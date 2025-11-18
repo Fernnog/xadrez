@@ -71,19 +71,54 @@ export function isPromotionMove(from, to) {
            (piece.color === 'b' && from[1] === '2' && targetRank === '1');
 }
 
+// --- FUNÇÕES ADICIONADAS PARA CORRIGIR O ERRO ---
+
 /**
- * Retorna um objeto contendo o estado atual do jogo.
- * @returns {{
- *  fen: string,
- *  turn: 'w' | 'b',
- *  board: object[][],
- *  history: object[],
- *  isGameOver: boolean,
- *  isCheckmate: boolean,
- *  isStalemate: boolean,
- *  isDraw: boolean,
- *  inCheck: boolean
- * }}
+ * Verifica se o jogo terminou.
+ * @returns {boolean}
+ */
+export function isGameOver() {
+    return game.game_over();
+}
+
+/**
+ * Retorna de quem é a vez ('w' para brancas, 'b' para pretas).
+ * @returns {string}
+ */
+export function getTurn() {
+    return game.turn();
+}
+
+/**
+ * Retorna o array 2D representando o tabuleiro.
+ * @returns {object[][]}
+ */
+export function getBoard() {
+    return game.board();
+}
+
+/**
+ * Retorna o histórico de movimentos.
+ * @param {object} options - Opções (ex: { verbose: true }).
+ * @returns {string[] | object[]}
+ */
+export function getHistory(options) {
+    return game.history(options);
+}
+
+/**
+ * Retorna a string FEN da posição atual (usado pelo Stockfish).
+ * @returns {string}
+ */
+export function getFen() {
+    return game.fen();
+}
+
+// ------------------------------------------------
+
+/**
+ * Retorna um objeto contendo o estado completo atual do jogo.
+ * Útil para atualizações em massa da UI.
  */
 export function getGameState() {
     return {
@@ -94,9 +129,17 @@ export function getGameState() {
         isGameOver: game.game_over(),
         isCheckmate: game.in_checkmate(),
         isStalemate: game.in_stalemate(),
-        isDraw: game.in_draw(),
+        isDraw: game.in_draw(), // Cobre empate por regra dos 50 lances ou material insuficiente
         inCheck: game.in_check()
     };
+}
+
+/**
+ * Verifica repetição tripla de posições.
+ * @returns {boolean}
+ */
+export function inThreefoldRepetition() {
+    return game.in_threefold_repetition();
 }
 
 /**
