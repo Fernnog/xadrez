@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xadrez: Humano vs. Stockfish</title>
+    
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fontes do Google -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Folha de Estilo Personalizada -->
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body class="bg-gray-800 text-white flex flex-col items-center justify-center min-h-screen p-4">
+
+    <div id="gameContainer" class="w-full hidden flex flex-col items-center">
+        <div class="w-full max-w-lg mb-2 flex justify-between items-center gap-4 bg-gray-900 rounded-lg p-2 shadow-lg h-16">
+            <div id="evaluationPanel" class="text-2xl font-bold text-center w-28 bg-gray-800 rounded-md py-1">
+                <span id="evaluationValue">0.00</span>
+            </div>
+            <p class="text-lg sm:text-xl font-semibold text-center flex-grow" id="status">É a vez das Brancas.</p>
+        </div>
+
+        <div class="w-full max-w-5xl flex flex-col lg:flex-row gap-6 items-center lg:items-start">
+            <div class="w-full max-w-lg lg:max-w-none lg:w-2/3 flex flex-col">
+                <div id="capturedForBlack" class="captured-pieces-container w-full mb-2"></div>
+                <div class="board-container">
+                    <div class="rank-labels"></div>
+                    <div id="board" class="w-full aspect-square grid grid-cols-8 grid-rows-8 shadow-2xl rounded-lg overflow-hidden border-4 border-gray-900 transition-all"></div>
+                    <div class="file-labels"></div>
+                </div>
+                <div id="capturedForWhite" class="captured-pieces-container w-full mt-2"></div>
+            </div>
+
+            <div class="w-full max-w-lg lg:w-1/3 flex flex-col gap-4">
+                <div class="bg-gray-900 p-4 rounded-lg shadow-lg">
+                    <div class="flex justify-between items-center mb-3">
+                        <h2 class="text-xl font-bold">Histórico de Lances</h2>
+                        <button id="copyPgnButton" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-md shadow-md transition-all">Copiar PGN</button>
+                    </div>
+                    <div id="moveHistory" class="move-history bg-gray-700 rounded-md p-2 overflow-y-auto text-base"></div>
+                </div>
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-2">
+                    <p class="font-semibold">Engine: Stockfish</p>
+                    <button id="resetButton" class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-lg transition-transform transform hover:scale-105">
+                        Novo Jogo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="colorSelectionModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white text-gray-900 p-8 rounded-lg shadow-xl text-center max-w-md w-full">
+            <div id="continueGameContainer" class="hidden mb-6 pb-6 border-b border-gray-300">
+                <h3 class="text-2xl font-bold mb-4">Jogo Salvo Encontrado</h3>
+                <button id="continueGameButton" class="w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-lg transition-transform transform hover:scale-105">
+                    Continuar Jogo Anterior
+                </button>
+            </div>
+            
+            <h2 id="newGameTitle" class="text-3xl font-bold mb-6">Comece um Novo Jogo</h2>
+            <div class="flex gap-4 justify-center">
+                <button id="playWhiteButton" class="btn-play-white px-8 py-4 text-white font-bold rounded-lg text-5xl transition-all transform hover:scale-110" style="text-shadow: 0 1px 3px rgba(0,0,0,0.6);">♟</button>
+                <button id="playBlackButton" class="btn-play-black px-8 py-4 text-gray-800 font-bold rounded-lg text-5xl transition-all transform hover:scale-110">♟</button>
+            </div>
+            <div class="mt-8">
+                <label for="difficultyLevel" class="block text-xl font-semibold mb-2">Nível de Dificuldade</label>
+                <select id="difficultyLevel" class="w-full p-2 border border-gray-300 rounded-md text-lg bg-gray-100 text-gray-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <option value="1">Fácil (Iniciante)</option>
+                    <option value="5">Médio (Amador)</option>
+                    <option value="12" selected>Difícil (Clube)</option>
+                    <option value="20">Mestre (Força Máxima)</option>
+                </select>
+            </div>
+
+            <div id="importPgnContainer" class="mt-6 pt-6 border-t border-gray-300">
+                <h3 class="text-2xl font-bold mb-4">Ou Importe um Jogo (PGN)</h3>
+                <textarea id="pgnInput" class="w-full h-24 p-2 border border-gray-300 rounded-md bg-gray-100 text-gray-800 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Cole o PGN aqui..."></textarea>
+                <button id="importPgnButton" class="w-full mt-3 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-lg transition-transform transform hover:scale-105">
+                    Importar e Jogar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="gameOverModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-white text-gray-900 p-8 rounded-lg shadow-xl text-center">
+            <h2 class="text-3xl font-bold mb-4" id="modalTitle">Fim de Jogo!</h2>
+            <p class="text-lg mb-6" id="modalMessage">O jogo terminou.</p>
+            <button id="modalResetButton" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg">Jogar Novamente</button>
+        </div>
+    </div>
+
+    <div id="promotionModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-white text-gray-900 p-8 rounded-lg shadow-xl text-center max-w-sm">
+            <h3 class="text-2xl font-bold mb-6">Escolha a Peça de Promoção</h3>
+            <div id="promotionOptions" class="flex justify-around bg-gray-100 p-3 rounded-md">
+                <!-- Opções de peças serão inseridas via JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Dependências JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+
+    <!-- Ponto de Entrada da Aplicação -->
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>
