@@ -9,8 +9,10 @@ const GAME_STATE_KEY = 'savedChessGameState';
 export function saveGameState(game, playerColor, skillLevel) {
     if (!game) return;
     try {
+        // CORREÇÃO AQUI: O módulo game.js exporta a função como 'getPgn', não 'pgn'.
+        // Usar game.pgn() causava o erro pois o objeto 'game' aqui é o módulo importado.
         const state = {
-            pgn: game.pgn(),
+            pgn: game.getPgn(), 
             playerColor: playerColor,
             skillLevel: skillLevel,
             timestamp: new Date().getTime()
@@ -72,8 +74,10 @@ export function copyPgn(pgn) {
     const showSuccess = () => {
         const originalText = 'Copiar PGN';
         button.textContent = 'Copiado!';
-        button.classList.add('bg-green-600', 'hover:bg-green-700');
+        // Remove classes antigas antes de adicionar novas para evitar conflitos
         button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+        button.classList.add('bg-green-600', 'hover:bg-green-700');
+        
         setTimeout(() => {
             button.textContent = originalText;
             button.classList.remove('bg-green-600', 'hover:bg-green-700');
