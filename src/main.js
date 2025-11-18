@@ -1,157 +1,132 @@
 // src/main.js
 
-/**
- * Ponto de entrada e orquestrador principal da aplicação de xadrez.
- * Responsabilidades:
- * - Gerenciar o estado da aplicação (cor do jogador, nível de dificuldade, etc.).
- * - Inicializar os módulos de UI, Jogo e Motor.
- * - Orquestrar o fluxo do jogo (turno do jogador, turno do motor).
- * - Lidar com as interações do usuário (cliques nos botões, movimentos no tabuleiro).
- * - Gerenciar o salvamento e carregamento do estado do jogo no localStorage.
- */
-
-// Importa funções dos outros módulos (assumindo que eles exportam o necessário)
 import * as ui from './modules/ui.js';
 import * as game from './modules/game.js';
 import * as engine from './modules/engine.js';
-import { playSound, audioMove, audioStart, audioGameOver } from './modules/audio.js'; // Supondo um módulo de áudio
+import * as audio from './modules/audio.js'; // <-- IMPORTAÇÃO CORRIGIDA
+import * as utils from './modules/utils.js'; // <-- NOVA IMPORTAÇÃO
 
-// --- Estado da Aplicação ---
-let playerColor = 'w';
-let stockfishSkillLevel = 12;
-let selectedSquare = null;
-let pendingPromotionMove = null;
-let isEngineTurn = false;
-let gameStarted = false;
-
-// --- Inicialização ---
+// Estado da aplicação
+let appState = {
+    playerColor: 'w',
+    skillLevel: 12,
+    selectedSquare: null,
+    isEngineTurn: false,
+    pendingPromotionMove: null,
+};
 
 function init() {
-    ui.init(handleSquareClick); // Passa a função de callback para cliques no tabuleiro
-    engine.initEngine(handleEngineMessage); // Passa a função de callback para mensagens do motor
-
-    // Mapeamento de botões para funções
-    const listeners = {
-        'playWhiteButton': () => startGame('w'),
-        'playBlackButton': () => startGame('b'),
-        'resetButton': resetGame,
-        'modalResetButton': resetGame,
-        'copyPgnButton': () => ui.copyPgn(game.getPgn()),
-        'continueGameButton': resumeGame,
-        'importPgnButton': importPgnGame,
-    };
-
-    for (const id in listeners) {
-        document.getElementById(id)?.addEventListener('click', listeners[id]);
-    }
+    // Registra os handlers da UI (funções que main.js provê para a UI chamar)
+    ui.registerUIHandlers({
+        onPlayWhite: () => startGame('w'),
+        onPlayBlack: () => startGame('b'),
+        onResetGame: resetGame,
+        onCopyPgn: () => utils.copyPgn(game.getPgn()),
+        onContinueGame: resumeGame,
+        onImportPgn: importPgnGame,
+        onSquareClick: handleSquareClick,
+        onPromotionSelect: handlePromotion,
+    });
     
-    ui.checkForSavedGame(localStorage.getItem('chessGameState'));
+    engine.initEngine(handleEngineMessage);
+    checkForSavedGame();
 }
 
-// --- Lógica de Fluxo de Jogo ---
-
-function startGame(chosenColor, pgn = null) {
+function startGame(chosenColor) {
+    audio.initAudio(); // Inicializa o áudio no primeiro clique do usuário
+    utils.clearGameState();
+    
+    appState.playerColor = chosenColor;
+    appState.skillLevel = ui.getSkillLevel();
+    
     game.reset();
-    if (pgn && !game.loadPgn(pgn)) {
-        alert("PGN inválido. Começando um novo jogo.");
-        ui.updatePgnInputValue('');
-    }
-
-    playerColor = chosenColor;
-    stockfishSkillLevel = ui.getDifficultyLevel();
-    isEngineTurn = false;
-    selectedSquare = null;
-    pendingPromotionMove = null;
-    gameStarted = true;
-
-    ui.setupAndDisplayGame(playerColor, game.getHistory());
-    playSound(audioStart);
+    ui.setupAndDisplayGame(appState.playerColor);
     updateAllDisplays();
 
-    // Se o jogador escolheu as pretas, ou se carregou um PGN onde é a vez das brancas
-    if ((!pgn && playerColor === 'b') || (pgn && game.getTurn() === 'w' && playerColor === 'b')) {
-        makeBotMove();
+    if (game.getTurn() !== appState.playerColor) {
+        requestEngineMove();
     }
 }
 
-function resetGame() {
-    gameStarted = false;
-    game.reset();
-    ui.resetUI();
-    localStorage.removeItem('chessGameState');
-    ui.checkForSavedGame(null);
-}
-
-// --- Manipuladores de Eventos ---
-
-/**
- * Lida com cliques nos quadrados do tabuleiro. Chamado pelo módulo UI.
- * @param {string} squareName - O nome do quadrado clicado (ex: "e4").
- */
 function handleSquareClick(squareName) {
-    if (isEngineTurn || !gameStarted || game.isGameOver()) return;
+    if (game.isGameOver() || appState.isEngineTurn) return;
+    
+    // Lógica completa de clique (seleção, movimento, promoção)
+    // ... (esta lógica é complexa, vamos simplificar por enquanto)
 
-    if (selectedSquare) {
-        // Verifica se é um movimento de promoção válido
-        if (game.isPromotionMove(selectedSquare, squareName)) {
-            pendingPromotionMove = { from: selectedSquare, to: squareName };
-            ui.showPromotionModal(playerColor, handlePromotionSelect);
-            selectedSquare = null;
-            ui.clearHighlights();
-            return;
+    if (appState.selectedSquare) {
+        const move = { from: appState.selectedSquare, to: squareName };
+        
+        if (game.isPromotionMove(appState.selectedSquare, squareName)) {
+            const tempMove = { ...move, promotion: 'q' };
+            if (game.isValidMove(tempMove)) {
+                appState.pendingPromotionMove = move;
+                ui.clearHighlights();
+                ui.showPromotionModal(appState.playerColor);
+                appState.selectedSquare = null;
+                return;
+            }
         }
-
-        // Tenta fazer um movimento normal
-        const move = { from: selectedSquare, to: squareName };
+        
         const result = game.makeMove(move);
-        selectedSquare = null;
         ui.clearHighlights();
-
+        
         if (result) {
-            processMoveResult(result);
+            audio.playSound(audio.audioMove);
+            updateAllDisplays();
+            utils.saveGameState(game, appState.playerColor, appState.skillLevel);
+            if (!game.isGameOver()) {
+                requestEngineMove();
+            }
         }
+        appState.selectedSquare = null;
+
     } else {
         const piece = game.getPiece(squareName);
-        if (piece && piece.color === playerColor) {
-            selectedSquare = squareName;
-            ui.highlightMoves(squareName, game.getValidMoves(squareName));
+        if (piece && piece.color === appState.playerColor) {
+            appState.selectedSquare = squareName;
+            const validMoves = game.getValidMoves(squareName);
+            ui.highlightMoves(squareName, validMoves);
+        } else {
+            appState.selectedSquare = null;
         }
     }
 }
 
-/**
- * Lida com a seleção de uma peça no modal de promoção.
- * @param {string} pieceType - O tipo da peça escolhida ('q', 'r', 'b', ou 'n').
- */
-function handlePromotionSelect(pieceType) {
-    if (!pendingPromotionMove) return;
+function handlePromotion(pieceType) {
+    ui.hidePromotionModal();
+    if (!appState.pendingPromotionMove) return;
 
-    const move = { ...pendingPromotionMove, promotion: pieceType };
+    const move = { ...appState.pendingPromotionMove, promotion: pieceType };
     const result = game.makeMove(move);
-    pendingPromotionMove = null;
-    
+    appState.pendingPromotionMove = null;
+
     if (result) {
-        processMoveResult(result);
+        audio.playSound(audio.audioMove);
+        updateAllDisplays();
+        utils.saveGameState(game, appState.playerColor, appState.skillLevel);
+        if (!game.isGameOver()) {
+            requestEngineMove();
+        }
     }
 }
 
-/**
- * Processa as mensagens recebidas do motor Stockfish.
- * @param {string} message - A mensagem do worker.
- */
 function handleEngineMessage(message) {
     if (message.startsWith('bestmove')) {
-        isEngineTurn = false;
-        ui.setBoardCursor('default');
-        
         const bestMoveStr = message.split(' ')[1];
-        const move = game.parseMove(bestMoveStr); // Módulo game deve saber converter "e7e8q" para objeto
-        const result = game.makeMove(move);
-
-        if (result) {
-            processMoveResult(result);
+        const move = game.makeMove(bestMoveStr);
+        
+        if (move) {
+            audio.playSound(audio.audioMove);
+            // ui.animateMove(move, () => { ... });
+            updateAllDisplays();
+            engine.requestEvaluation(game.getFen());
+            utils.saveGameState(game, appState.playerColor, appState.skillLevel);
         }
-    } else if (message.startsWith('info depth')) {
+        appState.isEngineTurn = false;
+        ui.setBoardCursor('pointer');
+
+    } else if (message.startsWith("info depth")) {
         const scoreMatch = message.match(/score (cp|mate) (-?\d+)/);
         if (scoreMatch) {
             const type = scoreMatch[1];
@@ -164,87 +139,64 @@ function handleEngineMessage(message) {
     }
 }
 
-// --- Funções Auxiliares ---
-
-/**
- * Centraliza as ações a serem tomadas após um lance válido (do jogador ou do motor).
- * @param {object} moveResult - O objeto de resultado do lance retornado por chess.js.
- */
-function processMoveResult(moveResult) {
-    playSound(audioMove);
-    ui.animateMove(moveResult, () => {
-        updateAllDisplays();
-        saveGameState();
-
-        if (game.isGameOver()) {
-            playSound(audioGameOver);
-            ui.showGameOverModal(game.getGameOverState());
-        } else if (game.getTurn() !== playerColor) {
-            makeBotMove();
-        } else {
-            // Se for a vez do jogador, solicita uma avaliação
-            engine.requestEvaluation(game.getFen());
-        }
-    });
-}
-
-function makeBotMove() {
-    isEngineTurn = true;
+function requestEngineMove() {
+    appState.isEngineTurn = true;
     ui.setBoardCursor('wait');
-    // Atraso para dar uma sensação mais natural
     setTimeout(() => {
-        engine.requestMove(game.getFen(), stockfishSkillLevel);
-    }, 500);
+        engine.requestMove(game.getFen(), appState.skillLevel);
+    }, 250);
 }
 
 function updateAllDisplays() {
-    const gameState = {
-        board: game.getBoard(),
-        history: game.getHistory({ verbose: true }),
-        turn: game.getTurn(),
-        isGameOver: game.isGameOver(),
-        inCheck: game.inCheck(),
-        gameOverState: game.getGameOverState(),
-    };
-    ui.renderBoard(gameState.board);
-    ui.updateStatus(gameState);
+    const isGameOver = game.isGameOver();
+    ui.renderBoard(game.getBoard());
+    ui.updateStatus(game);
     ui.updateMoveHistory(game.getHistory());
-    ui.updateCapturedPieces(gameState.history);
+    ui.updateCapturedPieces(game.getHistory({verbose: true}));
+
+    if (isGameOver) {
+        audio.playSound(audio.audioGameOver);
+        utils.clearGameState();
+    }
 }
 
-// --- Gerenciamento de Estado (LocalStorage) ---
+function resetGame() {
+    utils.clearGameState();
+    ui.showColorSelectionModal();
+    checkForSavedGame();
+}
 
-function saveGameState() {
-    if (!gameStarted) return;
-    const state = {
-        pgn: game.getPgn(),
-        playerColor: playerColor,
-        skillLevel: stockfishSkillLevel,
-    };
-    localStorage.setItem('chessGameState', JSON.stringify(state));
+function checkForSavedGame() {
+    const savedState = utils.loadGameState();
+    if(savedState) {
+        ui.showContinueGameOption(true);
+    } else {
+        ui.showContinueGameOption(false);
+    }
 }
 
 function resumeGame() {
-    const savedState = JSON.parse(localStorage.getItem('chessGameState'));
-    if (savedState) {
-        ui.setDifficultyLevel(savedState.skillLevel);
-        startGame(savedState.playerColor, savedState.pgn);
+    const savedState = utils.loadGameState();
+    if (savedState && game.loadPgn(savedState.pgn)) {
+        audio.initAudio();
+        appState.playerColor = savedState.playerColor;
+        appState.skillLevel = savedState.skillLevel;
+        ui.setupAndDisplayGame(appState.playerColor);
+        updateAllDisplays();
     }
 }
 
 function importPgnGame() {
-    const pgn = ui.getPgnInputValue();
-    if (pgn) {
-        // Ao importar, assumimos que o jogador quer jogar com as peças que devem mover
-        const tempGame = new Chess();
-        if (tempGame.load_pgn(pgn)) {
-            const nextPlayer = tempGame.turn() === 'w' ? 'w' : 'b';
-            startGame(nextPlayer, pgn);
-        } else {
-            alert('PGN inválido ou incompleto.');
-        }
+    const pgn = ui.getPgnInput();
+    if (pgn && game.loadPgn(pgn)) {
+        audio.initAudio();
+        const turn = game.getTurn();
+        // Assume o jogador controla a cor do turno atual no PGN
+        startGame(turn);
+    } else {
+        alert("PGN inválido!");
     }
 }
 
-// --- Ponto de Entrada da Aplicação ---
+// Inicia a aplicação
 document.addEventListener('DOMContentLoaded', init);
