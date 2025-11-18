@@ -1,77 +1,66 @@
 // src/modules/engine.js
 
-/**
- * Módulo para gerenciar a comunicação com o motor de xadrez Stockfish (Web Worker).
- * Responsabilidades:
- * - Iniciar o worker.
- * - Enviar comandos para o motor (análise de posição, cálculo do melhor lance).
- * - Receber mensagens do motor e encaminhá-las via callback.
- */
-
 let stockfish;
 let onMessageCallback;
 
-/**
- * Inicializa o Web Worker do Stockfish.
- * @param {Function} callback - Função a ser chamada quando o worker envia uma mensagem.
- */
 export function initEngine(callback) {
+    console.log("[Engine] Inicializando módulo...");
     onMessageCallback = callback;
-    const stockfishWorkerPath = 'src/assets/workers/stockfish.js'; // Caminho para o worker
+    
+    // ATENÇÃO: O caminho aqui é crítico. Se estiver no GitHub Pages em um subdiretório,
+    // o caminho pode precisar ser ajustado.
+    const stockfishWorkerPath = 'src/assets/workers/stockfish.js'; 
 
-    // Verifica se o navegador suporta Web Workers
     if (typeof(Worker) === "undefined") {
-        console.error("Seu navegador não suporta Web Workers. O motor Stockfish não pode ser carregado.");
-        alert("Desculpe, seu navegador não suporta Web Workers. O motor não funcionará.");
+        console.error("[Engine ERROR] Web Workers não suportados neste navegador.");
+        alert("Seu navegador não suporta Web Workers.");
         return;
     }
 
     try {
+        console.log(`[Engine] Tentando carregar worker de: ${stockfishWorkerPath}`);
         stockfish = new Worker(stockfishWorkerPath);
+        
         stockfish.onmessage = (event) => {
+            // Loga apenas mensagens importantes para não travar o console com spam de 'info'
+            if (event.data.startsWith('bestmove') || event.data.includes('error')) {
+                 console.log(`[Engine -> Main] ${event.data}`);
+            }
+            
             if (onMessageCallback) {
                 onMessageCallback(event.data);
             }
         };
 
-        // Envia o comando inicial para preparar o motor
+        stockfish.onerror = (error) => {
+            console.error("[Engine ERROR] Ocorreu um erro no Worker:", error);
+            console.error("Caminho tentado:", stockfishWorkerPath);
+            alert("Falha ao carregar o motor de xadrez (404 ou erro de script). Verifique o console.");
+        };
+
         sendMessage('uci');
     } catch (error) {
-        console.error("Erro ao carregar o worker do Stockfish:", error);
-        alert("Ocorreu um erro ao carregar o motor de xadrez. Verifique o console para mais detalhes.");
+        console.error("[Engine ERROR] Exceção ao criar Worker:", error);
     }
 }
 
-/**
- * Envia uma mensagem/comando para o motor Stockfish.
- * @param {string} message - O comando a ser enviado (no formato UCI).
- */
 function sendMessage(message) {
     if (stockfish) {
+        console.log(`[Main -> Engine] Comando: ${message}`);
         stockfish.postMessage(message);
     } else {
-        console.warn("Tentativa de enviar mensagem para o motor Stockfish antes de ser inicializado.");
+        console.warn("[Engine WARNING] Tentativa de envio falhou. Worker não inicializado.");
     }
 }
 
-/**
- * Solicita ao motor que calcule o melhor lance para a posição atual.
- * @param {string} fen - A posição atual do tabuleiro no formato FEN.
- * @param {number} skillLevel - O nível de dificuldade do motor (0-20).
- */
 export function requestMove(fen, skillLevel) {
+    console.log(`[Engine] Solicitando cálculo para nível ${skillLevel}`);
     sendMessage(`position fen ${fen}`);
     sendMessage(`setoption name Skill Level value ${skillLevel}`);
-    // A profundidade pode ser ajustada ou baseada no nível de dificuldade
     sendMessage('go depth 15'); 
 }
 
-/**
- * Solicita ao motor uma avaliação rápida da posição atual.
- * @param {string} fen - A posição atual do tabuleiro no formato FEN.
- */
 export function requestEvaluation(fen) {
     sendMessage(`position fen ${fen}`);
-    // Uma profundidade menor para uma avaliação mais rápida
     sendMessage('go depth 12'); 
 }
