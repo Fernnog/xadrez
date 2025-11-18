@@ -3,8 +3,10 @@
 import * as ui from './modules/ui.js';
 import * as game from './modules/game.js';
 import * as engine from './modules/engine.js';
-import * as audio from './modules/audio.js'; // <-- IMPORTAÇÃO CORRIGIDA
-import * as utils from './modules/utils.js'; // <-- NOVA IMPORTAÇÃO
+import * as audio from './modules/audio.js';
+import * as utils from './modules/utils.js';
+
+console.log("[Main] Módulo main.js carregado.");
 
 // Estado da aplicação
 let appState = {
@@ -16,10 +18,10 @@ let appState = {
 };
 
 function init() {
-    // Registra os handlers da UI (funções que main.js provê para a UI chamar)
+    console.log("[Main] Inicializando aplicação...");
     ui.registerUIHandlers({
-        onPlayWhite: () => startGame('w'),
-        onPlayBlack: () => startGame('b'),
+        onPlayWhite: () => { console.log("[UI] Botão Jogar Brancas clicado"); startGame('w'); },
+        onPlayBlack: () => { console.log("[UI] Botão Jogar Pretas clicado"); startGame('b'); },
         onResetGame: resetGame,
         onCopyPgn: () => utils.copyPgn(game.getPgn()),
         onContinueGame: resumeGame,
@@ -33,57 +35,83 @@ function init() {
 }
 
 function startGame(chosenColor) {
-    audio.initAudio(); // Inicializa o áudio no primeiro clique do usuário
+    console.log(`[Main] Iniciando jogo. Cor do jogador: ${chosenColor}`);
+    audio.initAudio();
     utils.clearGameState();
     
     appState.playerColor = chosenColor;
     appState.skillLevel = ui.getSkillLevel();
+    console.log(`[Main] Nível de habilidade definido para: ${appState.skillLevel}`);
     
     game.reset();
     ui.setupAndDisplayGame(appState.playerColor);
     updateAllDisplays();
 
     if (game.getTurn() !== appState.playerColor) {
+        console.log("[Main] É a vez da IA (Pretas). Solicitando lance...");
         requestEngineMove();
+    } else {
+        console.log("[Main] É a vez do Humano (Brancas). Aguardando clique...");
     }
 }
 
 function handleSquareClick(squareName) {
-    if (game.isGameOver() || appState.isEngineTurn) return;
+    if (game.isGameOver() || appState.isEngineTurn) {
+        console.log("[Main] Clique ignorado (Jogo acabou ou vez da IA).");
+        return;
+    }
     
-    // Lógica completa de clique (seleção, movimento, promoção)
-    // ... (esta lógica é complexa, vamos simplificar por enquanto)
+    console.log(`[Main] Casa clicada: ${squareName}`);
 
     if (appState.selectedSquare) {
         const move = { from: appState.selectedSquare, to: squareName };
         
+        // Verifica Promoção
         if (game.isPromotionMove(appState.selectedSquare, squareName)) {
             const tempMove = { ...move, promotion: 'q' };
-            if (game.isValidMove(tempMove)) {
+            if (game.isValidMove && game.isValidMove(tempMove)) { // Verifica se isValidMove existe antes
                 appState.pendingPromotionMove = move;
                 ui.clearHighlights();
                 ui.showPromotionModal(appState.playerColor);
                 appState.selectedSquare = null;
                 return;
             }
+             // Fallback se isValidMove não existir (versões antigas do chess.js ou game.js incompleto)
+             // Assumimos que getValidMoves já filtrou.
+             appState.pendingPromotionMove = move;
+             ui.clearHighlights();
+             ui.showPromotionModal(appState.playerColor);
+             appState.selectedSquare = null;
+             return;
         }
         
+        console.log(`[Main] Tentando movimento: ${JSON.stringify(move)}`);
         const result = game.makeMove(move);
         ui.clearHighlights();
         
         if (result) {
-            audio.playSound(audio.audioMove);
+            console.log("[Main] Movimento VÁLIDO realizado.");
+            audio.playSound(audio.audioMove); // Tenta tocar som via módulo audio (se exportado assim) ou ui.playSound
+            // Se audio.audioMove não funcionar, tente: ui.playSound('move');
+            
             updateAllDisplays();
             utils.saveGameState(game, appState.playerColor, appState.skillLevel);
+            
             if (!game.isGameOver()) {
                 requestEngineMove();
+            } else {
+                console.log("[Main] Jogo terminou após lance do humano.");
             }
+        } else {
+            console.log("[Main] Movimento INVÁLIDO.");
         }
         appState.selectedSquare = null;
 
     } else {
+        // Seleção de peça
         const piece = game.getPiece(squareName);
         if (piece && piece.color === appState.playerColor) {
+            console.log(`[Main] Peça selecionada em ${squareName}`);
             appState.selectedSquare = squareName;
             const validMoves = game.getValidMoves(squareName);
             ui.highlightMoves(squareName, validMoves);
@@ -94,6 +122,7 @@ function handleSquareClick(squareName) {
 }
 
 function handlePromotion(pieceType) {
+    console.log(`[Main] Promoção selecionada: ${pieceType}`);
     ui.hidePromotionModal();
     if (!appState.pendingPromotionMove) return;
 
@@ -102,7 +131,7 @@ function handlePromotion(pieceType) {
     appState.pendingPromotionMove = null;
 
     if (result) {
-        audio.playSound(audio.audioMove);
+        ui.playSound('move'); // Usando via UI para garantir
         updateAllDisplays();
         utils.saveGameState(game, appState.playerColor, appState.skillLevel);
         if (!game.isGameOver()) {
@@ -112,16 +141,21 @@ function handlePromotion(pieceType) {
 }
 
 function handleEngineMessage(message) {
+    // console.log(`[Engine Msg] ${message}`); // Comentado para não poluir demais, descomente se necessário
+    
     if (message.startsWith('bestmove')) {
+        console.log(`[Main] Engine respondeu com bestmove: ${message}`);
         const bestMoveStr = message.split(' ')[1];
         const move = game.makeMove(bestMoveStr);
         
         if (move) {
-            audio.playSound(audio.audioMove);
-            // ui.animateMove(move, () => { ... });
+            console.log(`[Main] Movimento da IA aplicado: ${bestMoveStr}`);
+            ui.playSound('move'); 
             updateAllDisplays();
             engine.requestEvaluation(game.getFen());
             utils.saveGameState(game, appState.playerColor, appState.skillLevel);
+        } else {
+            console.error(`[Main ERROR] Movimento da IA inválido ou falhou: ${bestMoveStr}`);
         }
         appState.isEngineTurn = false;
         ui.setBoardCursor('pointer');
@@ -140,27 +174,34 @@ function handleEngineMessage(message) {
 }
 
 function requestEngineMove() {
+    console.log("[Main] Solicitando movimento da Engine...");
     appState.isEngineTurn = true;
     ui.setBoardCursor('wait');
+    
+    // Pequeno delay para a UI renderizar antes de bloquear (se não usar Worker corretamente)
     setTimeout(() => {
-        engine.requestMove(game.getFen(), appState.skillLevel);
+        const fen = game.getFen();
+        console.log(`[Main] Enviando FEN para Engine: ${fen}`);
+        engine.requestMove(fen, appState.skillLevel);
     }, 250);
 }
 
 function updateAllDisplays() {
     const isGameOver = game.isGameOver();
     ui.renderBoard(game.getBoard());
-    ui.updateStatus(game);
+    ui.updateStatus(game.getGameState()); // Passando o estado completo
     ui.updateMoveHistory(game.getHistory());
     ui.updateCapturedPieces(game.getHistory({verbose: true}));
 
     if (isGameOver) {
-        audio.playSound(audio.audioGameOver);
+        console.log("[Main] Jogo Terminou (updateAllDisplays).");
+        ui.playSound('gameOver');
         utils.clearGameState();
     }
 }
 
 function resetGame() {
+    console.log("[Main] Resetando jogo.");
     utils.clearGameState();
     ui.showColorSelectionModal();
     checkForSavedGame();
@@ -176,6 +217,7 @@ function checkForSavedGame() {
 }
 
 function resumeGame() {
+    console.log("[Main] Retomando jogo salvo...");
     const savedState = utils.loadGameState();
     if (savedState && game.loadPgn(savedState.pgn)) {
         audio.initAudio();
@@ -183,6 +225,11 @@ function resumeGame() {
         appState.skillLevel = savedState.skillLevel;
         ui.setupAndDisplayGame(appState.playerColor);
         updateAllDisplays();
+        
+        // Se for a vez da IA ao retomar
+        if (game.getTurn() !== appState.playerColor) {
+             requestEngineMove();
+        }
     }
 }
 
@@ -191,8 +238,7 @@ function importPgnGame() {
     if (pgn && game.loadPgn(pgn)) {
         audio.initAudio();
         const turn = game.getTurn();
-        // Assume o jogador controla a cor do turno atual no PGN
-        startGame(turn);
+        startGame(turn); // Simplificação
     } else {
         alert("PGN inválido!");
     }
