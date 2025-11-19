@@ -1,179 +1,200 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
 body { 
     font-family: 'Inter', sans-serif; 
+    /* Previne pull-to-refresh no mobile que atrapalha o app */
+    overscroll-behavior-y: contain;
 }
 
+/* --- TABULEIRO E CASAS --- */
 .square { 
     position: relative; 
     display: flex; 
     align-items: center; 
     justify-content: center; 
+    /* Garante que o clique seja rápido no mobile */
+    touch-action: manipulation;
 }
 
 .light { 
-    background-color: #f0d9b5; 
+    background-color: #ebecd0; /* Cor clássica chess.com */
 }
 
 .dark { 
-    background-color: #b58863; 
+    background-color: #739552; /* Verde clássico chess.com */
 }
 
+/* --- PEÇAS DE XADREZ --- */
 .piece { 
     font-size: 3.5rem; 
-    cursor: pointer; 
+    cursor: grab; 
     user-select: none; 
     z-index: 10; 
-    transition: opacity 0.1s ease-in-out; 
+    line-height: 1; /* Remove espaçamento extra da fonte */
+    transition: transform 0.1s ease-out; 
+    will-change: transform;
 }
 
+.piece:active {
+    cursor: grabbing;
+}
+
+/* 
+   TRUQUE VISUAL PARA PEÇAS BRANCAS "CHEIAS":
+   Define a cor da fonte como Branca (#FFFFFF).
+   Usa text-shadow múltiplo para criar uma "borda" preta ao redor.
+   Isso funciona tanto para os glifos de contorno (♙) quanto para os sólidos (♟).
+*/
 .white-piece { 
     color: #FFFFFF; 
-    text-shadow: 0 1px 3px rgba(0,0,0,0.6); 
+    text-shadow: 
+        -1px -1px 0 #000,  
+         1px -1px 0 #000,
+        -1px  1px 0 #000,
+         1px  1px 0 #000,
+         0 3px 3px rgba(0,0,0,0.3);
 }
 
 .black-piece { 
-    color: #4a5568; 
-    text-shadow: 0 1px 2px rgba(255,255,255,0.1); 
+    color: #1a1a1a; 
+    text-shadow: 0 2px 2px rgba(255,255,255,0.3); 
 }
 
+/* Responsividade das peças */
 @media (max-width: 640px) { 
     .piece { font-size: 2.5rem; } 
 }
-
 @media (max-width: 400px) { 
     .piece { font-size: 2rem; } 
 }
 
-.animated-piece { 
-    position: absolute; 
-    z-index: 1000; 
-    pointer-events: none; 
-    transition: top 0.25s ease-out, left 0.25s ease-out; 
-}
-
-.piece-hidden { 
-    opacity: 0; 
-}
-
+/* --- ANIMAÇÕES E INTERAÇÃO --- */
 .selected-square { 
-    background-color: rgba(250, 204, 21, 0.8) !important; 
+    background-color: rgba(255, 255, 51, 0.5) !important; 
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 51, 0.8);
 }
 
+/* Marcador de movimento válido (ponto verde) */
 .valid-move-marker { 
     position: absolute; 
-    top: 50%; 
-    left: 50%; 
-    transform: translate(-50%, -50%); 
-    width: 30%; 
-    height: 30%; 
-    background-color: rgba(34, 197, 94, 0.5); 
+    width: 25%; 
+    height: 25%; 
+    background-color: rgba(0, 0, 0, 0.2); 
     border-radius: 50%; 
     pointer-events: none; 
     z-index: 5; 
 }
+/* Marcador de captura (aro) */
+.square:has(.piece) .valid-move-marker {
+    width: 80%;
+    height: 80%;
+    background-color: transparent;
+    border: 5px solid rgba(0, 0, 0, 0.2);
+}
 
+/* --- HISTÓRICO E LAYOUT --- */
 .move-history { 
-    max-height: 10.5rem; 
+    /* Scrollbar personalizada para webkit */
+    scrollbar-width: thin;
+    scrollbar-color: #4b5563 #1f2937;
+}
+
+.move-history::-webkit-scrollbar {
+    width: 8px;
+}
+.move-history::-webkit-scrollbar-track {
+    background: #1f2937; 
+}
+.move-history::-webkit-scrollbar-thumb {
+    background-color: #4b5563; 
+    border-radius: 4px;
 }
 
 .move-list-item { 
     display: grid; 
-    grid-template-columns: 2.5rem 1fr 1fr; 
+    grid-template-columns: 2rem 1fr 1fr; 
     gap: 0.5rem; 
-    padding: 0.25rem 0.5rem; 
+    padding: 0.35rem 0.5rem; 
     border-radius: 0.25rem; 
+    font-family: monospace;
 }
 
 .move-list-item:nth-child(odd) { 
-    background-color: #4a5568; 
+    background-color: rgba(255,255,255,0.05); 
 }
 
 .move-number { 
-    color: #a0aec0; 
-    font-weight: 600; 
-    text-align: right; 
+    color: #6b7280; 
+    font-weight: bold; 
 }
 
-.board-container { 
-    display: grid; 
-    grid-template-columns: 1.5rem 1fr; 
-    grid-template-rows: 1fr 1.5rem; 
-    gap: 0.5rem; 
-}
-
-#board { 
-    grid-column: 2; 
-    grid-row: 1; 
-    position: relative; 
-    transition: transform 0.5s ease-in-out; 
-}
-
+/* Labels das coordenadas */
 .rank-labels, .file-labels { 
     display: grid; 
     font-weight: 600; 
-    color: #a0aec0; 
-    user-select: none; 
+    color: #9ca3af; 
+    font-size: 0.75rem;
+    pointer-events: none;
 }
 
 .rank-labels { 
+    position: absolute;
+    left: 2px;
+    top: 0;
+    height: 100%;
     grid-template-rows: repeat(8, 1fr); 
-    grid-column: 1; 
-    grid-row: 1; 
+    z-index: 5;
+}
+.rank-labels span {
+    align-items: flex-start;
+    padding-top: 2px;
 }
 
 .file-labels { 
+    position: absolute;
+    right: 0;
+    bottom: 2px;
+    width: 100%;
     grid-template-columns: repeat(8, 1fr); 
-    grid-column: 2; 
-    grid-row: 2; 
+    z-index: 5;
+}
+.file-labels span {
+    justify-content: flex-end;
+    padding-right: 4px;
 }
 
-.rank-labels span, .file-labels span { 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-}
+/* Flip do tabuleiro */
+.board-flipped { transform: rotate(180deg); }
+.board-flipped .piece { transform: rotate(180deg); }
+.board-flipped .rank-labels span { align-items: flex-end; padding-bottom: 2px; padding-top: 0; }
+.board-flipped .file-labels span { justify-content: flex-start; padding-left: 4px; padding-right: 0; }
 
-.board-flipped { 
-    transform: rotate(180deg); 
-}
-
-.board-flipped .piece, .board-flipped .animated-piece { 
-    transform: rotate(180deg); 
-}
-
+/* Botões do Modal */
 .btn-play-white { 
-    background-color: #b58863; 
+    background-color: #ebecd0; 
+    color: #739552;
 }
-
-.btn-play-white:hover { 
-    background-color: #c79d7f; 
-}
-
 .btn-play-black { 
-    background-color: #f0d9b5; 
-}
-
-.btn-play-black:hover { 
-    background-color: #e6c8a4; 
+    background-color: #363636; 
+    color: #ebecd0;
 }
 
 .captured-pieces-container { 
-    min-height: 2.5rem; 
     display: flex; 
     align-items: center; 
-    gap: 0.25rem; 
-    padding: 0 0.5rem; 
-    border-radius: 0.25rem; 
-    background-color: rgba(31, 41, 55, 0.5); 
+    flex-wrap: wrap;
+    gap: 2px; 
 }
-
 .captured-pieces-container .piece { 
     font-size: 1.5rem; 
     cursor: default; 
+    margin-right: -5px; /* Sobreposição leve para economizar espaço */
 }
-
-.captured-pieces-container .material-diff { 
-    font-size: 0.9rem; 
-    font-weight: 600; 
-    color: #a0aec0; 
-    margin-left: 0.5rem; 
+.material-diff {
+    font-size: 0.85rem;
+    background: #374151;
+    padding: 1px 4px;
+    border-radius: 4px;
+    margin-left: 8px;
+    color: #d1d5db;
 }
