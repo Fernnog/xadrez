@@ -2,7 +2,7 @@
 
 import { PIECES, PIECE_VALUES, PROMOTION_PIECES } from './config.js';
 
-// Centraliza a seleção de todos os elementos do DOM para melhor performance e organização
+// Centraliza a seleção de todos os elementos do DOM
 const elements = {
     board: document.getElementById('board'),
     status: document.getElementById('status'),
@@ -23,21 +23,14 @@ const elements = {
     fileLabels: document.querySelector('.file-labels'),
 };
 
-// Sons da interface (carregados uma vez)
-// Nota: Os base64 foram omitidos/resumidos no prompt original, mas mantive a estrutura de inicialização.
-// Certifique-se de que o arquivo audio.js está lidando com o carregamento real dos dados de áudio se eles vierem de lá,
-// ou se eles são definidos aqui, mantenha suas strings base64 originais se você as tiver.
-// Para este código, assumimos que a lógica de audio.js (importada no main) lida com o som pesado,
-// e aqui lidamos apenas com triggers visuais ou sons simples se necessário.
-// MANTENDO A ESTRUTURA ORIGINAL DO SEU ARQUIVO:
-const audioMove = new Audio(''); // Preencha se necessário ou use o módulo audio.js
+// Sons da interface
+const audioMove = new Audio(''); 
 const audioStart = new Audio(''); 
 const audioGameOver = new Audio(''); 
 let isAudioInitialized = false;
 
 function initAudio() {
     if (isAudioInitialized) return;
-    // Tenta tocar um som silencioso para contornar políticas de autoplay dos navegadores
     audioMove.volume = 0;
     audioMove.play().catch(() => {});
     audioMove.volume = 1;
@@ -46,43 +39,30 @@ function initAudio() {
 
 // --- ESTADO E HELPERS INTERNOS ---
 
-// Armazena as funções de callback enviadas pelo main.js
 let uiHandlers = {}; 
 
-/**
- * Helper para adicionar eventos com segurança.
- * Evita erros fatais se um ID mudar no HTML.
- */
 function safeAddEventListener(id, event, handler) {
     const el = document.getElementById(id);
     if (el) {
         el.addEventListener(event, handler);
     } else {
-        console.warn(`[UI Warning] Elemento com ID '${id}' não encontrado. O evento '${event}' não foi vinculado.`);
+        console.warn(`[UI Warning] Elemento com ID '${id}' não encontrado.`);
     }
 }
 
-// --- FUNÇÕES EXPORTADAS NECESSÁRIAS PARA O MAIN.JS (A CORREÇÃO) ---
+// --- FUNÇÕES EXPORTADAS ---
 
-/**
- * Registra os callbacks de eventos vindos da lógica do jogo.
- * Esta era a função faltante que causava o erro.
- */
 export function registerUIHandlers(handlers) {
     uiHandlers = handlers;
 
-    // UX: Wrapper para dar feedback visual imediato (cursor de espera) ao iniciar
     const onStartWrapper = (callback) => {
         document.body.style.cursor = 'wait'; 
         setTimeout(() => callback(), 10);
     };
 
-    // Vincula os botões principais
     safeAddEventListener('playWhiteButton', 'click', () => onStartWrapper(handlers.onPlayWhite));
     safeAddEventListener('playBlackButton', 'click', () => onStartWrapper(handlers.onPlayBlack));
     safeAddEventListener('resetButton', 'click', handlers.onResetGame);
-    
-    // Vincula botões de modais e utilitários
     safeAddEventListener('modalResetButton', 'click', handlers.onResetGame);
     safeAddEventListener('continueGameButton', 'click', handlers.onContinueGame);
     safeAddEventListener('importPgnButton', 'click', handlers.onImportPgn);
@@ -94,7 +74,7 @@ export function registerUIHandlers(handlers) {
 
 export function getSkillLevel() {
     const el = document.getElementById('difficultyLevel');
-    return el ? parseInt(el.value, 10) : 12; // Default para 12 se falhar
+    return el ? parseInt(el.value, 10) : 12;
 }
 
 export function getPgnInput() {
@@ -119,27 +99,15 @@ export function showContinueGameOption(isVisible) {
     }
 }
 
-/**
- * Prepara a UI para o jogo ativo.
- */
 export function setupAndDisplayGame(playerColor) {
-    // Reverte o cursor para o padrão (fim do carregamento)
     document.body.style.cursor = 'default';
-    
     hideColorSelectionModal();
     hideGameOverModal();
     showGameContainer();
-    
     setupBoardOrientation(playerColor);
-    // Cria o tabuleiro e conecta o handler de clique nas casas
     createBoard(uiHandlers.onSquareClick);
 }
 
-// --- FUNÇÕES DE RENDERIZAÇÃO E VISUALIZAÇÃO (EXISTENTES) ---
-
-/**
- * Renderiza o tabuleiro de xadrez com base no estado do jogo.
- */
 export function renderBoard(boardState) {
     for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
@@ -148,11 +116,10 @@ export function renderBoard(boardState) {
             const piece = boardState[r][c];
             
             if (squareElement) {
-                squareElement.innerHTML = ''; // Limpa a casa
+                squareElement.innerHTML = '';
                 if (piece) {
                     const pieceElement = document.createElement('span');
                     pieceElement.className = `piece ${piece.color === 'w' ? 'white-piece' : 'black-piece'}`;
-                    // Adiciona rotação se o tabuleiro estiver invertido
                     if (elements.board.classList.contains('board-flipped')) {
                         pieceElement.style.transform = 'rotate(180deg)';
                     }
@@ -164,9 +131,6 @@ export function renderBoard(boardState) {
     }
 }
 
-/**
- * Cria a estrutura HTML do tabuleiro e adiciona os event listeners nas casas.
- */
 export function createBoard(onSquareClickCallback) {
     if (!elements.board) return;
     elements.board.innerHTML = '';
@@ -177,7 +141,6 @@ export function createBoard(onSquareClickCallback) {
             const colorClass = (r + c) % 2 === 0 ? 'light' : 'dark';
             square.className = `square ${colorClass}`;
             square.dataset.square = squareName;
-            // Usa o callback passado (que agora vem via registerUIHandlers -> setupAndDisplayGame)
             if (onSquareClickCallback) {
                 square.addEventListener('click', () => onSquareClickCallback(squareName));
             }
@@ -186,9 +149,6 @@ export function createBoard(onSquareClickCallback) {
     }
 }
 
-/**
- * Configura a orientação do tabuleiro e das legendas.
- */
 export function setupBoardOrientation(playerColor) {
     const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
     const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
@@ -210,14 +170,9 @@ export function setupBoardOrientation(playerColor) {
     }
 }
 
-/**
- * Atualiza o texto de status do jogo.
- */
 export function updateStatus(gameState, showGameOverCallback) {
     let statusText = '';
     const turn = gameState.turn === 'w' ? 'Brancas' : 'Pretas';
-
-    // Se showGameOverCallback não for passado, usamos um interno seguro
     const safeGameOverCall = showGameOverCallback || showGameOverModal;
 
     if (gameState.isGameOver) {
@@ -229,7 +184,7 @@ export function updateStatus(gameState, showGameOverCallback) {
         } else if (gameState.isStalemate) {
             statusText = 'Empate por Afogamento.';
             safeGameOverCall('Empate!', 'O jogo terminou em afogamento.');
-        } else if (gameState.isDraw) { // Simplificado para cobrir repetição também se a flag vier true
+        } else if (gameState.isDraw) {
             statusText = 'Empate.';
             safeGameOverCall('Empate!', 'Material insuficiente, repetição ou regra dos 50 lances.');
         }
@@ -241,9 +196,6 @@ export function updateStatus(gameState, showGameOverCallback) {
     elements.status.textContent = statusText;
 }
 
-/**
- * Destaca a casa de origem e os movimentos válidos possíveis.
- */
 export function highlightMoves(fromSquare, moves) {
     clearHighlights();
     const fromElement = elements.board.querySelector(`[data-square="${fromSquare}"]`);
@@ -265,11 +217,26 @@ export function clearHighlights() {
     document.querySelectorAll('.valid-move-marker').forEach(el => el.remove());
 }
 
+/**
+ * ATUALIZAÇÃO CRÍTICA: Correção da exibição do histórico.
+ * Agora aceita tanto string simples ('e4') quanto objetos ({ san: 'e4' }).
+ */
 export function updateMoveHistory(history) {
     elements.moveHistory.innerHTML = '';
     const movePairs = [];
+    
+    // Helper para extrair a notação corretamente
+    const getSan = (move) => {
+        if (!move) return '';
+        if (typeof move === 'string') return move; // Se for string simples, retorna ela mesma
+        return move.san || ''; // Se for objeto, tenta pegar a propriedade .san
+    };
+
     for (let i = 0; i < history.length; i += 2) {
-        movePairs.push({ white: history[i]?.san || '', black: history[i + 1]?.san || '' });
+        movePairs.push({ 
+            white: getSan(history[i]), 
+            black: getSan(history[i + 1]) 
+        });
     }
 
     movePairs.reverse().forEach((pair, index) => {
@@ -289,8 +256,9 @@ export function updateMoveHistory(history) {
 export function updateCapturedPieces(history) {
     const captured = { w: [], b: [] };
     for (const move of history) {
-        if (move.captured) {
-            const capturedColor = move.color === 'w' ? 'b' : 'w'; // Peça capturada é da cor oposta
+        // Aqui esperamos o objeto completo (verbose: true)
+        if (move && typeof move === 'object' && move.captured) {
+            const capturedColor = move.color === 'w' ? 'b' : 'w';
             captured[capturedColor].push(move.captured);
         }
     }
@@ -326,10 +294,6 @@ export function updateCapturedPieces(history) {
     }
 }
 
-/**
- * Exibe o modal para o jogador escolher a peça de promoção.
- * ATUALIZADO: Agora usa uiHandlers.onPromotionSelect
- */
 export function showPromotionModal(color) {
     if (!elements.promotionOptions || !elements.promotionModal) return;
 
@@ -373,7 +337,6 @@ export function playSound(soundType) {
     }
 }
 
-// Funções de controle de visibilidade de modais e elementos
 export function showGameContainer() { elements.gameContainer.classList.remove('hidden'); }
 export function hideGameContainer() { elements.gameContainer.classList.add('hidden'); }
 export function showColorSelectionModal() { elements.colorSelectionModal.classList.remove('hidden'); }
