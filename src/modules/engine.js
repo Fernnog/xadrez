@@ -1,5 +1,7 @@
 // src/modules/engine.js
 
+import { STOCKFISH_WORKER_PATH } from './config.js';
+
 let stockfish;
 let onMessageCallback;
 
@@ -7,10 +9,6 @@ export function initEngine(callback) {
     console.log("[Engine] Inicializando módulo...");
     onMessageCallback = callback;
     
-    // ATENÇÃO: O caminho aqui é crítico. Se estiver no GitHub Pages em um subdiretório,
-    // o caminho pode precisar ser ajustado.
-    const stockfishWorkerPath = 'src/assets/workers/stockfish.js'; 
-
     if (typeof(Worker) === "undefined") {
         console.error("[Engine ERROR] Web Workers não suportados neste navegador.");
         alert("Seu navegador não suporta Web Workers.");
@@ -18,12 +16,12 @@ export function initEngine(callback) {
     }
 
     try {
-        console.log(`[Engine] Tentando carregar worker de: ${stockfishWorkerPath}`);
-        stockfish = new Worker(stockfishWorkerPath);
+        console.log(`[Engine] Tentando carregar worker de: ${STOCKFISH_WORKER_PATH}`);
+        stockfish = new Worker(STOCKFISH_WORKER_PATH);
         
         stockfish.onmessage = (event) => {
-            // Loga apenas mensagens importantes para não travar o console com spam de 'info'
-            if (event.data.startsWith('bestmove') || event.data.includes('error')) {
+            // Loga mensagens críticas
+            if (event.data && (typeof event.data === 'string') && (event.data.startsWith('bestmove') || event.data.includes('error'))) {
                  console.log(`[Engine -> Main] ${event.data}`);
             }
             
@@ -34,8 +32,8 @@ export function initEngine(callback) {
 
         stockfish.onerror = (error) => {
             console.error("[Engine ERROR] Ocorreu um erro no Worker:", error);
-            console.error("Caminho tentado:", stockfishWorkerPath);
-            alert("Falha ao carregar o motor de xadrez (404 ou erro de script). Verifique o console.");
+            console.error("Caminho tentado:", STOCKFISH_WORKER_PATH);
+            alert("Falha ao carregar o motor de xadrez. Verifique sua conexão com a internet (usando CDN).");
         };
 
         sendMessage('uci');
@@ -57,6 +55,7 @@ export function requestMove(fen, skillLevel) {
     console.log(`[Engine] Solicitando cálculo para nível ${skillLevel}`);
     sendMessage(`position fen ${fen}`);
     sendMessage(`setoption name Skill Level value ${skillLevel}`);
+    // Ajuste de profundidade para resposta mais rápida no teste
     sendMessage('go depth 15'); 
 }
 

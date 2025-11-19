@@ -2,7 +2,6 @@
 
 /**
  * Mapeamento dos tipos de peça para seus símbolos Unicode.
- * @type {{w: object, b: object}}
  */
 export const PIECES = {
     w: { p: '♙', r: '♖', n: '♘', b: '♗', q: '♕', k: '♔' },
@@ -10,8 +9,7 @@ export const PIECES = {
 };
 
 /**
- * Valores relativos de cada peça, usados para calcular a diferença de material.
- * @type {object}
+ * Valores relativos de cada peça.
  */
 export const PIECE_VALUES = {
     p: 1,
@@ -22,13 +20,12 @@ export const PIECE_VALUES = {
 };
 
 /**
- * Lista das peças disponíveis para promoção de um peão.
- * @type {string[]}
+ * Lista das peças disponíveis para promoção.
  */
 export const PROMOTION_PIECES = ['q', 'r', 'b', 'n'];
 
 /**
  * Caminho para o worker do Stockfish.
- * @type {string}
+ * Mudamos para um CDN público e estável para garantir que carregue em qualquer ambiente.
  */
-export const STOCKFISH_WORKER_PATH = 'src/assets/workers/stockfish.js';
+export const STOCKFISH_WORKER_PATH = 'https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.0/stockfish.js';
