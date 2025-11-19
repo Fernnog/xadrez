@@ -1,12 +1,10 @@
 {
-  "name": "Xadrez: Humano vs. Stockfish",
+  "name": "Xadrez vs Stockfish",
   "short_name": "XadrezIA",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#1f2937",
   "theme_color": "#1f2937",
-  "description": "Jogue xadrez contra a IA Stockfish diretamente do seu navegador.",
-  "orientation": "portrait",
   "icons": [
     {
       "src": "img/icon-192.png",
