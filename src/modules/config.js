@@ -43,7 +43,7 @@ export const OPENING_FENS = {
     'italian_game': { 
         name: 'Jogo Italiano', 
         pgn: '1. e4 e5 2. Nf3 Nc6 3. Bc4',
-        fen: 'r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4' 
+        fen: 'r1bqk1nr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4' 
     }, 
     // 1. d4 d5 2. c4 e6 3. Nc3 Nf6
     'queens_gambit_declined': { 
