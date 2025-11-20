@@ -1,6 +1,6 @@
 // src/modules/ui.js
 
-import { PIECES, PIECE_VALUES, PROMOTION_PIECES, OPENING_FENS } from './config.js'; // Importação de OPENING_FENS adicionada
+import { PIECES, PIECE_VALUES, PROMOTION_PIECES, OPENING_FENS } from './config.js'; 
 
 // Centraliza a seleção de todos os elementos do DOM
 const elements = {
@@ -18,20 +18,18 @@ const elements = {
     modalTitle: document.getElementById('modalTitle'),
     modalMessage: document.getElementById('modalMessage'),
     copyPgnButton: document.getElementById('copyPgnButton'),
-    mainBoardContainer: document.querySelector('.w-full.max-w-[500px].flex.flex-col'), // Ajustado o seletor para o container correto
+    mainBoardContainer: document.querySelector('.flex.flex-col.w-full.lg\\:w-auto.items-center'),
     rankLabels: document.querySelector('.rank-labels'),
     fileLabels: document.querySelector('.file-labels'),
-    openingSelect: document.getElementById('openingSelect'), // NOVO: Referência ao seletor de aberturas
+    openingSelect: document.getElementById('openingSelect'), 
 };
 
-// Sons da interface (As variáveis de áudio foram movidas para audio.js, 
-// mas os objetos locais ainda precisam existir para usar playSound)
+// Sons da interface (Mantido por compatibilidade com o main.js que usa playSound)
 const audioMove = new Audio(''); 
 const audioStart = new Audio(''); 
 const audioGameOver = new Audio(''); 
 let isAudioInitialized = false;
 
-// Funções de áudio mantidas aqui para integração com o módulo audio.js
 function initAudio() {
     // Implementação real da inicialização deve vir de audio.js
 }
@@ -55,23 +53,28 @@ function safeAddEventListener(id, event, handler) {
 function populateOpeningSelector() {
     if (!elements.openingSelect) return;
     
-    // Limpa opções (apenas mantém a primeira padrão se houver)
+    // Limpa todas as opções existentes no HTML
     elements.openingSelect.innerHTML = '';
     
-    // Adiciona a opção padrão
-    const standardOption = document.createElement('option');
-    standardOption.value = 'standard';
-    standardOption.textContent = 'Jogo Padrão (Início)';
-    elements.openingSelect.appendChild(standardOption);
-
     // Adiciona as aberturas da configuração
     for (const key in OPENING_FENS) {
+        const data = OPENING_FENS[key];
+        const option = document.createElement('option');
+        option.value = key;
+        option.textContent = data.name;
+        
         if (key !== 'standard') {
-            const option = document.createElement('option');
-            option.value = key;
-            option.textContent = OPENING_FENS[key].name;
-            elements.openingSelect.appendChild(option);
+             // Determina o próximo a mover
+             const turn = data.fen.split(' ')[1] === 'w' ? '(Brancas Movem)' : '(Pretas Movem)';
+             option.textContent += ` ${turn}`;
         }
+        
+        // Define o valor padrão
+        if (key === 'standard') {
+            option.selected = true;
+        }
+
+        elements.openingSelect.appendChild(option);
     }
 }
 
@@ -83,7 +86,8 @@ export function registerUIHandlers(handlers) {
 
     const onStartWrapper = (callback) => {
         document.body.style.cursor = 'wait'; 
-        setTimeout(() => callback(), 10);
+        // Chamada direta, o engine.js agora lida com o estado de prontidão.
+        setTimeout(() => callback(), 10); 
     };
 
     safeAddEventListener('playWhiteButton', 'click', () => onStartWrapper(handlers.onPlayWhite));
@@ -97,7 +101,7 @@ export function registerUIHandlers(handlers) {
         elements.copyPgnButton.addEventListener('click', handlers.onCopyPgn);
     }
     
-    // NOVO: Popula o seletor de aberturas ao registrar handlers (no início)
+    // NOVO: Popula o seletor de aberturas
     populateOpeningSelector();
 }
 
@@ -106,7 +110,6 @@ export function getSkillLevel() {
     return el ? parseInt(el.value, 10) : 12;
 }
 
-// NOVO:
 export function getOpeningKey() {
     const el = document.getElementById('openingSelect');
     return el ? el.value : 'standard';
@@ -135,7 +138,6 @@ export function showContinueGameOption(isVisible) {
 }
 
 export function setupAndDisplayGame(playerColor) {
-    // CORRIGIDO: Garante que o cursor global é resetado após a seleção
     document.body.style.cursor = 'default'; 
     
     hideColorSelectionModal();
@@ -196,13 +198,10 @@ export function setupBoardOrientation(playerColor) {
         elements.board.classList.add('board-flipped');
         ranks.reverse().forEach(r => elements.rankLabels.innerHTML += `<span>${r}</span>`);
         files.reverse().forEach(f => elements.fileLabels.innerHTML += `<span>${f}</span>`);
-        // O posicionamento dos containers de peças capturadas é complexo no seu layout. 
-        // Manteremos a lógica original do HTML para evitar bugs de layout.
     } else {
         elements.board.classList.remove('board-flipped');
         ranks.forEach(r => elements.rankLabels.innerHTML += `<span>${r}</span>`);
         files.forEach(f => elements.fileLabels.innerHTML += `<span>${f}</span>`);
-        // Manter a lógica original do HTML
     }
 }
 
@@ -212,7 +211,7 @@ export function updateStatus(gameState, showGameOverCallback) {
     const safeGameOverCall = showGameOverCallback || showGameOverModal;
 
     if (gameState.isGameOver) {
-        playSound('gameOver');
+        // playSound('gameOver');
         if (gameState.isCheckmate) {
             const winner = gameState.turn === 'w' ? 'Pretas' : 'Brancas';
             statusText = `Xeque-mate! ${winner} vencem.`;
@@ -253,19 +252,14 @@ export function clearHighlights() {
     document.querySelectorAll('.valid-move-marker').forEach(el => el.remove());
 }
 
-/**
- * ATUALIZAÇÃO CRÍTICA: Correção da exibição do histórico.
- * Agora aceita tanto string simples ('e4') quanto objetos ({ san: 'e4' }).
- */
 export function updateMoveHistory(history) {
     elements.moveHistory.innerHTML = '';
     const movePairs = [];
     
-    // Helper para extrair a notação corretamente
     const getSan = (move) => {
         if (!move) return '';
-        if (typeof move === 'string') return move; // Se for string simples, retorna ela mesma
-        return move.san || ''; // Se for objeto, tenta pegar a propriedade .san
+        if (typeof move === 'string') return move;
+        return move.san || '';
     };
 
     for (let i = 0; i < history.length; i += 2) {
@@ -292,7 +286,6 @@ export function updateMoveHistory(history) {
 export function updateCapturedPieces(history) {
     const captured = { w: [], b: [] };
     for (const move of history) {
-        // Aqui esperamos o objeto completo (verbose: true)
         if (move && typeof move === 'object' && move.captured) {
             const capturedColor = move.color === 'w' ? 'b' : 'w';
             captured[capturedColor].push(move.captured);
@@ -355,13 +348,8 @@ export function hidePromotionModal() {
     elements.promotionModal.classList.add('hidden');
 }
 
-// Nota: A função playSound aqui está incompleta. O módulo audio.js deve ser importado e usado.
-// Mantendo a estrutura original para mínima interrupção do código existente.
 export function playSound(soundType) {
-    // initAudio(); // Removido para evitar conflito com o módulo audio
-    // Assume que o módulo audio.js está fazendo o trabalho pesado
-    // Como os áudios Move/Start/GameOver não estão na UI,
-    // o main.js que importa o módulo audio.js é o responsável por tocá-los.
+    // Implementação removida/comentada para usar o módulo audio.js diretamente no main.js
 }
 
 export function showGameContainer() { elements.gameContainer.classList.remove('hidden'); }

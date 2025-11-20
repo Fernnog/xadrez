@@ -4,10 +4,11 @@ import { STOCKFISH_WORKER_PATH } from './config.js';
 
 let stockfish;
 let onMessageCallback;
+let isEngineReady = false; // Flag de prontidão do motor
+let commandQueue = []; // Fila para comandos pendentes
 
 /**
  * Cria um Web Worker a partir de uma URL externa contornando CORS.
- * Baixa o script como texto/blob e cria uma URL local temporária.
  */
 async function createWorkerFromUrl(url) {
     try {
@@ -19,14 +20,40 @@ async function createWorkerFromUrl(url) {
         }
 
         const scriptContent = await response.text();
-        // Cria um Blob (arquivo na memória) com o conteúdo do script
         const blob = new Blob([scriptContent], { type: 'application/javascript' });
-        // Cria uma URL interna (blob:https://...) que o navegador considera segura
         return new Worker(URL.createObjectURL(blob));
     } catch (error) {
         throw error;
     }
 }
+
+/**
+ * Processa a fila de comandos pendentes.
+ */
+function processQueue() {
+    while (commandQueue.length > 0 && isEngineReady) {
+        const message = commandQueue.shift();
+        console.log(`[Main -> Engine] Executando comando da fila: ${message}`);
+        stockfish.postMessage(message);
+    }
+}
+
+function sendMessage(message) {
+    if (stockfish) {
+        // Se estiver pronto, envia imediatamente.
+        if (isEngineReady) {
+            console.log(`[Main -> Engine] Comando: ${message}`);
+            stockfish.postMessage(message);
+        } else {
+            // Se não estiver pronto (no início), enfileira.
+            console.log(`[Main -> Engine] Enfileirando comando (motor não pronto): ${message}`);
+            commandQueue.push(message);
+        }
+    } else {
+        console.warn("[Engine WARNING] Tentativa de envio falhou. Worker ainda carregando ou falhou.");
+    }
+}
+
 
 export function initEngine(callback) {
     console.log("[Engine] Inicializando módulo...");
@@ -38,20 +65,27 @@ export function initEngine(callback) {
         return;
     }
 
-    // Inicia o processo de carga (assíncrono)
     createWorkerFromUrl(STOCKFISH_WORKER_PATH)
         .then(worker => {
             stockfish = worker;
             console.log("[Engine] Worker criado com sucesso via Blob Proxy!");
 
             stockfish.onmessage = (event) => {
-                // Log de diagnóstico
-                if (event.data && (typeof event.data === 'string') && (event.data.startsWith('bestmove') || event.data.includes('error'))) {
-                     console.log(`[Engine -> Main] ${event.data}`);
+                const data = event.data;
+                
+                // CRÍTICO: Se o motor responde uciok, ele está pronto.
+                if (data === 'uciok') {
+                    isEngineReady = true;
+                    console.log("[Engine READY] Motor pronto. Processando fila de comandos.");
+                    processQueue();
+                }
+
+                if (data && (typeof data === 'string') && (data.startsWith('bestmove') || data.includes('error'))) {
+                     console.log(`[Engine -> Main] ${data}`);
                 }
                 
                 if (onMessageCallback) {
-                    onMessageCallback(event.data);
+                    onMessageCallback(data);
                 }
             };
 
@@ -59,8 +93,9 @@ export function initEngine(callback) {
                 console.error("[Engine ERROR] Falha interna no Worker:", error);
             };
 
-            // Envia comando inicial para confirmar que está vivo
+            // Comandos iniciais (enfileirados se a engine não estiver pronta)
             sendMessage('uci');
+            sendMessage('setoption name Use NNUE value true'); 
         })
         .catch(error => {
             console.error("[Engine ERROR] Falha fatal ao carregar Stockfish:", error);
@@ -68,24 +103,7 @@ export function initEngine(callback) {
         });
 }
 
-function sendMessage(message) {
-    if (stockfish) {
-        console.log(`[Main -> Engine] Comando: ${message}`);
-        stockfish.postMessage(message);
-    } else {
-        // Se o worker ainda estiver baixando (o fetch pode demorar uns segundos), avisamos
-        console.warn("[Engine WARNING] Tentativa de envio falhou. Worker ainda carregando ou falhou.");
-    }
-}
-
 export function requestMove(fen, skillLevel) {
-    // Se o stockfish ainda não carregou, tentamos novamente em breve
-    if (!stockfish) {
-        console.log("[Engine] Worker não pronto. Tentando novamente em 500ms...");
-        setTimeout(() => requestMove(fen, skillLevel), 500);
-        return;
-    }
-
     console.log(`[Engine] Solicitando cálculo para nível ${skillLevel}`);
     sendMessage(`position fen ${fen}`);
     sendMessage(`setoption name Skill Level value ${skillLevel}`);
@@ -95,6 +113,5 @@ export function requestMove(fen, skillLevel) {
 export function requestEvaluation(fen) {
     if (!stockfish) return;
     sendMessage(`position fen ${fen}`);
-    // OTIMIZAÇÃO: Reduzimos a profundidade para uma avaliação inicial mais rápida (P2)
     sendMessage('go depth 8'); 
 }
