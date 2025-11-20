@@ -22,7 +22,7 @@ const elements = {
     rankLabels: document.querySelector('.rank-labels'),
     fileLabels: document.querySelector('.file-labels'),
     openingSelect: document.getElementById('openingSelect'), 
-    // NOVO: Adiciona o botão Desfazer
+    // Elemento adicionado na correção anterior
     undoButton: document.getElementById('undoButton'),
 };
 
@@ -104,7 +104,7 @@ export function registerUIHandlers(handlers) {
     safeAddEventListener('continueGameButton', 'click', handlers.onContinueGame);
     safeAddEventListener('importPgnButton', 'click', handlers.onImportPgn);
     
-    // NOVO: Handler para desfazer
+    // NOVO: Handler para desfazer (Adicionado na correção anterior)
     safeAddEventListener('undoButton', 'click', handlers.onUndo); 
 
     if (elements.copyPgnButton) {
