@@ -20,6 +20,16 @@ export function loadPgn(pgn) {
     return game.load_pgn(pgn);
 }
 
+// NOVO:
+/**
+ * Carrega um jogo a partir de uma string FEN.
+ * @param {string} fen - A string FEN da posição.
+ * @returns {boolean} - True se o FEN foi carregado com sucesso, false caso contrário.
+ */
+export function loadFen(fen) {
+    return game.load(fen);
+}
+
 /**
  * Tenta realizar um movimento no tabuleiro.
  * Aceita notação de casa (e.g., 'e4') ou um objeto de movimento (para promoções).
