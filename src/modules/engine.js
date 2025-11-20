@@ -11,7 +11,18 @@ let commandQueue = []; // Fila para comandos pendentes
  * Cria um Web Worker a partir de uma URL externa contornando CORS.
  */
 async function createWorkerFromUrl(url) {
-// ... [CÓDIGO INALTERADO] ...
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const script = await response.text();
+        const blob = new Blob([script], { type: 'application/javascript' });
+        const blobUrl = URL.createObjectURL(blob);
+        return new Worker(blobUrl);
+    } catch (error) {
+        console.error('Failed to create worker from URL:', error);
+        alert('Não foi possível carregar o motor de xadrez. Verifique sua conexão com a internet e tente recarregar a página.');
+        throw error;
+    }
 }
 
 /**
@@ -48,7 +59,8 @@ export function initEngine(callback) {
     onMessageCallback = callback;
     
     if (typeof(Worker) === "undefined") {
-// ... [CÓDIGO INALTERADO] ...
+        alert("Desculpe, seu navegador não suporta Web Workers, que são necessários para rodar o Stockfish.");
+        return;
     }
 
     createWorkerFromUrl(STOCKFISH_WORKER_PATH)
@@ -91,17 +103,35 @@ export function initEngine(callback) {
             stockfish.postMessage('uci'); 
         })
         .catch(error => {
-// ... [CÓDIGO INALTERADO] ...
+            console.error("[Engine FATAL] Não foi possível carregar o worker do Stockfish:", error);
         });
 }
 
 /**
  * Solicita um movimento do Stockfish.
-// ... [CÓDIGO INALTERADO] ...
+ * @param {string} fen - A posição atual do tabuleiro em notação FEN.
+ * @param {number} skillLevel - O nível de dificuldade (0-20).
+ * @param {number} moveTime - O tempo em ms que a engine tem para pensar.
+ */
+export function requestMove(fen, skillLevel, moveTime = 1000) {
+    sendMessage(`position fen ${fen}`);
+    sendMessage(`setoption name Skill Level value ${skillLevel}`);
+    sendMessage(`go movetime ${moveTime}`);
 }
 
+/**
+ * Solicita uma avaliação da posição atual.
+ * @param {string} fen - A posição atual do tabuleiro em notação FEN.
+ */
 export function requestEvaluation(fen) {
-// ... [CÓDIGO INALTERADO] ...
+    if (isEngineReady) {
+        sendMessage(`position fen ${fen}`);
+        sendMessage('go depth 15');
+    } else {
+        // Adiciona na fila se a engine não estiver pronta.
+        commandQueue.push(`position fen ${fen}`);
+        commandQueue.push('go depth 15');
+    }
 }
 
 /**
