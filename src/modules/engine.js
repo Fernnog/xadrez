@@ -95,5 +95,6 @@ export function requestMove(fen, skillLevel) {
 export function requestEvaluation(fen) {
     if (!stockfish) return;
     sendMessage(`position fen ${fen}`);
-    sendMessage('go depth 12'); 
+    // OTIMIZAÇÃO: Reduzimos a profundidade para uma avaliação inicial mais rápida (P2)
+    sendMessage('go depth 8'); 
 }
