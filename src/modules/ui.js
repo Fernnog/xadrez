@@ -21,7 +21,8 @@ const elements = {
     mainBoardContainer: document.querySelector('.flex.flex-col.w-full.lg\\:w-auto.items-center'),
     rankLabels: document.querySelector('.rank-labels'),
     fileLabels: document.querySelector('.file-labels'),
-    openingSelect: document.getElementById('openingSelect'), 
+    openingSelect: document.getElementById('openingSelect'),
+    openingFilter: document.getElementById('openingFilter'),
     undoButton: document.getElementById('undoButton'),
 };
 
@@ -49,13 +50,16 @@ function safeAddEventListener(id, event, handler) {
 }
 
 /**
- * Preenche dinamicamente o seletor de aberturas, agora com grupos.
+ * Preenche dinamicamente o seletor de aberturas, com filtro opcional.
+ * @param {string} [filterText=''] - Texto para filtrar as aberturas.
  */
-function populateOpeningSelector() {
+function populateOpeningSelector(filterText = '') {
     if (!elements.openingSelect) return;
+    
+    const filter = filterText.toLowerCase().trim();
     elements.openingSelect.innerHTML = '';
 
-    // 1. Agrupa as aberturas pela nova propriedade 'category'
+    // 1. Agrupa as aberturas pela propriedade 'category'
     const groupedOpenings = {};
     for (const key in OPENING_FENS) {
         const opening = OPENING_FENS[key];
@@ -75,30 +79,42 @@ function populateOpeningSelector() {
         'Outras'
     ];
 
-    // 3. Cria e anexa os <optgroup> e <option>
+    let hasVisibleOptions = false;
+
+    // 3. Cria e anexa os <optgroup> e <option> filtrados
     categoryOrder.forEach(categoryName => {
         if (!groupedOpenings[categoryName]) return;
 
+        const openingsInCategory = groupedOpenings[categoryName];
+        
+        // Filtra as aberturas com base no texto de busca
+        const matchingOpenings = openingsInCategory.filter(data =>
+            filter === '' ||
+            data.name.toLowerCase().includes(filter) ||
+            data.pgn.toLowerCase().includes(filter)
+        );
+
+        if (matchingOpenings.length === 0) return; // Pula a categoria se não houver correspondências
+
+        hasVisibleOptions = true;
+
         // A categoria "Padrão" é uma opção normal, não um grupo
         if (categoryName === 'Padrão') {
-            const openingData = groupedOpenings[categoryName][0];
+            const openingData = matchingOpenings[0];
             const option = document.createElement('option');
             option.value = openingData.key;
             option.textContent = openingData.name;
-            option.selected = true; // Define como padrão
             elements.openingSelect.appendChild(option);
-            return; // Continua para a próxima categoria
+            return;
         }
         
         const optgroup = document.createElement('optgroup');
         optgroup.label = categoryName;
 
-        const openingsInCategory = groupedOpenings[categoryName];
-        openingsInCategory.forEach(data => {
+        matchingOpenings.forEach(data => {
             const option = document.createElement('option');
             option.value = data.key;
             
-            // Determina de quem é a vez para exibir no texto
             const fenParts = data.fen.split(' ');
             const turn = fenParts.length > 1 && fenParts[1] === 'w' ? '(Brancas Movem)' : '(Pretas Movem)';
             option.textContent = `${data.name} (${data.pgn}) ${turn}`;
@@ -108,6 +124,13 @@ function populateOpeningSelector() {
         
         elements.openingSelect.appendChild(optgroup);
     });
+
+    if (!hasVisibleOptions) {
+        const option = document.createElement('option');
+        option.disabled = true;
+        option.textContent = 'Nenhuma abertura encontrada';
+        elements.openingSelect.appendChild(option);
+    }
 }
 
 
@@ -118,7 +141,6 @@ export function registerUIHandlers(handlers) {
 
     const onStartWrapper = (callback) => {
         document.body.style.cursor = 'wait'; 
-        // Chamada direta, o engine.js agora lida com o estado de prontidão.
         setTimeout(() => callback(), 10); 
     };
 
@@ -129,13 +151,16 @@ export function registerUIHandlers(handlers) {
     safeAddEventListener('continueGameButton', 'click', handlers.onContinueGame);
     safeAddEventListener('importPgnButton', 'click', handlers.onImportPgn);
     
+    // Adiciona o listener para o filtro de aberturas
+    safeAddEventListener('openingFilter', 'input', (e) => populateOpeningSelector(e.target.value));
+
     safeAddEventListener('undoButton', 'click', handlers.onUndo); 
 
     if (elements.copyPgnButton) {
         elements.copyPgnButton.addEventListener('click', handlers.onCopyPgn);
     }
     
-    populateOpeningSelector();
+    populateOpeningSelector(); // Chamada inicial para preencher a lista
 }
 
 export function getSkillLevel() {
