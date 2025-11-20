@@ -29,6 +29,7 @@ function init() {
         onImportPgn: importPgnGame,
         onSquareClick: handleSquareClick,
         onPromotionSelect: handlePromotion,
+        onUndo: handleUndo,
     });
     
     engine.initEngine(handleEngineMessage);
@@ -46,19 +47,24 @@ function startGame(chosenColor) {
     
     game.reset(); 
 
-    // --- LÓGICA DE ABERTURA ---
+    // --- LÓGICA DE ABERTURA MODIFICADA ---
     const openingKey = ui.getOpeningKey();
     const openingData = OPENING_FENS[openingKey];
     
-    if (openingKey !== 'standard' && openingData) {
-        if (!game.loadFen(openingData.fen)) {
-            console.error("[Main] Falha ao carregar FEN da abertura. Resetando para padrão.");
-            game.reset(); 
+    if (openingKey !== 'standard' && openingData && openingData.pgn) {
+        // Tentamos carregar PGN para obter o histórico completo
+        if (!game.loadPgn(openingData.pgn)) {
+            console.error("[Main] Falha ao carregar PGN da abertura. Tentando FEN...");
+            // Fallback para FEN
+            if (!game.loadFen(openingData.fen)) {
+                 console.error("[Main] Falha ao carregar FEN. Resetando para padrão.");
+                 game.reset(); 
+            }
         } else {
             console.log(`[Main] Jogo iniciado com a abertura: ${openingData.name}`);
         }
     } 
-    // -------------------------
+    // ------------------------------------
     
     ui.setupAndDisplayGame(appState.playerColor);
     updateAllDisplays();
@@ -169,9 +175,12 @@ function handleEngineMessage(message) {
         if (scoreMatch) {
             const type = scoreMatch[1];
             let score = parseInt(scoreMatch[2], 10);
-            if (game.getTurn() === 'b' && type === 'cp') {
+            
+            // MELHORIA UX: Inverte o score se o jogador for preto, para exibir a vantagem do ponto de vista do jogador.
+            if (appState.playerColor === 'b' && type === 'cp') {
                 score = -score;
             }
+            
             ui.updateEvaluationDisplay(type, score);
         }
     }
@@ -259,6 +268,46 @@ function importPgnGame() {
     } else {
         alert("PGN inválido!");
     }
+}
+
+/**
+ * Manipula a ação de Desfazer (Undo).
+ * Desfaz o último par de lances (IA + Humano) ou apenas o último lance do Humano.
+ */
+function handleUndo() {
+    if (appState.isEngineTurn) {
+        // 1. Se a IA estiver pensando, pare imediatamente
+        engine.stopCalculation();
+        appState.isEngineTurn = false;
+        ui.setBoardCursor('pointer');
+    }
+    
+    const historyLength = game.getHistory().length;
+    
+    // 2. Lógica de Desfazer: Se o jogo tem pelo menos 2 lances (IA+Humano), desfaz 2. Senão, desfaz 1.
+    if (historyLength >= 2) {
+        game.undoMove(); // Desfaz o lance da IA
+        game.undoMove(); // Desfaz o lance do Humano
+        console.log("[Main] Desfeito o lance da IA e do Humano.");
+    } else if (historyLength === 1) {
+        game.undoMove(); // Desfaz apenas o lance do Humano
+        console.log("[Main] Desfeito o último lance (apenas um no histórico).");
+    } else {
+        console.log("[Main] Nenhum lance para desfazer.");
+        return;
+    }
+    
+    // 3. Atualiza o estado
+    appState.selectedSquare = null;
+    ui.clearHighlights();
+    utils.saveGameState(game, appState.playerColor, appState.skillLevel);
+    updateAllDisplays();
+    
+    // 4. Solicita nova avaliação para a posição revertida
+    engine.requestEvaluation(game.getFen());
+    
+    // 5. Garante que o usuário pode jogar
+    ui.setBoardCursor('pointer');
 }
 
 document.addEventListener('DOMContentLoaded', init);
