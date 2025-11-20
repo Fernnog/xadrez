@@ -112,8 +112,14 @@
                 </select>
             </div>
             
-            <!-- NOVO CAMPO DE SELEÇÃO DE ABERTURA - AGORA VAZIO -->
+            <!-- NOVO CAMPO DE FILTRO DE ABERTURA -->
             <div class="mt-4 text-left">
+                <label for="openingFilter" class="block text-sm font-bold text-gray-600 uppercase mb-2">Filtrar Abertura</label>
+                <input type="text" id="openingFilter" placeholder="Ex: Siciliana, Gambito..." class="w-full p-3 border border-gray-300 rounded-md text-lg bg-gray-50 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-inner">
+            </div>
+
+            <!-- CAMPO DE SELEÇÃO DE ABERTURA -->
+            <div class="mt-2 text-left">
                 <label for="openingSelect" class="block text-sm font-bold text-gray-600 uppercase mb-2">Escolha da Abertura</label>
                 <select id="openingSelect" class="w-full p-3 border border-gray-300 rounded-md text-lg bg-gray-50 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-inner">
                     <!-- As opções serão preenchidas dinamicamente pelo src/modules/ui.js -->
@@ -152,6 +158,11 @@
                 <!-- Opções inseridas via JS -->
             </div>
         </div>
+    </div>
+    
+    <!-- CARD DE VERSÃO -->
+    <div id="versionCard" class="fixed bottom-4 left-4 bg-gray-900 bg-opacity-80 text-gray-400 text-xs px-3 py-1 rounded-full shadow-lg z-20">
+        <span>v1.0.0</span>
     </div>
 
     <!-- Dependências JavaScript -->
