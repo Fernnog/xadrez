@@ -139,7 +139,7 @@ function init() {
 }
 
 // ==========================================================
-// 3. FUNÇÕES PRINCIPAIS E DE FLUXO (REORDENADAS ABAIXO)
+// 3. FUNÇÕES PRINCIPAIS E DE FLUXO (CONTÊM engine.resetEngineState())
 // ==========================================================
 
 function startGame(chosenColor) {
@@ -147,6 +147,7 @@ function startGame(chosenColor) {
     audio.initAudio();
     utils.clearGameState();
     
+    // CRÍTICO: Resetar o estado interno do motor UCI ANTES de definir a posição.
     engine.resetEngineState(); 
     
     appState.playerColor = chosenColor;
