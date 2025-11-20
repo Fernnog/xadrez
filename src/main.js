@@ -18,6 +18,108 @@ let appState = {
     pendingPromotionMove: null,
 };
 
+// ==========================================================
+// 1. FUNÇÕES DE CALLBACK (MOVIDAS PARA O TOPO PARA EVITAR REFERENCE ERROR)
+// ==========================================================
+
+function handleSquareClick(squareName) {
+    if (game.isGameOver() || appState.isEngineTurn) {
+        return;
+    }
+    
+    if (appState.selectedSquare) {
+        const move = { from: appState.selectedSquare, to: squareName };
+        
+        if (game.isPromotionMove(appState.selectedSquare, squareName)) {
+             appState.pendingPromotionMove = move;
+             ui.clearHighlights();
+             ui.showPromotionModal(appState.playerColor);
+             appState.selectedSquare = null;
+             return;
+        }
+        
+        const result = game.makeMove(move);
+        ui.clearHighlights();
+        
+        if (result) {
+            console.log(`[Main] Humano jogou: ${move.from}-${move.to}`);
+            audio.playSound(audio.audioMove);
+            updateAllDisplays();
+            utils.saveGameState(game, appState.playerColor, appState.skillLevel);
+            
+            if (!game.isGameOver()) {
+                requestEngineMove();
+            }
+        }
+        appState.selectedSquare = null;
+
+    } else {
+        const piece = game.getPiece(squareName);
+        if (piece && piece.color === appState.playerColor) {
+            appState.selectedSquare = squareName;
+            const validMoves = game.getValidMoves(squareName);
+            ui.highlightMoves(squareName, validMoves);
+        } else {
+            appState.selectedSquare = null;
+        }
+    }
+}
+
+function handlePromotion(pieceType) {
+    ui.hidePromotionModal();
+    if (!appState.pendingPromotionMove) return;
+
+    const move = { ...appState.pendingPromotionMove, promotion: pieceType };
+    const result = game.makeMove(move);
+    appState.pendingPromotionMove = null;
+
+    if (result) {
+        audio.playSound(audio.audioMove);
+        updateAllDisplays();
+        utils.saveGameState(game, appState.playerColor, appState.skillLevel);
+        if (!game.isGameOver()) {
+            requestEngineMove();
+        }
+    }
+}
+
+/**
+ * Manipula a ação de Desfazer (Undo).
+ */
+function handleUndo() {
+    if (appState.isEngineTurn) {
+        engine.stopCalculation();
+        appState.isEngineTurn = false;
+        ui.setBoardCursor('pointer');
+    }
+    
+    const historyLength = game.getHistory().length;
+    
+    if (historyLength >= 2) {
+        game.undoMove(); 
+        game.undoMove(); 
+        console.log("[Main] Desfeito o lance da IA e do Humano.");
+    } else if (historyLength === 1) {
+        game.undoMove(); 
+        console.log("[Main] Desfeito o último lance (apenas um no histórico).");
+    } else {
+        console.log("[Main] Nenhum lance para desfazer.");
+        return;
+    }
+    
+    appState.selectedSquare = null;
+    ui.clearHighlights();
+    utils.saveGameState(game, appState.playerColor, appState.skillLevel);
+    updateAllDisplays();
+    
+    engine.requestEvaluation(game.getFen());
+    ui.setBoardCursor('pointer');
+}
+
+// ==========================================================
+// 2. FUNÇÃO INIT (AGORA REFERENCIA FUNÇÕES JÁ DEFINIDAS)
+// ==========================================================
+
 function init() {
     console.log("[Main] Inicializando aplicação...");
     ui.registerUIHandlers({
@@ -29,19 +131,22 @@ function init() {
         onImportPgn: importPgnGame,
         onSquareClick: handleSquareClick,
         onPromotionSelect: handlePromotion,
-        onUndo: handleUndo, // Implementado na correção anterior
+        onUndo: handleUndo,
     });
     
     engine.initEngine(handleEngineMessage);
     checkForSavedGame();
 }
 
+// ==========================================================
+// 3. FUNÇÕES PRINCIPAIS E DE FLUXO (REORDENADAS ABAIXO)
+// ==========================================================
+
 function startGame(chosenColor) {
     console.log(`[Main] Iniciando jogo. Cor do jogador: ${chosenColor}`);
     audio.initAudio();
     utils.clearGameState();
     
-    // NOVO: Resetar o estado interno do motor UCI
     engine.resetEngineState(); 
     
     appState.playerColor = chosenColor;
@@ -50,15 +155,12 @@ function startGame(chosenColor) {
     
     game.reset(); 
 
-    // --- LÓGICA DE ABERTURA MODIFICADA (Mantida da correção anterior) ---
     const openingKey = ui.getOpeningKey();
     const openingData = OPENING_FENS[openingKey];
     
     if (openingKey !== 'standard' && openingData && openingData.pgn) {
-        // Tentamos carregar PGN para obter o histórico completo
         if (!game.loadPgn(openingData.pgn)) {
             console.error("[Main] Falha ao carregar PGN da abertura. Tentando FEN...");
-            // Fallback para FEN
             if (!game.loadFen(openingData.fen)) {
                  console.error("[Main] Falha ao carregar FEN. Resetando para padrão.");
                  game.reset(); 
@@ -67,29 +169,22 @@ function startGame(chosenColor) {
             console.log(`[Main] Jogo iniciado com a abertura: ${openingData.name}`);
         }
     } 
-    // ------------------------------------
     
     ui.setupAndDisplayGame(appState.playerColor);
     updateAllDisplays();
 
-    // 1. Inicia a avaliação imediata (para feedback visual)
     if (!game.isGameOver()) {
         engine.requestEvaluation(game.getFen());
     }
 
-    // 2. Verifica se é a vez da IA
     if (game.getTurn() !== appState.playerColor) {
         console.log("[Main] É a vez da IA. Solicitando lance...");
-        
-        // Se for o lance inicial da IA, passamos true
         requestEngineMove(true); 
     } else {
         ui.setBoardCursor('pointer'); 
         console.log("[Main] É a vez do Humano. Aguardando clique...");
     }
 }
-
-// ... [handleSquareClick, handlePromotion] ...
 
 function handleEngineMessage(message) {
     if (message.startsWith('bestmove')) {
@@ -139,10 +234,8 @@ function requestEngineMove(isStartingMove = false) {
     // Pequeno delay visual
     setTimeout(() => {
         if (isStartingMove) {
-            // Se for o lance inicial, pedimos um 'movetime' muito baixo (50ms) para garantir a jogada imediata.
             engine.requestMove(game.getFen(), appState.skillLevel, 50); 
         } else {
-            // Para lances normais, usamos o padrão (depth 15)
             engine.requestMove(game.getFen(), appState.skillLevel);
         }
     }, 250);
@@ -179,7 +272,6 @@ function resumeGame() {
     if (savedState && game.loadPgn(savedState.pgn)) {
         audio.initAudio();
         
-        // NOVO: Resetar o estado interno do motor UCI
         engine.resetEngineState();
         
         appState.playerColor = savedState.playerColor;
@@ -205,7 +297,6 @@ function importPgnGame() {
     if (pgn && game.loadPgn(pgn)) {
         audio.initAudio();
         
-        // NOVO: Resetar o estado interno do motor UCI após importação
         engine.resetEngineState(); 
         
         const turn = game.getTurn();
@@ -222,44 +313,5 @@ function importPgnGame() {
     }
 }
 
-/**
- * Manipula a ação de Desfazer (Undo).
- * Desfaz o último par de lances (IA + Humano) ou apenas o último lance do Humano.
- */
-function handleUndo() {
-    if (appState.isEngineTurn) {
-        // 1. Se a IA estiver pensando, pare imediatamente
-        engine.stopCalculation();
-        appState.isEngineTurn = false;
-        ui.setBoardCursor('pointer');
-    }
-    
-    const historyLength = game.getHistory().length;
-    
-    // 2. Lógica de Desfazer: Se o jogo tem pelo menos 2 lances (IA+Humano), desfaz 2. Senão, desfaz 1.
-    if (historyLength >= 2) {
-        game.undoMove(); // Desfaz o lance da IA
-        game.undoMove(); // Desfaz o lance do Humano
-        console.log("[Main] Desfeito o lance da IA e do Humano.");
-    } else if (historyLength === 1) {
-        game.undoMove(); // Desfaz apenas o lance do Humano
-        console.log("[Main] Desfeito o último lance (apenas um no histórico).");
-    } else {
-        console.log("[Main] Nenhum lance para desfazer.");
-        return;
-    }
-    
-    // 3. Atualiza o estado
-    appState.selectedSquare = null;
-    ui.clearHighlights();
-    utils.saveGameState(game, appState.playerColor, appState.skillLevel);
-    updateAllDisplays();
-    
-    // 4. Solicita nova avaliação para a posição revertida
-    engine.requestEvaluation(game.getFen());
-    
-    // 5. Garante que o usuário pode jogar
-    ui.setBoardCursor('pointer');
-}
 
 document.addEventListener('DOMContentLoaded', init);
