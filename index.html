@@ -77,7 +77,7 @@
 
     </div>
     
-    <!-- MODAL DE SELEÇÃO DE COR (CORRIGIDO: FUNDO BRANCO) -->
+    <!-- MODAL DE SELEÇÃO DE COR -->
     <div id="colorSelectionModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
         <div class="bg-white text-gray-900 p-8 rounded-lg shadow-xl text-center max-w-md w-full">
             <div id="continueGameContainer" class="hidden mb-6 pb-6 border-b border-gray-300">
@@ -92,6 +92,8 @@
                 <button id="playWhiteButton" class="btn-play-white px-8 py-4 font-bold rounded-lg text-5xl transition-all transform hover:scale-110 shadow-md border border-gray-300">♟</button>
                 <button id="playBlackButton" class="btn-play-black px-8 py-4 font-bold rounded-lg text-5xl transition-all transform hover:scale-110 shadow-md border border-gray-300">♟</button>
             </div>
+            
+            <!-- SELEÇÃO DE DIFICULDADE -->
             <div class="mt-4 text-left">
                 <label for="difficultyLevel" class="block text-sm font-bold text-gray-600 uppercase mb-2">Nível de Dificuldade</label>
                 <select id="difficultyLevel" class="w-full p-3 border border-gray-300 rounded-md text-lg bg-gray-50 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-inner">
@@ -101,21 +103,15 @@
                     <option value="20">Mestre (Força Máxima)</option>
                 </select>
             </div>
-
-            <!-- NOVO CAMPO DE SELEÇÃO DE ABERTURA INSERIDO AQUI -->
+            
+            <!-- NOVO CAMPO DE SELEÇÃO DE ABERTURA - AGORA VAZIO -->
             <div class="mt-4 text-left">
                 <label for="openingSelect" class="block text-sm font-bold text-gray-600 uppercase mb-2">Escolha da Abertura</label>
                 <select id="openingSelect" class="w-full p-3 border border-gray-300 rounded-md text-lg bg-gray-50 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-inner">
-                    <option value="standard">Jogo Padrão (Início)</option>
-                    <option value="italian_game">Jogo Italiano (Agressivo)</option>
-                    <option value="queens_gambit_declined">Gambito da Rainha Recusado</option>
-                    <option value="nimzo_indian">Defesa Nimzo-Índia (Sólida)</option>
-                    <option value="english_opening">Abertura Inglesa (Flanco)</option>
-                    <option value="caro_kann">Defesa Caro-Kann (Sistemática)</option>
+                    <!-- As opções serão preenchidas dinamicamente pelo src/modules/ui.js -->
                 </select>
-                <p class="text-xs text-gray-500 mt-1">O jogo começará nesta posição, e o Stockfish fará o próximo lance.</p>
+                <p class="text-xs text-gray-500 mt-1">O jogo começará nesta posição, e o Stockfish fará o próximo lance, se for a vez dele.</p>
             </div>
-            <!-- FIM NOVO CAMPO -->
 
             <div id="importPgnContainer" class="mt-6 pt-6 border-t border-gray-300">
                 <a href="#" onclick="document.getElementById('pgnInputArea').classList.toggle('hidden'); return false;" class="text-blue-600 hover:underline font-semibold text-sm">
