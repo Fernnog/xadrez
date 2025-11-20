@@ -190,3 +190,12 @@ body {
     color: #a0aec0; 
     margin-left: 0.5rem; 
 }
+
+#versionCard {
+    transition: all 0.2s ease-in-out;
+}
+
+#versionCard:hover {
+    background-color: rgba(55, 65, 81, 0.9); /* bg-gray-700 com opacidade */
+    cursor: help;
+}
