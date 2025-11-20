@@ -103,11 +103,24 @@ export function initEngine(callback) {
         });
 }
 
-export function requestMove(fen, skillLevel) {
+/**
+ * Solicita um movimento do Stockfish.
+ * @param {string} fen - Posição atual.
+ * @param {number} skillLevel - Nível de dificuldade.
+ * @param {number} [timeLimit=0] - Se > 0, usa go movetime [ms] em vez de go depth.
+ */
+export function requestMove(fen, skillLevel, timeLimit = 0) {
     console.log(`[Engine] Solicitando cálculo para nível ${skillLevel}`);
     sendMessage(`position fen ${fen}`);
     sendMessage(`setoption name Skill Level value ${skillLevel}`);
-    sendMessage('go depth 15'); 
+    
+    if (timeLimit > 0) {
+        // Usa tempo fixo para forçar um lance rápido no início
+        sendMessage(`go movetime ${timeLimit}`);
+    } else {
+        // Usa profundidade padrão para lances normais
+        sendMessage('go depth 15'); 
+    }
 }
 
 export function requestEvaluation(fen) {

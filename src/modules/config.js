@@ -28,6 +28,8 @@ export const PROMOTION_PIECES = ['q', 'r', 'b', 'n'];
 
 /**
  * Openings pre-definidas (FEN após alguns lances).
+ * Todos os FENs abaixo indicam que é a vez das Brancas ('w') moverem,
+ * o que é ideal para o cenário onde o jogador escolhe Pretas (a IA joga Brancas).
  * FEN: Posição | Turno | Castling | En Passant | Halfmove clock | Fullmove number
  */
 export const OPENING_FENS = {
