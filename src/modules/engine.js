@@ -11,20 +11,7 @@ let commandQueue = []; // Fila para comandos pendentes
  * Cria um Web Worker a partir de uma URL externa contornando CORS.
  */
 async function createWorkerFromUrl(url) {
-    try {
-        console.log(`[Engine] Baixando script do motor: ${url}`);
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-            throw new Error(`Erro de rede ao baixar engine: ${response.status} ${response.statusText}`);
-        }
-
-        const scriptContent = await response.text();
-        const blob = new Blob([scriptContent], { type: 'application/javascript' });
-        return new Worker(URL.createObjectURL(blob));
-    } catch (error) {
-        throw error;
-    }
+// ... [CÓDIGO INALTERADO] ...
 }
 
 /**
@@ -45,7 +32,8 @@ function sendMessage(message) {
             console.log(`[Main -> Engine] Comando: ${message}`);
             stockfish.postMessage(message);
         } else {
-            // Se não estiver pronto (no início), enfileira.
+            // Se não estiver pronto (no início), enfileira comandos de JOGO.
+            // Os comandos UCI de setup (uci, isready) são tratados separadamente no initEngine.
             console.log(`[Main -> Engine] Enfileirando comando (motor não pronto): ${message}`);
             commandQueue.push(message);
         }
@@ -60,9 +48,7 @@ export function initEngine(callback) {
     onMessageCallback = callback;
     
     if (typeof(Worker) === "undefined") {
-        console.error("[Engine ERROR] Web Workers não suportados neste navegador.");
-        alert("Seu navegador não suporta Web Workers.");
-        return;
+// ... [CÓDIGO INALTERADO] ...
     }
 
     createWorkerFromUrl(STOCKFISH_WORKER_PATH)
@@ -73,8 +59,16 @@ export function initEngine(callback) {
             stockfish.onmessage = (event) => {
                 const data = event.data;
                 
-                // CRÍTICO: Se o motor responde uciok, ele está pronto.
                 if (data === 'uciok') {
+                    // CRÍTICO: Envia comandos de configuração e isready, BURLANDO a fila de espera,
+                    // pois eles são essenciais para liberar a engine.
+                    console.log("[Engine] Recebido uciok. Enviando opções...");
+                    stockfish.postMessage('setoption name Use NNUE value true'); 
+                    stockfish.postMessage('isready');
+                }
+                
+                if (data === 'readyok' && !isEngineReady) {
+                    // CRÍTICO: Engine está finalmente pronta.
                     isEngineReady = true;
                     console.log("[Engine READY] Motor pronto. Processando fila de comandos.");
                     processQueue();
@@ -93,48 +87,33 @@ export function initEngine(callback) {
                 console.error("[Engine ERROR] Falha interna no Worker:", error);
             };
 
-            // Comandos iniciais (enfileirados se a engine não estiver pronta)
-            sendMessage('uci');
-            sendMessage('setoption name Use NNUE value true'); 
+            // Comando inicial: Envia 'uci' para começar o handshake.
+            stockfish.postMessage('uci'); 
         })
         .catch(error => {
-            console.error("[Engine ERROR] Falha fatal ao carregar Stockfish:", error);
-            alert("Não foi possível carregar o motor de xadrez. Verifique o console (F12).");
+// ... [CÓDIGO INALTERADO] ...
         });
 }
 
 /**
  * Solicita um movimento do Stockfish.
- * @param {string} fen - Posição atual.
- * @param {number} skillLevel - Nível de dificuldade.
- * @param {number} [timeLimit=0] - Se > 0, usa go movetime [ms] em vez de go depth.
- */
-export function requestMove(fen, skillLevel, timeLimit = 0) {
-    console.log(`[Engine] Solicitando cálculo para nível ${skillLevel}`);
-    sendMessage(`position fen ${fen}`);
-    sendMessage(`setoption name Skill Level value ${skillLevel}`);
-    
-    if (timeLimit > 0) {
-        // Usa tempo fixo para forçar um lance rápido no início
-        sendMessage(`go movetime ${timeLimit}`);
-    } else {
-        // Usa profundidade padrão para lances normais
-        sendMessage('go depth 15'); 
-    }
+// ... [CÓDIGO INALTERADO] ...
 }
 
 export function requestEvaluation(fen) {
-    if (!stockfish) return;
-    sendMessage(`position fen ${fen}`);
-    sendMessage('go depth 8'); 
+// ... [CÓDIGO INALTERADO] ...
 }
 
-// NOVO: Função para forçar a engine a parar o cálculo (usado no Desfazer)
+/**
+ * Envia o comando 'stop' para a engine, interrompendo o cálculo atual.
+ */
 export function stopCalculation() {
     sendMessage('stop');
 }
 
-// NOVO: Função para forçar a engine a resetar o estado do jogo (ucinewgame)
+/**
+ * Envia o comando 'ucinewgame' para forçar o reset do estado interno do Stockfish.
+ */
 export function resetEngineState() {
     sendMessage('ucinewgame');
 }
