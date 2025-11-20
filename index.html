@@ -102,6 +102,21 @@
                 </select>
             </div>
 
+            <!-- NOVO CAMPO DE SELEÇÃO DE ABERTURA INSERIDO AQUI -->
+            <div class="mt-4 text-left">
+                <label for="openingSelect" class="block text-sm font-bold text-gray-600 uppercase mb-2">Escolha da Abertura</label>
+                <select id="openingSelect" class="w-full p-3 border border-gray-300 rounded-md text-lg bg-gray-50 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-inner">
+                    <option value="standard">Jogo Padrão (Início)</option>
+                    <option value="italian_game">Jogo Italiano (Agressivo)</option>
+                    <option value="queens_gambit_declined">Gambito da Rainha Recusado</option>
+                    <option value="nimzo_indian">Defesa Nimzo-Índia (Sólida)</option>
+                    <option value="english_opening">Abertura Inglesa (Flanco)</option>
+                    <option value="caro_kann">Defesa Caro-Kann (Sistemática)</option>
+                </select>
+                <p class="text-xs text-gray-500 mt-1">O jogo começará nesta posição, e o Stockfish fará o próximo lance.</p>
+            </div>
+            <!-- FIM NOVO CAMPO -->
+
             <div id="importPgnContainer" class="mt-6 pt-6 border-t border-gray-300">
                 <a href="#" onclick="document.getElementById('pgnInputArea').classList.toggle('hidden'); return false;" class="text-blue-600 hover:underline font-semibold text-sm">
                     Ou Importe um PGN
