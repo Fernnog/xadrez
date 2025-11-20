@@ -52,7 +52,25 @@ export const OPENING_FENS = {
         pgn: '1. e4 e5 2. Nf3 Nc6 3. Bc4',
         fen: 'r1bqk1nr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4',
         category: 'Aberturas de Peão Rei (1. e4)'
-    }, 
+    },
+    'petroff_defense': {
+        name: 'Defesa Petroff',
+        pgn: '1. e4 e5 2. Nf3 Nf6',
+        fen: 'rnbqkb1r/pppp1ppp/5n2/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3',
+        category: 'Aberturas de Peão Rei (1. e4)'
+    },
+    'scotch_game': {
+        name: 'Abertura Escocesa',
+        pgn: '1. e4 e5 2. Nf3 Nc6 3. d4',
+        fen: 'r1bqkbnr/pppp1ppp/2n5/4p3/3PP3/5N2/PPP2PPP/RNBQKB1R b KQkq - 0 3',
+        category: 'Aberturas de Peão Rei (1. e4)'
+    },
+    'scandinavian_defense': {
+        name: 'Defesa Escandinava',
+        pgn: '1. e4 d5',
+        fen: 'rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2',
+        category: 'Aberturas de Peão Rei (1. e4)'
+    },
     'sicilian_defense': {
         name: 'Defesa Siciliana (Aberta)',
         pgn: '1. e4 c5 2. Nf3 d6 3. d4',
@@ -70,13 +88,31 @@ export const OPENING_FENS = {
         pgn: '1. e4 c6 2. d4 d5',
         fen: 'rnbqkbnr/pp2pppp/2p5/3p4/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3',
         category: 'Aberturas de Peão Rei (1. e4)'
-    }, 
+    },
+    'pirc_defense': {
+        name: 'Defesa Pirc',
+        pgn: '1. e4 d6 2. d4 Nf6 3. Nc3 g6',
+        fen: 'rnbqkb1r/ppp1pp1p/3p1np1/8/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 0 4',
+        category: 'Aberturas de Peão Rei (1. e4)'
+    },
+    'modern_defense': {
+        name: 'Defesa Moderna',
+        pgn: '1. e4 g6',
+        fen: 'rnbqkbnr/pppppp1p/6p1/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2',
+        category: 'Aberturas de Peão Rei (1. e4)'
+    },
+    'alekhine_defense': {
+        name: 'Defesa Alekhine',
+        pgn: '1. e4 Nf6',
+        fen: 'rnbqkb1r/pppppppp/5n2/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2',
+        category: 'Aberturas de Peão Rei (1. e4)'
+    },
 
     // --- ABERTURAS DE PEÃO DAMA (1. d4) ---
     'queens_gambit_declined': { 
         name: 'Gambito da Rainha Recusado', 
-        pgn: '1. d4 d5 2. c4 e6 3. Nc3 Nf6',
-        fen: 'rnbqkb1r/ppp2ppp/4pn2/3p4/2PP4/2N5/PP2PPPP/R1BQKBNR w KQkq - 0 4',
+        pgn: '1. d4 d5 2. c4 e6',
+        fen: 'rnbqkbnr/ppp2ppp/4p3/3p4/2PP4/8/PP2PPPP/R1BQKBNR w KQkq - 0 3',
         category: 'Aberturas de Peão Dama (1. d4)'
     },
     'queens_gambit_accepted': {
@@ -103,14 +139,62 @@ export const OPENING_FENS = {
         fen: 'rnbqk2r/pppp1ppp/4pn2/8/2PP4/2N5/PP2PPPP/R1BQKBNR w KQkq - 0 4',
         category: 'Aberturas de Peão Dama (1. d4)'
     },
+    'grunfeld_defense': {
+        name: 'Defesa Grünfeld',
+        pgn: '1. d4 Nf6 2. c4 g6 3. Nc3 d5',
+        fen: 'rnbqkb1r/ppp1pp1p/5np1/3p4/2PP4/2N5/PP2PPPP/R1BQKBNR w KQkq - 0 4',
+        category: 'Aberturas de Peão Dama (1. d4)'
+    },
+    'queens_indian_defense': {
+        name: 'Defesa Índia da Dama',
+        pgn: '1. d4 Nf6 2. c4 e6 3. Nf3 b6',
+        fen: 'rnbqkb1r/p1pp1ppp/1p2pn2/8/2PP4/5N2/PP2PPPP/RNBQKB1R w KQkq - 0 4',
+        category: 'Aberturas de Peão Dama (1. d4)'
+    },
+    'london_system': {
+        name: 'Sistema London',
+        pgn: '1. d4 d5 2. Nf3 Nf6 3. Bf4',
+        fen: 'rnbqkb1r/ppp1pppp/5n2/3p4/3P1B2/5N2/PPP1PPPP/RN1QKB1R w KQkq - 2 4',
+        category: 'Aberturas de Peão Dama (1. d4)'
+    },
+    'benoni_defense': {
+        name: 'Defesa Benoni',
+        pgn: '1. d4 Nf6 2. c4 c5 3. d5',
+        fen: 'rnbqkb1r/pp1ppppp/5n2/2pP4/2P5/8/PP2PPPP/RNBQKBNR w KQkq - 0 4',
+        category: 'Aberturas de Peão Dama (1. d4)'
+    },
+    'trompowsky_attack': {
+        name: 'Ataque Trompowsky',
+        pgn: '1. d4 Nf6 2. Bg5',
+        fen: 'rnbqkb1r/pppppppp/5n2/6B1/3P4/8/PPP1PPPP/RN1QKBNR b KQkq - 1 2',
+        category: 'Aberturas de Peão Dama (1. d4)'
+    },
     
     // --- OUTRAS ABERTURAS ---
     'english_opening': { 
-        name: 'Abertura Inglesa (Simétrica)', 
-        pgn: '1. c4 e5',
-        fen: 'rnbqkbnr/pppp1ppp/8/4p3/2P5/8/PP1PPPPP/RNBQKBNR w KQkq - 0 2',
+        name: 'Abertura Inglesa', 
+        pgn: '1. c4',
+        fen: 'rnbqkbnr/pppppppp/8/8/2P5/8/PP1PPPPP/RNBQKBNR b KQkq - 0 1',
         category: 'Outras Aberturas'
-    } 
+    },
+    'reti_opening': {
+        name: 'Abertura Réti',
+        pgn: '1. Nf3 d5',
+        fen: 'rnbqkbnr/ppp1pppp/8/3p4/8/5N2/PPPPPPPP/RNBQKB1R w KQkq - 0 2',
+        category: 'Outras Aberturas'
+    },
+    'dutch_defense': {
+        name: 'Defesa Holandesa',
+        pgn: '1. d4 f5',
+        fen: 'rnbqkbnr/ppppp1pp/8/5p2/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2',
+        category: 'Outras Aberturas'
+    },
+    'catalan_opening': {
+        name: 'Abertura Catalã',
+        pgn: '1. d4 Nf6 2. c4 e6 3. g3',
+        fen: 'rnbqkb1r/pppp1ppp/4pn2/8/2PP4/6P1/PP2PP1P/RNBQKBNR w KQkq - 0 4',
+        category: 'Outras Aberturas'
+    }
 };
 
 
