@@ -22,6 +22,8 @@ const elements = {
     rankLabels: document.querySelector('.rank-labels'),
     fileLabels: document.querySelector('.file-labels'),
     openingSelect: document.getElementById('openingSelect'), 
+    // NOVO: Adiciona o botão Desfazer
+    undoButton: document.getElementById('undoButton'),
 };
 
 // Sons da interface (Mantido por compatibilidade com o main.js que usa playSound)
@@ -61,12 +63,17 @@ function populateOpeningSelector() {
         const data = OPENING_FENS[key];
         const option = document.createElement('option');
         option.value = key;
-        option.textContent = data.name;
         
         if (key !== 'standard') {
-             // Determina o próximo a mover
-             const turn = data.fen.split(' ')[1] === 'w' ? '(Brancas Movem)' : '(Pretas Movem)';
+             // NOVO: Adiciona a sequência de lances (PGN) no label
+             option.textContent = `${data.name} (${data.pgn})`; 
+             
+             // O FEN deve ser usado para determinar o próximo a mover
+             const fenParts = data.fen.split(' ');
+             const turn = fenParts.length > 1 && fenParts[1] === 'w' ? '(Brancas Movem)' : '(Pretas Movem)';
              option.textContent += ` ${turn}`;
+        } else {
+             option.textContent = data.name;
         }
         
         // Define o valor padrão
@@ -96,6 +103,9 @@ export function registerUIHandlers(handlers) {
     safeAddEventListener('modalResetButton', 'click', handlers.onResetGame);
     safeAddEventListener('continueGameButton', 'click', handlers.onContinueGame);
     safeAddEventListener('importPgnButton', 'click', handlers.onImportPgn);
+    
+    // NOVO: Handler para desfazer
+    safeAddEventListener('undoButton', 'click', handlers.onUndo); 
 
     if (elements.copyPgnButton) {
         elements.copyPgnButton.addEventListener('click', handlers.onCopyPgn);

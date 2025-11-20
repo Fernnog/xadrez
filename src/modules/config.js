@@ -27,26 +27,48 @@ export const PIECE_VALUES = {
 export const PROMOTION_PIECES = ['q', 'r', 'b', 'n'];
 
 /**
- * Openings pre-definidas (FEN após alguns lances).
- * Todos os FENs abaixo indicam que é a vez das Brancas ('w') moverem,
- * o que é ideal para o cenário onde o jogador escolhe Pretas (a IA joga Brancas).
- * FEN: Posição | Turno | Castling | En Passant | Halfmove clock | Fullmove number
+ * Openings pre-definidas (PGN após alguns lances).
+ * A PGN garante que o histórico de lances seja carregado corretamente.
  */
 export const OPENING_FENS = {
     // Padrão
-    'standard': { name: 'Jogo Padrão (Início)', fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1' },
+    'standard': { 
+        name: 'Jogo Padrão (Início)', 
+        pgn: '', 
+        fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1' 
+    },
     
     // Aberturas Comuns (Brancas movem)
     // 1. e4 e5 2. Nf3 Nc6 3. Bc4
-    'italian_game': { name: 'Jogo Italiano', fen: 'r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4' }, 
+    'italian_game': { 
+        name: 'Jogo Italiano', 
+        pgn: '1. e4 e5 2. Nf3 Nc6 3. Bc4',
+        fen: 'r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4' 
+    }, 
     // 1. d4 d5 2. c4 e6 3. Nc3 Nf6
-    'queens_gambit_declined': { name: 'Gambito da Rainha Recusado', fen: 'rnbqkb1r/ppp2ppp/4pn2/3p4/2PP4/2N5/PP2PPPP/R1BQKBNR w KQkq - 0 4' },
+    'queens_gambit_declined': { 
+        name: 'Gambito da Rainha Recusado', 
+        pgn: '1. d4 d5 2. c4 e6 3. Nc3 Nf6',
+        fen: 'rnbqkb1r/ppp2ppp/4pn2/3p4/2PP4/2N5/PP2PPPP/R1BQKBNR w KQkq - 0 4' 
+    },
     // 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4
-    'nimzo_indian': { name: 'Defesa Nimzo-Índia', fen: 'rnbqk2r/pppp1ppp/4pn2/8/2PP4/2N5/PP2PPPP/R1BQKBNR w KQkq - 0 4' }, 
+    'nimzo_indian': { 
+        name: 'Defesa Nimzo-Índia', 
+        pgn: '1. d4 Nf6 2. c4 e6 3. Nc3 Bb4',
+        fen: 'rnbqk2r/pppp1ppp/4pn2/8/2PP4/2N5/PP2PPPP/R1BQKBNR w KQkq - 0 4' 
+    }, 
     // 1. c4 e5
-    'english_opening': { name: 'Abertura Inglesa (Simétrica)', fen: 'rnbqkbnr/pppp1ppp/8/4p3/2P5/8/PP1PPPPP/RNBQKBNR w KQkq - 0 2' }, 
+    'english_opening': { 
+        name: 'Abertura Inglesa (Simétrica)', 
+        pgn: '1. c4 e5',
+        fen: 'rnbqkbnr/pppp1ppp/8/4p3/2P5/8/PP1PPPPP/RNBQKBNR w KQkq - 0 2' 
+    }, 
     // 1. e4 c6 2. d4 d5
-    'caro_kann': { name: 'Defesa Caro-Kann', fen: 'rnbqkbnr/pp2pppp/2p5/3p4/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3' } 
+    'caro_kann': { 
+        name: 'Defesa Caro-Kann', 
+        pgn: '1. e4 c6 2. d4 d5',
+        fen: 'rnbqkbnr/pp2pppp/2p5/3p4/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3' 
+    } 
 };
 
 /**
