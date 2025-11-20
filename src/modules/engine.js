@@ -128,3 +128,13 @@ export function requestEvaluation(fen) {
     sendMessage(`position fen ${fen}`);
     sendMessage('go depth 8'); 
 }
+
+// NOVO: Função para forçar a engine a parar o cálculo (usado no Desfazer)
+export function stopCalculation() {
+    sendMessage('stop');
+}
+
+// NOVO: Função para forçar a engine a resetar o estado do jogo (ucinewgame)
+export function resetEngineState() {
+    sendMessage('ucinewgame');
+}
