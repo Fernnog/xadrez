@@ -29,7 +29,7 @@ function init() {
         onImportPgn: importPgnGame,
         onSquareClick: handleSquareClick,
         onPromotionSelect: handlePromotion,
-        onUndo: handleUndo,
+        onUndo: handleUndo, // Implementado na correção anterior
     });
     
     engine.initEngine(handleEngineMessage);
@@ -41,13 +41,16 @@ function startGame(chosenColor) {
     audio.initAudio();
     utils.clearGameState();
     
+    // NOVO: Resetar o estado interno do motor UCI
+    engine.resetEngineState(); 
+    
     appState.playerColor = chosenColor;
     appState.skillLevel = ui.getSkillLevel();
     appState.isEngineTurn = false; 
     
     game.reset(); 
 
-    // --- LÓGICA DE ABERTURA MODIFICADA ---
+    // --- LÓGICA DE ABERTURA MODIFICADA (Mantida da correção anterior) ---
     const openingKey = ui.getOpeningKey();
     const openingData = OPENING_FENS[openingKey];
     
@@ -78,7 +81,7 @@ function startGame(chosenColor) {
     if (game.getTurn() !== appState.playerColor) {
         console.log("[Main] É a vez da IA. Solicitando lance...");
         
-        // Chamamos requestEngineMove com tempo fixo (50ms) para forçar o primeiro lance da IA.
+        // Se for o lance inicial da IA, passamos true
         requestEngineMove(true); 
     } else {
         ui.setBoardCursor('pointer'); 
@@ -86,66 +89,7 @@ function startGame(chosenColor) {
     }
 }
 
-function handleSquareClick(squareName) {
-    if (game.isGameOver() || appState.isEngineTurn) {
-        return;
-    }
-    
-    if (appState.selectedSquare) {
-        const move = { from: appState.selectedSquare, to: squareName };
-        
-        if (game.isPromotionMove(appState.selectedSquare, squareName)) {
-             appState.pendingPromotionMove = move;
-             ui.clearHighlights();
-             ui.showPromotionModal(appState.playerColor);
-             appState.selectedSquare = null;
-             return;
-        }
-        
-        const result = game.makeMove(move);
-        ui.clearHighlights();
-        
-        if (result) {
-            console.log(`[Main] Humano jogou: ${move.from}-${move.to}`);
-            audio.playSound(audio.audioMove);
-            updateAllDisplays();
-            utils.saveGameState(game, appState.playerColor, appState.skillLevel);
-            
-            if (!game.isGameOver()) {
-                requestEngineMove();
-            }
-        }
-        appState.selectedSquare = null;
-
-    } else {
-        const piece = game.getPiece(squareName);
-        if (piece && piece.color === appState.playerColor) {
-            appState.selectedSquare = squareName;
-            const validMoves = game.getValidMoves(squareName);
-            ui.highlightMoves(squareName, validMoves);
-        } else {
-            appState.selectedSquare = null;
-        }
-    }
-}
-
-function handlePromotion(pieceType) {
-    ui.hidePromotionModal();
-    if (!appState.pendingPromotionMove) return;
-
-    const move = { ...appState.pendingPromotionMove, promotion: pieceType };
-    const result = game.makeMove(move);
-    appState.pendingPromotionMove = null;
-
-    if (result) {
-        audio.playSound(audio.audioMove);
-        updateAllDisplays();
-        utils.saveGameState(game, appState.playerColor, appState.skillLevel);
-        if (!game.isGameOver()) {
-            requestEngineMove();
-        }
-    }
-}
+// ... [handleSquareClick, handlePromotion] ...
 
 function handleEngineMessage(message) {
     if (message.startsWith('bestmove')) {
@@ -176,7 +120,7 @@ function handleEngineMessage(message) {
             const type = scoreMatch[1];
             let score = parseInt(scoreMatch[2], 10);
             
-            // MELHORIA UX: Inverte o score se o jogador for preto, para exibir a vantagem do ponto de vista do jogador.
+            // UX: Inverte o score se o jogador for preto, para exibir a vantagem do ponto de vista do jogador.
             if (appState.playerColor === 'b' && type === 'cp') {
                 score = -score;
             }
@@ -234,6 +178,10 @@ function resumeGame() {
     const savedState = utils.loadGameState();
     if (savedState && game.loadPgn(savedState.pgn)) {
         audio.initAudio();
+        
+        // NOVO: Resetar o estado interno do motor UCI
+        engine.resetEngineState();
+        
         appState.playerColor = savedState.playerColor;
         appState.skillLevel = savedState.skillLevel;
         
@@ -256,6 +204,10 @@ function importPgnGame() {
     const pgn = ui.getPgnInput();
     if (pgn && game.loadPgn(pgn)) {
         audio.initAudio();
+        
+        // NOVO: Resetar o estado interno do motor UCI após importação
+        engine.resetEngineState(); 
+        
         const turn = game.getTurn();
         appState.playerColor = turn; 
         appState.isEngineTurn = false;
