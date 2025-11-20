@@ -50,15 +50,12 @@ function startGame(chosenColor) {
     const openingKey = ui.getOpeningKey();
     const openingData = OPENING_FENS[openingKey];
     
-    let gameLoadedSuccessfully = false;
-
     if (openingKey !== 'standard' && openingData) {
-        gameLoadedSuccessfully = game.loadFen(openingData.fen);
-        if (gameLoadedSuccessfully) {
-            console.log(`[Main] Jogo iniciado com a abertura: ${openingData.name}`);
-        } else {
+        if (!game.loadFen(openingData.fen)) {
             console.error("[Main] Falha ao carregar FEN da abertura. Resetando para padrão.");
             game.reset(); 
+        } else {
+            console.log(`[Main] Jogo iniciado com a abertura: ${openingData.name}`);
         }
     } 
     // -------------------------
@@ -66,15 +63,17 @@ function startGame(chosenColor) {
     ui.setupAndDisplayGame(appState.playerColor);
     updateAllDisplays();
 
-    // 2. SOLICITA AVALIAÇÃO IMEDIATA (para feedback visual)
+    // 1. Inicia a avaliação imediata (para feedback visual)
     if (!game.isGameOver()) {
         engine.requestEvaluation(game.getFen());
     }
 
-    // 3. Verifica se é a vez da IA (o engine.js garante que o comando será executado quando pronto)
+    // 2. Verifica se é a vez da IA
     if (game.getTurn() !== appState.playerColor) {
         console.log("[Main] É a vez da IA. Solicitando lance...");
-        requestEngineMove();
+        
+        // Chamamos requestEngineMove com tempo fixo (50ms) para forçar o primeiro lance da IA.
+        requestEngineMove(true); 
     } else {
         ui.setBoardCursor('pointer'); 
         console.log("[Main] É a vez do Humano. Aguardando clique...");
@@ -178,7 +177,7 @@ function handleEngineMessage(message) {
     }
 }
 
-function requestEngineMove() {
+function requestEngineMove(isStartingMove = false) {
     appState.isEngineTurn = true; 
     ui.setBoardCursor('wait');
     
@@ -186,8 +185,13 @@ function requestEngineMove() {
     
     // Pequeno delay visual
     setTimeout(() => {
-        // Envia o comando, a Engine decide quando executá-lo via fila
-        engine.requestMove(game.getFen(), appState.skillLevel);
+        if (isStartingMove) {
+            // Se for o lance inicial, pedimos um 'movetime' muito baixo (50ms) para garantir a jogada imediata.
+            engine.requestMove(game.getFen(), appState.skillLevel, 50); 
+        } else {
+            // Para lances normais, usamos o padrão (depth 15)
+            engine.requestMove(game.getFen(), appState.skillLevel);
+        }
     }, 250);
 }
 
