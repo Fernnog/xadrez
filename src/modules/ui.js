@@ -22,7 +22,6 @@ const elements = {
     rankLabels: document.querySelector('.rank-labels'),
     fileLabels: document.querySelector('.file-labels'),
     openingSelect: document.getElementById('openingSelect'), 
-    // Elemento adicionado na correção anterior
     undoButton: document.getElementById('undoButton'),
 };
 
@@ -50,39 +49,65 @@ function safeAddEventListener(id, event, handler) {
 }
 
 /**
- * NOVO: Preenche dinamicamente o seletor de aberturas.
+ * Preenche dinamicamente o seletor de aberturas, agora com grupos.
  */
 function populateOpeningSelector() {
     if (!elements.openingSelect) return;
-    
-    // Limpa todas as opções existentes no HTML
     elements.openingSelect.innerHTML = '';
-    
-    // Adiciona as aberturas da configuração
-    for (const key in OPENING_FENS) {
-        const data = OPENING_FENS[key];
-        const option = document.createElement('option');
-        option.value = key;
-        
-        if (key !== 'standard') {
-             // NOVO: Adiciona a sequência de lances (PGN) no label
-             option.textContent = `${data.name} (${data.pgn})`; 
-             
-             // O FEN deve ser usado para determinar o próximo a mover
-             const fenParts = data.fen.split(' ');
-             const turn = fenParts.length > 1 && fenParts[1] === 'w' ? '(Brancas Movem)' : '(Pretas Movem)';
-             option.textContent += ` ${turn}`;
-        } else {
-             option.textContent = data.name;
-        }
-        
-        // Define o valor padrão
-        if (key === 'standard') {
-            option.selected = true;
-        }
 
-        elements.openingSelect.appendChild(option);
+    // 1. Agrupa as aberturas pela nova propriedade 'category'
+    const groupedOpenings = {};
+    for (const key in OPENING_FENS) {
+        const opening = OPENING_FENS[key];
+        const category = opening.category || 'Outras';
+        if (!groupedOpenings[category]) {
+            groupedOpenings[category] = [];
+        }
+        groupedOpenings[category].push({ key, ...opening });
     }
+
+    // 2. Define a ordem de exibição das categorias
+    const categoryOrder = [
+        'Padrão', 
+        'Aberturas de Peão Rei (1. e4)', 
+        'Aberturas de Peão Dama (1. d4)',
+        'Outras Aberturas',
+        'Outras'
+    ];
+
+    // 3. Cria e anexa os <optgroup> e <option>
+    categoryOrder.forEach(categoryName => {
+        if (!groupedOpenings[categoryName]) return;
+
+        // A categoria "Padrão" é uma opção normal, não um grupo
+        if (categoryName === 'Padrão') {
+            const openingData = groupedOpenings[categoryName][0];
+            const option = document.createElement('option');
+            option.value = openingData.key;
+            option.textContent = openingData.name;
+            option.selected = true; // Define como padrão
+            elements.openingSelect.appendChild(option);
+            return; // Continua para a próxima categoria
+        }
+        
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = categoryName;
+
+        const openingsInCategory = groupedOpenings[categoryName];
+        openingsInCategory.forEach(data => {
+            const option = document.createElement('option');
+            option.value = data.key;
+            
+            // Determina de quem é a vez para exibir no texto
+            const fenParts = data.fen.split(' ');
+            const turn = fenParts.length > 1 && fenParts[1] === 'w' ? '(Brancas Movem)' : '(Pretas Movem)';
+            option.textContent = `${data.name} (${data.pgn}) ${turn}`;
+            
+            optgroup.appendChild(option);
+        });
+        
+        elements.openingSelect.appendChild(optgroup);
+    });
 }
 
 
@@ -104,14 +129,12 @@ export function registerUIHandlers(handlers) {
     safeAddEventListener('continueGameButton', 'click', handlers.onContinueGame);
     safeAddEventListener('importPgnButton', 'click', handlers.onImportPgn);
     
-    // NOVO: Handler para desfazer (Adicionado na correção anterior)
     safeAddEventListener('undoButton', 'click', handlers.onUndo); 
 
     if (elements.copyPgnButton) {
         elements.copyPgnButton.addEventListener('click', handlers.onCopyPgn);
     }
     
-    // NOVO: Popula o seletor de aberturas
     populateOpeningSelector();
 }
 
