@@ -5,7 +5,7 @@ import * as game from './modules/game.js';
 import * as engine from './modules/engine.js';
 import * as audio from './modules/audio.js';
 import * as utils from './modules/utils.js';
-import { OPENING_FENS } from './modules/config.js'; // NOVO: Importa a lista de FENs
+import { OPENING_FENS } from './modules/config.js'; // NOVO: Importa as FENs
 
 console.log("[Main] Módulo main.js carregado.");
 
@@ -14,7 +14,7 @@ let appState = {
     playerColor: 'w',
     skillLevel: 12,
     selectedSquare: null,
-    isEngineTurn: false, // Essa flag é o semáforo que evitará o loop
+    isEngineTurn: false, 
     pendingPromotionMove: null,
 };
 
@@ -42,39 +42,45 @@ function startGame(chosenColor) {
     
     appState.playerColor = chosenColor;
     appState.skillLevel = ui.getSkillLevel();
-    appState.isEngineTurn = false; // Reset importante
+    appState.isEngineTurn = false; 
+    
+    // 1. SEMPRE RESETAMOS ANTES DE TENTAR CARREGAR O FEN
+    game.reset(); 
 
-    // --- LÓGICA DE CARREGAMENTO DE ABERTURA ---
+    // --- LÓGICA DE ABERTURA ---
     const openingKey = ui.getOpeningKey();
     const openingData = OPENING_FENS[openingKey];
     
     let gameLoadedSuccessfully = false;
 
     if (openingKey !== 'standard' && openingData) {
+        // Tentativa de carregar o FEN
         gameLoadedSuccessfully = game.loadFen(openingData.fen);
         if (gameLoadedSuccessfully) {
             console.log(`[Main] Jogo iniciado com a abertura: ${openingData.name}`);
+        } else {
+            console.error("[Main] Falha ao carregar FEN da abertura. Resetando para padrão.");
+            game.reset(); // Volta para o padrão se falhar
         }
     } 
-    
-    if (!gameLoadedSuccessfully) {
-        // Se for "standard" ou se o FEN falhar/não for encontrado.
-        game.reset();
-        console.log("[Main] Jogo iniciado na posição padrão.");
-    }
-    // -----------------------------------------
+    // -------------------------
     
     ui.setupAndDisplayGame(appState.playerColor);
     updateAllDisplays();
 
-    // Sempre solicitamos uma avaliação inicial da posição
-    engine.requestEvaluation(game.getFen());
+    // 2. MELHORIA UX CRÍTICA: Solicita avaliação da posição inicial,
+    // o que atualiza o display e confirma que o motor está ativo.
+    if (!game.isGameOver()) {
+        engine.requestEvaluation(game.getFen());
+    }
 
-    // Verifica se é a vez da IA (pode ser o caso em aberturas carregadas)
+    // 3. Verifica se é a vez da IA
     if (game.getTurn() !== appState.playerColor) {
         console.log("[Main] É a vez da IA. Solicitando lance...");
         requestEngineMove();
     } else {
+        // Se for a vez do Humano, garante que o cursor está pronto
+        ui.setBoardCursor('pointer'); 
         console.log("[Main] É a vez do Humano. Aguardando clique...");
     }
 }
@@ -102,7 +108,7 @@ function handleSquareClick(squareName) {
         
         if (result) {
             console.log(`[Main] Humano jogou: ${move.from}-${move.to}`);
-            ui.playSound('move');
+            audio.playSound(audio.audioMove); // USANDO O OBJETO DO MÓDULO AUDIO
             updateAllDisplays();
             utils.saveGameState(game, appState.playerColor, appState.skillLevel);
             
@@ -133,7 +139,7 @@ function handlePromotion(pieceType) {
     appState.pendingPromotionMove = null;
 
     if (result) {
-        ui.playSound('move');
+        audio.playSound(audio.audioMove); // USANDO O OBJETO DO MÓDULO AUDIO
         updateAllDisplays();
         utils.saveGameState(game, appState.playerColor, appState.skillLevel);
         if (!game.isGameOver()) {
@@ -145,7 +151,7 @@ function handlePromotion(pieceType) {
 function handleEngineMessage(message) {
     if (message.startsWith('bestmove')) {
         // Se recebermos um bestmove, mas a flag isEngineTurn for falsa,
-        // significa que foi apenas o resultado da análise de avaliação (Prioridade 2). Ignoramos o lance físico.
+        // significa que foi apenas o resultado da análise de avaliação. Ignoramos o lance.
         if (!appState.isEngineTurn) {
             console.log("[Main] bestmove recebido de análise/avaliação. Ignorando lance físico.");
             return;
@@ -156,7 +162,7 @@ function handleEngineMessage(message) {
         
         if (move) {
             console.log(`[Main] IA jogou: ${bestMoveStr}`);
-            ui.playSound('move'); 
+            audio.playSound(audio.audioMove); // USANDO O OBJETO DO MÓDULO AUDIO
             updateAllDisplays();
             utils.saveGameState(game, appState.playerColor, appState.skillLevel);
             
@@ -176,11 +182,7 @@ function handleEngineMessage(message) {
             const type = scoreMatch[1];
             let score = parseInt(scoreMatch[2], 10);
             // Ajusta pontuação para perspectiva das brancas
-            // O score do Stockfish é sempre relativo ao lado que está jogando.
-            // Aqui garantimos que o display é sempre do ponto de vista das Brancas (positivas = W, negativas = B).
-            if (game.getTurn() === 'b' && type === 'cp' && appState.isEngineTurn) {
-                // Se o motor (que está jogando de pretas) reporta +100 (para ele), 
-                // para as brancas é -100. Isso só se aplica se for o turno da IA (o "go depth 15").
+            if (game.getTurn() === 'b' && type === 'cp') {
                 score = -score;
             }
             ui.updateEvaluationDisplay(type, score);
@@ -201,14 +203,15 @@ function requestEngineMove() {
 }
 
 function updateAllDisplays() {
-    const isGameOver = game.isGameOver();
+    const gameState = game.getGameState();
+    const isGameOver = gameState.isGameOver;
     ui.renderBoard(game.getBoard());
-    ui.updateStatus(game.getGameState());
+    ui.updateStatus(gameState);
     ui.updateMoveHistory(game.getHistory());
     ui.updateCapturedPieces(game.getHistory({verbose: true}));
 
     if (isGameOver) {
-        ui.playSound('gameOver');
+        audio.playSound(audio.audioGameOver); // USANDO O OBJETO DO MÓDULO AUDIO
         utils.clearGameState();
         appState.isEngineTurn = false; // Garante que para de jogar
     }
@@ -238,11 +241,13 @@ function resumeGame() {
         ui.setupAndDisplayGame(appState.playerColor);
         updateAllDisplays();
         
-        // Solicita avaliação imediata ao retomar o jogo
+        // Solicita a avaliação da posição ao resumir
         engine.requestEvaluation(game.getFen());
         
         if (appState.isEngineTurn) {
              requestEngineMove();
+        } else {
+             ui.setBoardCursor('pointer'); 
         }
     }
 }
@@ -259,8 +264,9 @@ function importPgnGame() {
         ui.setupAndDisplayGame(appState.playerColor);
         updateAllDisplays();
         
-        // Solicita avaliação imediata ao importar PGN
+        // Avalia a posição importada
         engine.requestEvaluation(game.getFen());
+        ui.setBoardCursor('pointer');
     } else {
         alert("PGN inválido!");
     }
