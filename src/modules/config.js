@@ -202,3 +202,24 @@ export const OPENING_FENS = {
  * Caminho para o worker do Stockfish.
  */
 export const STOCKFISH_WORKER_PATH = 'https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.0/stockfish.js';
+
+export const APP_VERSION = 'v1.0.1';
+export const CACHE_NAME = `chess-pwa-${APP_VERSION}`; // Para uso no SW
+
+export const CHANGELOG = [
+    {
+        version: 'v1.0.1',
+        date: '2023-10-27',
+        changes: [
+            'Novo: Exportação de histórico para DOC com diagrama do tabuleiro.',
+            'Novo: Histórico de versões interativo.',
+            'UX: Notificações (Toasts) substituindo alertas.',
+            'Sistema: Melhoria de cache e atualização automática.'
+        ]
+    },
+    {
+        version: 'v1.0.0',
+        date: '2023-10-01',
+        changes: ['Lançamento inicial.']
+    }
+];
