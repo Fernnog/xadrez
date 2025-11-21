@@ -26,7 +26,6 @@
         <div class="flex flex-col w-full lg:w-auto items-center">
             
             <!-- CABEÇALHO: Logo (Esq) + Painel (Dir) -->
-            <!-- Altura total aprox 5rem (h-16 + mb-4) -->
             <div class="w-full max-w-[500px] flex items-center justify-between mb-4 gap-4">
                 <!-- Logo -->
                 <img src="img/logo.png" alt="Logo" class="h-16 w-auto object-contain">
@@ -55,13 +54,18 @@
         </div>
 
         <!-- COLUNA DIREITA: Histórico e Controles -->
-        <!-- lg:mt-20 (5rem) compensa exatamente a altura do cabeçalho (Logo+Painel) para alinhar com o TOPO do tabuleiro -->
         <div class="w-full max-w-[500px] lg:w-80 flex flex-col gap-4 mt-0 lg:mt-20"> 
             
             <div class="bg-gray-900 p-4 rounded-lg shadow-lg w-full">
                 <div class="flex justify-between items-center mb-3">
                     <h2 class="text-xl font-bold">Histórico</h2>
-                    <button id="copyPgnButton" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded transition-all">COPIAR PGN</button>
+                    <!-- ÁREA MODIFICADA: Grupo de botões DOC e Copiar -->
+                    <div class="flex gap-2">
+                        <button id="downloadDocButton" class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded transition-all flex items-center gap-1" title="Baixar histórico em DOC">
+                            <span>📄</span> DOC
+                        </button>
+                        <button id="copyPgnButton" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded transition-all">COPIAR PGN</button>
+                    </div>
                 </div>
                 <!-- Histórico com altura fixa -->
                 <div id="moveHistory" class="move-history bg-gray-800 rounded-md p-2 overflow-y-auto h-80 text-sm"></div>
@@ -70,7 +74,6 @@
             <div class="flex flex-col gap-2 items-center w-full">
                 <p class="text-xs text-gray-400 uppercase tracking-wider">Engine: Stockfish</p>
                 
-                <!-- ÁREA MODIFICADA -->
                 <div class="flex w-full gap-2">
                     <button id="undoButton" class="w-1/2 py-4 bg-gray-600 hover:bg-gray-700 text-white font-bold rounded-lg shadow-lg transition-transform active:scale-95 uppercase">
                         Desfazer
@@ -79,7 +82,6 @@
                         Novo Jogo
                     </button>
                 </div>
-                <!-- FIM DA ÁREA MODIFICADA -->
             </div>
         </div>
 
@@ -112,7 +114,7 @@
                 </select>
             </div>
             
-            <!-- NOVO CAMPO DE FILTRO DE ABERTURA -->
+            <!-- FILTRO DE ABERTURA -->
             <div class="mt-4 text-left">
                 <label for="openingFilter" class="block text-sm font-bold text-gray-600 uppercase mb-2">Filtrar Abertura</label>
                 <input type="text" id="openingFilter" placeholder="Ex: Siciliana, Gambito..." class="w-full p-3 border border-gray-300 rounded-md text-lg bg-gray-50 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-inner">
@@ -159,10 +161,26 @@
             </div>
         </div>
     </div>
+
+    <!-- MODAL DE CHANGELOG (NOVO) -->
+    <div id="changelogModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden backdrop-blur-sm">
+        <div class="bg-white text-gray-900 p-6 rounded-lg shadow-2xl max-w-md w-full max-h-[80vh] flex flex-col animate-fade-in">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h3 class="text-2xl font-bold text-gray-800">Novidades</h3>
+                <button id="closeChangelogButton" class="text-gray-400 hover:text-red-600 font-bold text-2xl leading-none">&times;</button>
+            </div>
+            <div id="changelogContent" class="overflow-y-auto flex-grow pr-2"></div>
+        </div>
+    </div>
     
-    <!-- CARD DE VERSÃO -->
-    <div id="versionCard" class="fixed bottom-4 left-4 bg-gray-900 bg-opacity-80 text-gray-400 text-xs px-3 py-1 rounded-full shadow-lg z-20">
-        <span>v1.0.0</span>
+    <!-- CARD DE VERSÃO (MODIFICADO PARA CLICÁVEL) -->
+    <div id="versionCard" class="fixed bottom-4 left-4 bg-gray-900 bg-opacity-90 text-gray-400 text-xs px-3 py-1 rounded-full shadow-lg z-20 cursor-pointer hover:bg-gray-700 hover:text-white transition-colors border border-gray-700">
+        <span id="currentVersionDisplay">v1.0.1</span> ℹ️
+    </div>
+
+    <!-- CONTAINER DE NOTIFICAÇÕES TOAST (NOVO) -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 flex flex-col gap-2 z-50 pointer-events-none">
+        <!-- Toasts serão injetados aqui via JS -->
     </div>
 
     <!-- Dependências JavaScript -->
