@@ -19,7 +19,7 @@ let appState = {
 };
 
 // ==========================================================
-// 1. FUNÇÕES DE CALLBACK (MOVIDAS PARA O TOPO PARA EVITAR REFERENCE ERROR)
+// 1. FUNÇÕES DE CALLBACK
 // ==========================================================
 
 function handleSquareClick(squareName) {
@@ -83,9 +83,6 @@ function handlePromotion(pieceType) {
     }
 }
 
-/**
- * Manipula a ação de Desfazer (Undo).
- */
 function handleUndo() {
     if (appState.isEngineTurn) {
         engine.stopCalculation();
@@ -104,6 +101,7 @@ function handleUndo() {
         console.log("[Main] Desfeito o último lance (apenas um no histórico).");
     } else {
         console.log("[Main] Nenhum lance para desfazer.");
+        ui.showToast("Nenhum lance para desfazer.", "error"); // UX Upgrade
         return;
     }
     
@@ -117,37 +115,65 @@ function handleUndo() {
 }
 
 // ==========================================================
-// 2. FUNÇÃO INIT (AGORA REFERENCIA FUNÇÕES JÁ DEFINIDAS)
+// 2. FUNÇÃO INIT
 // ==========================================================
 
 function init() {
     console.log("[Main] Inicializando aplicação...");
+    
+    // Registrar Handlers da UI com lógica de UX (Toasts)
     ui.registerUIHandlers({
-        onPlayWhite: () => { console.log("[UI] Botão Jogar Brancas clicado"); startGame('w'); },
-        onPlayBlack: () => { console.log("[UI] Botão Jogar Pretas clicado"); startGame('b'); },
+        onPlayWhite: () => { console.log("[UI] Jogar Brancas"); startGame('w'); },
+        onPlayBlack: () => { console.log("[UI] Jogar Pretas"); startGame('b'); },
         onResetGame: resetGame,
-        onCopyPgn: () => utils.copyPgn(game.getPgn()),
         onContinueGame: resumeGame,
         onImportPgn: importPgnGame,
         onSquareClick: handleSquareClick,
         onPromotionSelect: handlePromotion,
         onUndo: handleUndo,
+        
+        // Handler Atualizado: Copiar PGN com Feedback
+        onCopyPgn: () => {
+            utils.copyPgn(
+                game.getPgn(),
+                (msg) => ui.showToast(msg, 'success'),
+                (msg) => ui.showToast(msg, 'error')
+            );
+        },
+        
+        // Handler Novo: Download DOC com Diagrama
+        onDownloadDoc: () => {
+            const pgn = game.getPgn();
+            if (!pgn) {
+                ui.showToast('Não há lances para baixar.', 'error');
+                return;
+            }
+            const board = game.getBoard(); // Obtém estado atual para o diagrama
+            utils.downloadHistoryAsDoc(pgn, board);
+            ui.showToast('Download do DOC iniciado!', 'success');
+        }
     });
     
     engine.initEngine(handleEngineMessage);
     checkForSavedGame();
+
+    // Registro do Service Worker para Cache (Feature 2.a)
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('[ServiceWorker] Registrado.', reg))
+            .catch(err => console.error('[ServiceWorker] Falha.', err));
+    }
 }
 
 // ==========================================================
-// 3. FUNÇÕES PRINCIPAIS E DE FLUXO (CONTÊM engine.resetEngineState())
+// 3. FUNÇÕES PRINCIPAIS
 // ==========================================================
 
 function startGame(chosenColor) {
-    console.log(`[Main] Iniciando jogo. Cor do jogador: ${chosenColor}`);
+    console.log(`[Main] Iniciando jogo. Cor: ${chosenColor}`);
     audio.initAudio();
     utils.clearGameState();
     
-    // CRÍTICO: Resetar o estado interno do motor UCI ANTES de definir a posição.
     engine.resetEngineState(); 
     
     appState.playerColor = chosenColor;
@@ -161,13 +187,11 @@ function startGame(chosenColor) {
     
     if (openingKey !== 'standard' && openingData && openingData.pgn) {
         if (!game.loadPgn(openingData.pgn)) {
-            console.error("[Main] Falha ao carregar PGN da abertura. Tentando FEN...");
             if (!game.loadFen(openingData.fen)) {
-                 console.error("[Main] Falha ao carregar FEN. Resetando para padrão.");
                  game.reset(); 
             }
         } else {
-            console.log(`[Main] Jogo iniciado com a abertura: ${openingData.name}`);
+            console.log(`[Main] Abertura: ${openingData.name}`);
         }
     } 
     
@@ -179,26 +203,20 @@ function startGame(chosenColor) {
     }
 
     if (game.getTurn() !== appState.playerColor) {
-        console.log("[Main] É a vez da IA. Solicitando lance...");
         requestEngineMove(true); 
     } else {
         ui.setBoardCursor('pointer'); 
-        console.log("[Main] É a vez do Humano. Aguardando clique...");
     }
 }
 
 function handleEngineMessage(message) {
     if (message.startsWith('bestmove')) {
-        if (!appState.isEngineTurn) {
-            console.log("[Main] bestmove recebido de análise/avaliação. Ignorando lance físico.");
-            return;
-        }
+        if (!appState.isEngineTurn) return;
 
         const bestMoveStr = message.split(' ')[1];
         const move = game.makeMove(bestMoveStr);
         
         if (move) {
-            console.log(`[Main] IA jogou: ${bestMoveStr}`);
             audio.playSound(audio.audioMove);
             updateAllDisplays();
             utils.saveGameState(game, appState.playerColor, appState.skillLevel);
@@ -215,12 +233,9 @@ function handleEngineMessage(message) {
         if (scoreMatch) {
             const type = scoreMatch[1];
             let score = parseInt(scoreMatch[2], 10);
-            
-            // UX: Inverte o score se o jogador for preto, para exibir a vantagem do ponto de vista do jogador.
             if (appState.playerColor === 'b' && type === 'cp') {
                 score = -score;
             }
-            
             ui.updateEvaluationDisplay(type, score);
         }
     }
@@ -229,10 +244,6 @@ function handleEngineMessage(message) {
 function requestEngineMove(isStartingMove = false) {
     appState.isEngineTurn = true; 
     ui.setBoardCursor('wait');
-    
-    console.log("[Main] Vez da IA. Aguardando cálculo...");
-    
-    // Pequeno delay visual
     setTimeout(() => {
         if (isStartingMove) {
             engine.requestMove(game.getFen(), appState.skillLevel, 50); 
@@ -244,13 +255,12 @@ function requestEngineMove(isStartingMove = false) {
 
 function updateAllDisplays() {
     const gameState = game.getGameState();
-    const isGameOver = gameState.isGameOver;
     ui.renderBoard(game.getBoard());
     ui.updateStatus(gameState);
     ui.updateMoveHistory(game.getHistory());
     ui.updateCapturedPieces(game.getHistory({verbose: true}));
 
-    if (isGameOver) {
+    if (gameState.isGameOver) {
         audio.playSound(audio.audioGameOver);
         utils.clearGameState();
         appState.isEngineTurn = false;
@@ -272,12 +282,10 @@ function resumeGame() {
     const savedState = utils.loadGameState();
     if (savedState && game.loadPgn(savedState.pgn)) {
         audio.initAudio();
-        
         engine.resetEngineState();
         
         appState.playerColor = savedState.playerColor;
         appState.skillLevel = savedState.skillLevel;
-        
         appState.isEngineTurn = (game.getTurn() !== appState.playerColor);
         
         ui.setupAndDisplayGame(appState.playerColor);
@@ -297,7 +305,6 @@ function importPgnGame() {
     const pgn = ui.getPgnInput();
     if (pgn && game.loadPgn(pgn)) {
         audio.initAudio();
-        
         engine.resetEngineState(); 
         
         const turn = game.getTurn();
@@ -306,13 +313,13 @@ function importPgnGame() {
         
         ui.setupAndDisplayGame(appState.playerColor);
         updateAllDisplays();
-        
         engine.requestEvaluation(game.getFen());
         ui.setBoardCursor('pointer');
+        
+        ui.showToast("Jogo importado com sucesso!", "success");
     } else {
-        alert("PGN inválido!");
+        ui.showToast("PGN inválido!", "error");
     }
 }
-
 
 document.addEventListener('DOMContentLoaded', init);
