@@ -1,16 +1,15 @@
 // src/modules/utils.js
 
-const PGN_COPY_BUTTON_ID = 'copyPgnButton'; // Evita strings mágicas
+import { PIECES } from './config.js';
+
+const PGN_COPY_BUTTON_ID = 'copyPgnButton'; 
+const GAME_STATE_KEY = 'savedChessGameState';
 
 // --- Funções de Persistência (Salvar/Carregar Jogo) ---
-
-const GAME_STATE_KEY = 'savedChessGameState';
 
 export function saveGameState(game, playerColor, skillLevel) {
     if (!game) return;
     try {
-        // CORREÇÃO AQUI: O módulo game.js exporta a função como 'getPgn', não 'pgn'.
-        // Usar game.pgn() causava o erro pois o objeto 'game' aqui é o módulo importado.
         const state = {
             pgn: game.getPgn(), 
             playerColor: playerColor,
@@ -51,45 +50,92 @@ function fallbackCopy(text, successCallback, errorCallback) {
     try {
         const successful = document.execCommand('copy');
         if (successful) {
-            successCallback();
+            if (successCallback) successCallback("PGN copiado!");
         } else {
-            errorCallback();
+            if (errorCallback) errorCallback("Falha ao copiar PGN.");
         }
     } catch (err) {
-        errorCallback(err);
+        if (errorCallback) errorCallback(err);
     }
     document.body.removeChild(textArea);
 }
 
-export function copyPgn(pgn) {
-    const button = document.getElementById(PGN_COPY_BUTTON_ID);
-    if (!button) return;
-
+export function copyPgn(pgn, successCallback, errorCallback) {
     if (!pgn) {
-        button.textContent = 'Nenhum lance!';
-        setTimeout(() => { button.textContent = 'Copiar PGN'; }, 2000);
+        if (errorCallback) errorCallback('Nenhum lance para copiar!');
         return;
     }
 
-    const showSuccess = () => {
-        const originalText = 'Copiar PGN';
-        button.textContent = 'Copiado!';
-        // Remove classes antigas antes de adicionar novas para evitar conflitos
-        button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-        button.classList.add('bg-green-600', 'hover:bg-green-700');
-        
-        setTimeout(() => {
-            button.textContent = originalText;
-            button.classList.remove('bg-green-600', 'hover:bg-green-700');
-            button.classList.add('bg-blue-600', 'hover:bg-blue-700');
-        }, 2500);
-    };
-
-    const showFail = () => alert('Erro ao copiar PGN.');
-
+    // Tenta usar API moderna
     if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(pgn).then(showSuccess, () => fallbackCopy(pgn, showSuccess, showFail));
+        navigator.clipboard.writeText(pgn)
+            .then(() => successCallback && successCallback("PGN copiado para a área de transferência!"))
+            .catch(() => fallbackCopy(pgn, successCallback, errorCallback));
     } else {
-        fallbackCopy(pgn, showSuccess, showFail);
+        fallbackCopy(pgn, successCallback, errorCallback);
     }
+}
+
+// --- NOVA FUNÇÃO: Exportar DOC com Diagrama ---
+
+function generateBoardHtmlTable(boardArray) {
+    if (!boardArray) return '';
+    
+    let html = '<table border="0" cellspacing="0" cellpadding="0" style="border: 2px solid #333; margin: 20px auto;">';
+    
+    const lightColor = '#f0d9b5';
+    const darkColor = '#b58863';
+    
+    for (let r = 0; r < 8; r++) {
+        html += '<tr>';
+        for (let c = 0; c < 8; c++) {
+            const isDark = (r + c) % 2 === 1;
+            const bgColor = isDark ? darkColor : lightColor;
+            const piece = boardArray[r][c];
+            const symbol = piece ? PIECES[piece.color][piece.type] : '';
+            
+            // Estilo inline essencial para Word
+            html += `<td style="width: 40px; height: 40px; background-color: ${bgColor}; text-align: center; font-size: 24px; color: #000; border: none;">${symbol}</td>`;
+        }
+        html += '</tr>';
+    }
+    html += '</table>';
+    return html;
+}
+
+export function downloadHistoryAsDoc(pgn, boardArray) {
+    const boardDiagram = boardArray ? generateBoardHtmlTable(boardArray) : '';
+
+    const content = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head><meta charset='utf-8'><title>Partida de Xadrez</title></head>
+        <body style="font-family: Arial, sans-serif;">
+            <h1 style="text-align:center">Registro de Partida de Xadrez</h1>
+            <p style="text-align:center"><strong>Data:</strong> ${new Date().toLocaleDateString()}</p>
+            <hr>
+            <h3 style="text-align:center">Posição Final</h3>
+            ${boardDiagram}
+            <hr>
+            <h3>Notação (PGN)</h3>
+            <div style="background:#f4f4f4; padding:10px; border:1px solid #ddd; font-family: monospace; font-size: 14px;">
+                ${pgn}
+            </div>
+            <br>
+            <p style="font-size: 10px; color: #888; text-align: center;">Gerado por Xadrez vs Stockfish</p>
+        </body>
+        </html>
+    `;
+
+    const blob = new Blob([content], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    
+    link.href = url;
+    link.download = `Partida_Xadrez_${new Date().getTime()}.doc`;
+    
+    document.body.appendChild(link);
+    link.click();
+    
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 }
