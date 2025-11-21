@@ -1,6 +1,6 @@
 // src/modules/ui.js
 
-import { PIECES, PIECE_VALUES, PROMOTION_PIECES, OPENING_FENS } from './config.js'; 
+import { PIECES, PIECE_VALUES, PROMOTION_PIECES, OPENING_FENS, APP_VERSION, CHANGELOG } from './config.js'; 
 
 // Centraliza a seleção de todos os elementos do DOM
 const elements = {
@@ -18,18 +18,22 @@ const elements = {
     modalTitle: document.getElementById('modalTitle'),
     modalMessage: document.getElementById('modalMessage'),
     copyPgnButton: document.getElementById('copyPgnButton'),
+    downloadDocButton: document.getElementById('downloadDocButton'), // NOVO
     mainBoardContainer: document.querySelector('.flex.flex-col.w-full.lg\\:w-auto.items-center'),
     rankLabels: document.querySelector('.rank-labels'),
     fileLabels: document.querySelector('.file-labels'),
     openingSelect: document.getElementById('openingSelect'),
     openingFilter: document.getElementById('openingFilter'),
     undoButton: document.getElementById('undoButton'),
+    versionCard: document.getElementById('versionCard'), // NOVO
+    currentVersionDisplay: document.getElementById('currentVersionDisplay'), // NOVO
+    changelogModal: document.getElementById('changelogModal'), // NOVO
+    changelogContent: document.getElementById('changelogContent'), // NOVO
+    closeChangelogButton: document.getElementById('closeChangelogButton'), // NOVO
+    toastContainer: document.getElementById('toastContainer'), // NOVO
 };
 
-// Sons da interface (Mantido por compatibilidade com o main.js que usa playSound)
-const audioMove = new Audio(''); 
-const audioStart = new Audio(''); 
-const audioGameOver = new Audio(''); 
+// Sons da interface
 let isAudioInitialized = false;
 
 function initAudio() {
@@ -51,7 +55,6 @@ function safeAddEventListener(id, event, handler) {
 
 /**
  * Preenche dinamicamente o seletor de aberturas, com filtro opcional.
- * @param {string} [filterText=''] - Texto para filtrar as aberturas.
  */
 function populateOpeningSelector(filterText = '') {
     if (!elements.openingSelect) return;
@@ -59,7 +62,6 @@ function populateOpeningSelector(filterText = '') {
     const filter = filterText.toLowerCase().trim();
     elements.openingSelect.innerHTML = '';
 
-    // 1. Agrupa as aberturas pela propriedade 'category'
     const groupedOpenings = {};
     for (const key in OPENING_FENS) {
         const opening = OPENING_FENS[key];
@@ -70,7 +72,6 @@ function populateOpeningSelector(filterText = '') {
         groupedOpenings[category].push({ key, ...opening });
     }
 
-    // 2. Define a ordem de exibição das categorias
     const categoryOrder = [
         'Padrão', 
         'Aberturas de Peão Rei (1. e4)', 
@@ -81,24 +82,21 @@ function populateOpeningSelector(filterText = '') {
 
     let hasVisibleOptions = false;
 
-    // 3. Cria e anexa os <optgroup> e <option> filtrados
     categoryOrder.forEach(categoryName => {
         if (!groupedOpenings[categoryName]) return;
 
         const openingsInCategory = groupedOpenings[categoryName];
         
-        // Filtra as aberturas com base no texto de busca
         const matchingOpenings = openingsInCategory.filter(data =>
             filter === '' ||
             data.name.toLowerCase().includes(filter) ||
             data.pgn.toLowerCase().includes(filter)
         );
 
-        if (matchingOpenings.length === 0) return; // Pula a categoria se não houver correspondências
+        if (matchingOpenings.length === 0) return; 
 
         hasVisibleOptions = true;
 
-        // A categoria "Padrão" é uma opção normal, não um grupo
         if (categoryName === 'Padrão') {
             const openingData = matchingOpenings[0];
             const option = document.createElement('option');
@@ -133,6 +131,56 @@ function populateOpeningSelector(filterText = '') {
     }
 }
 
+// --- FUNÇÃO DE CHANGELOG (NOVA) ---
+function renderChangelog() {
+    if (!elements.currentVersionDisplay || !elements.changelogContent) return;
+    
+    elements.currentVersionDisplay.textContent = APP_VERSION || 'v1.0.1';
+    elements.changelogContent.innerHTML = '';
+    
+    if (!CHANGELOG) return;
+
+    CHANGELOG.forEach((log, index) => {
+        const isLatest = index === 0;
+        const entry = document.createElement('div');
+        entry.className = `mb-6 ${!isLatest ? 'opacity-75 hover:opacity-100 transition-opacity' : ''}`;
+        entry.innerHTML = `
+            <div class="flex justify-between items-baseline mb-2">
+                <div class="flex items-center gap-2">
+                    <span class="font-bold text-lg ${isLatest ? 'text-blue-600' : 'text-gray-600'}">${log.version}</span>
+                    ${isLatest ? '<span class="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">Atual</span>' : ''}
+                </div>
+                <span class="text-xs text-gray-500">${log.date}</span>
+            </div>
+            <ul class="list-disc list-inside text-sm text-gray-700 space-y-1 ml-1">
+                ${log.changes.map(c => `<li>${c}</li>`).join('')}
+            </ul>
+        `;
+        elements.changelogContent.appendChild(entry);
+    });
+}
+
+// --- FUNÇÃO DE TOAST (NOVA) ---
+export function showToast(message, type = 'info') {
+    if (!elements.toastContainer) return;
+
+    const toast = document.createElement('div');
+    const bgClass = type === 'error' ? 'bg-red-600' : (type === 'success' ? 'bg-green-600' : 'bg-blue-600');
+    
+    toast.className = `toast pointer-events-auto px-4 py-3 rounded shadow-lg text-white text-sm font-bold flex items-center gap-2 ${bgClass}`;
+    toast.innerHTML = `<span>${message}</span>`;
+    
+    elements.toastContainer.appendChild(toast);
+
+    requestAnimationFrame(() => {
+        toast.classList.add('toast-visible');
+    });
+
+    setTimeout(() => {
+        toast.classList.remove('toast-visible');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
 
 // --- FUNÇÕES EXPORTADAS ---
 
@@ -150,17 +198,20 @@ export function registerUIHandlers(handlers) {
     safeAddEventListener('modalResetButton', 'click', handlers.onResetGame);
     safeAddEventListener('continueGameButton', 'click', handlers.onContinueGame);
     safeAddEventListener('importPgnButton', 'click', handlers.onImportPgn);
-    
-    // Adiciona o listener para o filtro de aberturas
     safeAddEventListener('openingFilter', 'input', (e) => populateOpeningSelector(e.target.value));
-
     safeAddEventListener('undoButton', 'click', handlers.onUndo); 
 
     if (elements.copyPgnButton) {
         elements.copyPgnButton.addEventListener('click', handlers.onCopyPgn);
     }
+
+    // --- NOVOS HANDLERS ---
+    safeAddEventListener('downloadDocButton', 'click', handlers.onDownloadDoc);
+    safeAddEventListener('versionCard', 'click', () => elements.changelogModal.classList.remove('hidden'));
+    safeAddEventListener('closeChangelogButton', 'click', () => elements.changelogModal.classList.add('hidden'));
     
-    populateOpeningSelector(); // Chamada inicial para preencher a lista
+    populateOpeningSelector(); 
+    renderChangelog(); 
 }
 
 export function getSkillLevel() {
@@ -269,7 +320,6 @@ export function updateStatus(gameState, showGameOverCallback) {
     const safeGameOverCall = showGameOverCallback || showGameOverModal;
 
     if (gameState.isGameOver) {
-        // playSound('gameOver');
         if (gameState.isCheckmate) {
             const winner = gameState.turn === 'w' ? 'Pretas' : 'Brancas';
             statusText = `Xeque-mate! ${winner} vencem.`;
