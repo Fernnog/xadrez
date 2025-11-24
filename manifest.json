@@ -1,10 +1,13 @@
 {
   "name": "Xadrez vs Stockfish",
   "short_name": "XadrezIA",
+  "id": "./",
+  "scope": "./",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#1f2937",
   "theme_color": "#1f2937",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "img/icon-192.png",
