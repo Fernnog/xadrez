@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chess-pwa-v1.0.2'; // Versão atualizada para forçar reinstalação
+const CACHE_NAME = 'chess-pwa-v1.0.3'; // Versão incrementada
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -27,7 +27,7 @@ self.addEventListener('activate', (event) => {
             return Promise.all(
                 cacheNames.map((cache) => {
                     if (cache !== CACHE_NAME) {
-                        return caches.delete(cache); // Limpa cache antigo (v1.0.0 e v1.0.1)
+                        return caches.delete(cache); // Limpa cache antigo
                     }
                 })
             );
