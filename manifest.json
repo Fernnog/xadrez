@@ -1,9 +1,9 @@
 {
   "name": "Xadrez vs Stockfish",
   "short_name": "XadrezIA",
-  "id": "/NOME_DO_SEU_REPOSITORIO/",
-  "scope": "/NOME_DO_SEU_REPOSITORIO/",
-  "start_url": "/NOME_DO_SEU_REPOSITORIO/index.html",
+  "id": "./",
+  "scope": "./",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#1f2937",
   "theme_color": "#1f2937",
