@@ -166,8 +166,52 @@ function init() {
 }
 
 // ==========================================================
-// 3. FUNÇÕES PRINCIPAIS
+// 3. FUNÇÕES PRINCIPAIS E ANIMAÇÃO
 // ==========================================================
+
+// Função auxiliar para pausa (delay) na animação
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+// Nova lógica de animação de abertura
+async function playOpeningSequence(pgn) {
+    // 1. Carrega o PGN na engine apenas para extrair a lista de movimentos limpa
+    game.loadPgn(pgn);
+    const history = game.getHistory(); // Obtém lista de lances (ex: ['e4', 'c5', ...])
+    
+    // 2. Reseta o tabuleiro visual para o início
+    game.reset();
+    ui.renderBoard(game.getBoard());
+    ui.updateStatus(game.getGameState());
+    ui.updateMoveHistory([]); // Limpa histórico visual
+    
+    // Bloqueia interações durante a animação
+    appState.isEngineTurn = true; 
+    ui.setBoardCursor('wait');
+
+    // 3. Loop de animação
+    for (const move of history) {
+        await sleep(800); // Espera 800ms entre lances (ajustável)
+        
+        game.makeMove(move);
+        audio.playSound(audio.audioMove);
+        
+        // Atualiza UI passo a passo
+        updateAllDisplays();
+    }
+
+    // 4. Animação finalizada: Libera o jogo
+    appState.isEngineTurn = (game.getTurn() !== appState.playerColor);
+    
+    if (!game.isGameOver()) {
+        engine.requestEvaluation(game.getFen());
+    }
+
+    if (appState.isEngineTurn) {
+        requestEngineMove();
+    } else {
+        ui.setBoardCursor('pointer');
+    }
+}
 
 function startGame(chosenColor) {
     console.log(`[Main] Iniciando jogo. Cor: ${chosenColor}`);
@@ -185,27 +229,30 @@ function startGame(chosenColor) {
     const openingKey = ui.getOpeningKey();
     const openingData = OPENING_FENS[openingKey];
     
-    if (openingKey !== 'standard' && openingData && openingData.pgn) {
-        if (!game.loadPgn(openingData.pgn)) {
-            if (!game.loadFen(openingData.fen)) {
-                 game.reset(); 
-            }
-        } else {
-            console.log(`[Main] Abertura: ${openingData.name}`);
-        }
-    } 
-    
     ui.setupAndDisplayGame(appState.playerColor);
-    updateAllDisplays();
 
-    if (!game.isGameOver()) {
-        engine.requestEvaluation(game.getFen());
-    }
-
-    if (game.getTurn() !== appState.playerColor) {
-        requestEngineMove(true); 
+    // Lógica condicional: Se tem PGN de abertura, anima. Se não, inicia normal.
+    if (openingKey !== 'standard' && openingData && openingData.pgn) {
+        console.log(`[Main] Animando Abertura: ${openingData.name}`);
+        // Inicia a animação (assíncrona)
+        playOpeningSequence(openingData.pgn);
     } else {
-        ui.setBoardCursor('pointer'); 
+        // Fluxo padrão (sem animação, ou apenas FEN carregado anteriormente se necessário)
+        if (openingKey !== 'standard' && openingData && openingData.fen && !openingData.pgn) {
+             game.loadFen(openingData.fen);
+        }
+
+        updateAllDisplays();
+
+        if (!game.isGameOver()) {
+            engine.requestEvaluation(game.getFen());
+        }
+
+        if (game.getTurn() !== appState.playerColor) {
+            requestEngineMove(true); 
+        } else {
+            ui.setBoardCursor('pointer'); 
+        }
     }
 }
 
