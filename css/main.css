@@ -1,24 +1,53 @@
 /* css/main.css */
 
-/* --- CONFIGURAÇÕES GERAIS --- */
+/* ==========================================================================
+   1. CONFIGURAÇÕES GERAIS E TABULEIRO
+   ========================================================================== */
+
 body { 
     font-family: 'Inter', sans-serif; 
     /* O background geral é controlado pelo Tailwind no HTML */
 }
 
-/* --- CASAS E TABULEIRO --- */
+/* Container Estrutural */
+.board-container { 
+    position: relative;     
+    /* Espaços reservados para a numeração e letras */
+    padding-left: 1.5rem;   
+    padding-bottom: 1.5rem; 
+    
+    width: 100%;
+    max-width: 100%;
+    display: inline-block;  
+}
+
+/* O Tabuleiro de Xadrez */
+#board { 
+    width: 100%; 
+    aspect-ratio: 1 / 1;    
+    display: grid; 
+    grid-template-columns: repeat(8, 1fr); 
+    grid-template-rows: repeat(8, 1fr); 
+    transition: transform 0.5s ease-in-out; 
+    
+    /* Estética */
+    border: 4px solid #111827; 
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+/* Casas (Squares) */
 .square { 
     position: relative; 
     display: flex; 
     align-items: center; 
     justify-content: center; 
 }
-
 .light { background-color: #f0d9b5; }
 .dark { background-color: #b58863; }
 .selected-square { background-color: rgba(250, 204, 21, 0.8) !important; }
 
-/* Marcador de movimento */
+/* Marcador de Movimento */
 .valid-move-marker { 
     position: absolute; 
     top: 50%; left: 50%; 
@@ -26,16 +55,69 @@ body {
     width: 30%; height: 30%; 
     background-color: rgba(34, 197, 94, 0.6); 
     border-radius: 50%; 
-    pointer-events: none; z-index: 5; 
+    pointer-events: none; 
+    z-index: 5; 
 }
 
-/* --- PEÇAS --- */
+/* ==========================================================================
+   2. ETIQUETAS (LABELS) - CORRIGIDO
+   ========================================================================== */
+
+/* Números (1-8) à esquerda */
+.rank-labels { 
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1.5rem; 
+    /* Altura igual à do tabuleiro (100% menos o padding de baixo) */
+    height: calc(100% - 1.5rem); 
+    
+    /* GRID para alinhar perfeitamente com as linhas do tabuleiro */
+    display: grid;
+    grid-template-rows: repeat(8, 1fr);
+    
+    font-weight: 600; 
+    color: #a0aec0; 
+    user-select: none;
+}
+
+/* Letras (a-h) embaixo */
+.file-labels { 
+    position: absolute;
+    bottom: 0;
+    left: 1.5rem; /* Começa depois do padding da esquerda */
+    width: calc(100% - 1.5rem);
+    height: 1.5rem; 
+    
+    /* GRID para alinhar perfeitamente com as colunas do tabuleiro */
+    display: grid; 
+    grid-template-columns: repeat(8, 1fr);
+    
+    font-weight: 600; 
+    color: #a0aec0; 
+    user-select: none; 
+}
+
+/* ESTILO DOS ITENS INTERNOS (SPANS) - O QUE FALTAVA */
+.rank-labels span, .file-labels span { 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    width: 100%;
+    height: 100%;
+}
+
+/* ==========================================================================
+   3. PEÇAS
+   ========================================================================== */
+
 .piece { 
-    font-size: 3.5rem; /* Padrão Desktop */
+    font-size: 3.5rem; 
     cursor: pointer; 
     user-select: none; 
     z-index: 10; 
-    line-height: 1;
+    line-height: 1; 
+    transition: opacity 0.1s ease-in-out; 
 }
 
 .white-piece { 
@@ -48,69 +130,28 @@ body {
     text-shadow: 0 1px 2px rgba(255,255,255,0.2); 
 }
 
-/* Responsividade das Peças */
-@media (max-width: 640px) { .piece { font-size: 2.5rem; } }
-@media (max-width: 400px) { .piece { font-size: 1.8rem; } }
-
-/* --- ESTRUTURA DO TABULEIRO (CORREÇÃO DE LAYOUT) --- */
-
-/* Container principal que segura labels + tabuleiro */
-.board-container { 
-    position: relative; /* Referência para os labels absolutos */
-    padding-left: 1.5rem; /* Espaço para números à esquerda */
-    padding-bottom: 1.5rem; /* Espaço para letras embaixo */
-    width: 100%;
-    max-width: 100%;
-    /* Garante que o container não estique além do necessário */
-    display: inline-block; 
+.animated-piece { 
+    position: absolute; 
+    z-index: 1000; 
+    pointer-events: none; 
+    transition: top 0.25s ease-out, left 0.25s ease-out; 
 }
 
-/* O Tabuleiro em si (Grid 8x8) */
-#board { 
-    width: 100%; 
-    aspect-ratio: 1 / 1; /* Mantém sempre quadrado */
-    display: grid; 
-    grid-template-columns: repeat(8, 1fr); 
-    grid-template-rows: repeat(8, 1fr); 
-    transition: transform 0.5s ease-in-out; 
-}
-
-/* Labels: Numeração Esquerda (1-8) */
-.rank-labels { 
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 1.5rem;
-    height: calc(100% - 1.5rem); /* Subtrai o padding bottom */
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around; /* Distribui igualmente */
-    font-weight: 600; 
-    color: #a0aec0; 
-    user-select: none;
-}
-
-/* Labels: Letras Inferiores (a-h) */
-.file-labels { 
-    position: absolute;
-    bottom: 0;
-    left: 1.5rem; /* Começa depois do padding left */
-    width: calc(100% - 1.5rem);
-    height: 1.5rem;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around; /* Distribui igualmente */
-    align-items: center;
-    font-weight: 600; 
-    color: #a0aec0; 
-    user-select: none; 
-}
+.piece-hidden { opacity: 0; }
 
 /* Rotação */
 .board-flipped { transform: rotate(180deg); }
-.board-flipped .piece { transform: rotate(180deg); }
+.board-flipped .piece, .board-flipped .animated-piece { transform: rotate(180deg); }
 
-/* --- HISTÓRICO E UI --- */
+/* Responsividade Mobile */
+@media (max-width: 640px) { .piece { font-size: 2.5rem; } }
+@media (max-width: 400px) { .piece { font-size: 1.8rem; } }
+
+
+/* ==========================================================================
+   4. UI AUXILIAR
+   ========================================================================== */
+
 .move-history { 
     overflow-y: auto; scrollbar-width: thin; scrollbar-color: #4a5568 #2d3748; 
 }
@@ -127,22 +168,21 @@ body {
 .captured-pieces-container .piece { font-size: 1.5rem; cursor: default; }
 .captured-pieces-container .material-diff { font-size: 0.9rem; font-weight: 600; color: #a0aec0; margin-left: 0.5rem; }
 
-/* Botões */
 .btn-play-white { background-color: #b58863; color: white; }
 .btn-play-white:hover { background-color: #c79d7f; }
 .btn-play-black { background-color: #f0d9b5; color: #1a202c; }
 .btn-play-black:hover { background-color: #e6c8a4; }
 
-/* Toast e Extras */
 #versionCard:hover { background-color: rgba(55, 65, 81, 0.9); cursor: help; }
 .toast { transform: translateX(100%); transition: transform 0.3s ease-out, opacity 0.3s ease-out; opacity: 0; }
 .toast-visible { transform: translateX(0); opacity: 1; }
 
-/* ========================================= */
-/* --- MODO WIDGET (POP-OUT) - CORRIGIDO --- */
-/* ========================================= */
 
-/* 1. Esconde a interface padrão */
+/* ==========================================================================
+   5. MODO WIDGET (POP-OUT) - FINAL
+   ========================================================================== */
+
+/* Esconde elementos desnecessários */
 body.widget-mode #mainHeader,
 body.widget-mode #sidebarPanel,
 body.widget-mode #popOutWidgetBtn,
@@ -153,10 +193,10 @@ body.widget-mode footer {
     display: none !important; 
 }
 
-/* 2. Configura a janela do widget */
+/* Layout da Janela */
 body.widget-mode {
     padding: 0 !important;
-    background-color: #1f2937;
+    background-color: #1f2937; 
     overflow: hidden;
     width: 100vw;
     height: 100vh;
@@ -175,37 +215,45 @@ body.widget-mode #gameContainer {
     align-items: center;
 }
 
-/* 3. O Tabuleiro no Widget */
+/* Tabuleiro no Widget */
 body.widget-mode .board-container {
-    /* Define tamanho explícito para o widget não ficar vazio */
     width: 95vmin !important; 
-    height: auto !important; /* Altura automática baseada no aspect-ratio do #board */
-    
-    /* Remove limitações do modo normal */
+    height: auto !important; 
     max-width: none;
     
-    /* Garante que os números/letras caibam */
+    /* Aumenta o espaço para números/letras no widget para facilitar leitura */
     padding-left: 2rem; 
     padding-bottom: 2rem;
 }
 
-/* Ajusta labels para o Widget */
-body.widget-mode .rank-labels { width: 2rem; }
-body.widget-mode .file-labels { height: 2rem; left: 2rem; width: calc(100% - 2rem); }
-body.widget-mode .rank-labels, 
-body.widget-mode .file-labels { font-size: 1rem; }
+/* Ajusta largura/altura das barras de Labels no Widget */
+body.widget-mode .rank-labels { 
+    width: 2rem; 
+    height: calc(100% - 2rem);
+}
+body.widget-mode .file-labels { 
+    height: 2rem; 
+    left: 2rem; 
+    width: calc(100% - 2rem); 
+}
 
-/* 4. Peças Gigantes no Widget (Responsivas) */
+/* Aumenta fonte dos números/letras no Widget */
+body.widget-mode .rank-labels span, 
+body.widget-mode .file-labels span { 
+    font-size: 1rem; 
+}
+
+/* Peças Responsivas no Widget */
 body.widget-mode .piece {
-    /* 11% da menor dimensão da tela = tamanho da peça */
     font-size: 11vmin; 
 }
 
-/* 5. Botão Restaurar */
+/* Botão Restaurar */
 body.widget-mode #restoreWindowBtn {
     display: flex !important;
     position: absolute;
     top: 10px; right: 10px; z-index: 50;
     background-color: rgba(31, 41, 55, 0.8);
     backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.1);
 }
