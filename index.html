@@ -23,26 +23,22 @@
     <div id="gameContainer" class="w-full max-w-7xl hidden flex flex-col lg:flex-row gap-8 items-start justify-center">
         
         <!-- COLUNA ESQUERDA: Cabeçalho e Tabuleiro -->
-        <!-- Adicionado 'relative' para posicionamento dos botões flutuantes -->
+        <!-- ATENÇÃO: Classe 'relative' adicionada aqui para posicionar os botões flutuantes -->
         <div class="flex flex-col w-full lg:w-auto items-center relative">
             
-            <!-- Botão Pop-out Widget (Abre nova janela) -->
-            <button id="popOutWidgetBtn" class="absolute -left-16 top-0 hidden lg:flex items-center justify-center p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-lg transition-all z-20 group" title="Abrir como Widget (Pop-out)">
-                <svg class="w-6 h-6 transform group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                </svg>
+            <!-- NOVO: Botão Pop-out Widget (Aparece no modo Normal Desktop) -->
+            <button id="popOutWidgetBtn" class="absolute -left-16 top-2 hidden lg:flex items-center justify-center p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-lg transition-all z-20 group" title="Abrir como Widget (Pop-out)">
+                <svg class="w-6 h-6 transform group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
             </button>
             
-            <!-- Botão Restaurar Janela (Aparece apenas no modo Widget) -->
-            <button id="restoreWindowBtn" class="absolute top-2 right-2 hidden z-50 bg-gray-900 text-white p-2 rounded-full shadow-lg opacity-70 hover:opacity-100 transition-all" title="Restaurar para Navegador">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
-                </svg>
+            <!-- NOVO: Botão Restaurar Janela (Aparece APENAS no modo Widget via CSS) -->
+            <button id="restoreWindowBtn" class="absolute top-2 right-2 hidden z-50 bg-gray-700 hover:bg-gray-600 text-white p-2 rounded shadow-lg transition-colors" title="Restaurar para Navegador">
+                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
             </button>
 
             <!-- CABEÇALHO: Logo (Esq) + Painel (Dir) -->
             <!-- ID 'mainHeader' adicionado para ocultação no modo widget -->
-            <div id="mainHeader" class="w-full max-w-[500px] flex items-center justify-between mb-4 gap-4 transition-opacity duration-300">
+            <div id="mainHeader" class="w-full max-w-[500px] flex items-center justify-between mb-4 gap-4">
                 <!-- Logo -->
                 <img src="img/logo.png" alt="Logo" class="h-16 w-auto object-contain">
                 
@@ -56,22 +52,22 @@
             </div>
 
             <!-- ÁREA DO TABULEIRO -->
-            <div class="w-full max-w-[500px] flex flex-col board-wrapper transition-all duration-300">
-                <div id="capturedForBlack" class="captured-pieces-container w-full mb-2 transition-opacity duration-300"></div>
+            <div class="w-full max-w-[500px] flex flex-col board-container">
+                <div id="capturedForBlack" class="captured-pieces-container w-full mb-2"></div>
                 
-                <div class="board-container relative">
+                <div class="relative">
                     <div class="rank-labels"></div>
                     <div id="board" class="w-full aspect-square grid grid-cols-8 grid-rows-8 shadow-2xl rounded-lg overflow-hidden border-4 border-gray-900 bg-gray-700"></div>
                     <div class="file-labels"></div>
                 </div>
                 
-                <div id="capturedForWhite" class="captured-pieces-container w-full mt-2 transition-opacity duration-300"></div>
+                <div id="capturedForWhite" class="captured-pieces-container w-full mt-2"></div>
             </div>
         </div>
 
         <!-- COLUNA DIREITA: Histórico e Controles -->
         <!-- ID 'sidebarPanel' adicionado para ocultação no modo widget -->
-        <div id="sidebarPanel" class="w-full max-w-[500px] lg:w-80 flex flex-col gap-4 mt-0 lg:mt-20 transition-opacity duration-300"> 
+        <div id="sidebarPanel" class="w-full max-w-[500px] lg:w-80 flex flex-col gap-4 mt-0 lg:mt-20"> 
             
             <div class="bg-gray-900 p-4 rounded-lg shadow-lg w-full">
                 <div class="flex justify-between items-center mb-3">
@@ -190,12 +186,12 @@
         </div>
     </div>
     
-    <!-- CARD DE VERSÃO -->
+    <!-- CARD DE VERSÃO (MODIFICADO PARA CLICÁVEL) -->
     <div id="versionCard" class="fixed bottom-4 left-4 bg-gray-900 bg-opacity-90 text-gray-400 text-xs px-3 py-1 rounded-full shadow-lg z-20 cursor-pointer hover:bg-gray-700 hover:text-white transition-colors border border-gray-700">
         <span id="currentVersionDisplay">v1.0.1</span> ℹ️
     </div>
 
-    <!-- CONTAINER DE NOTIFICAÇÕES TOAST -->
+    <!-- CONTAINER DE NOTIFICAÇÕES TOAST (NOVO) -->
     <div id="toastContainer" class="fixed bottom-5 right-5 flex flex-col gap-2 z-50 pointer-events-none">
         <!-- Toasts serão injetados aqui via JS -->
     </div>
