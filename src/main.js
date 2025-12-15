@@ -121,6 +121,14 @@ function handleUndo() {
 function init() {
     console.log("[Main] Inicializando aplicação...");
     
+    // --- NOVO: Detecção do Modo Widget ---
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('mode') === 'widget') {
+        document.body.classList.add('widget-mode');
+        console.log("[Main] Inicializado em Modo Widget (Compacto).");
+    }
+    // -------------------------------------
+
     // Registrar Handlers da UI com lógica de UX (Toasts)
     ui.registerUIHandlers({
         onPlayWhite: () => { console.log("[UI] Jogar Brancas"); startGame('w'); },
