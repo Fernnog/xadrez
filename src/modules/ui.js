@@ -18,19 +18,22 @@ const elements = {
     modalTitle: document.getElementById('modalTitle'),
     modalMessage: document.getElementById('modalMessage'),
     copyPgnButton: document.getElementById('copyPgnButton'),
-    downloadDocButton: document.getElementById('downloadDocButton'), // NOVO
+    downloadDocButton: document.getElementById('downloadDocButton'), 
     mainBoardContainer: document.querySelector('.flex.flex-col.w-full.lg\\:w-auto.items-center'),
     rankLabels: document.querySelector('.rank-labels'),
     fileLabels: document.querySelector('.file-labels'),
     openingSelect: document.getElementById('openingSelect'),
     openingFilter: document.getElementById('openingFilter'),
     undoButton: document.getElementById('undoButton'),
-    versionCard: document.getElementById('versionCard'), // NOVO
-    currentVersionDisplay: document.getElementById('currentVersionDisplay'), // NOVO
-    changelogModal: document.getElementById('changelogModal'), // NOVO
-    changelogContent: document.getElementById('changelogContent'), // NOVO
-    closeChangelogButton: document.getElementById('closeChangelogButton'), // NOVO
-    toastContainer: document.getElementById('toastContainer'), // NOVO
+    versionCard: document.getElementById('versionCard'), 
+    currentVersionDisplay: document.getElementById('currentVersionDisplay'), 
+    changelogModal: document.getElementById('changelogModal'), 
+    changelogContent: document.getElementById('changelogContent'), 
+    closeChangelogButton: document.getElementById('closeChangelogButton'), 
+    toastContainer: document.getElementById('toastContainer'), 
+    // --- NOVOS ELEMENTOS WIDGET ---
+    popOutWidgetBtn: document.getElementById('popOutWidgetBtn'),
+    restoreWindowBtn: document.getElementById('restoreWindowBtn'),
 };
 
 // Sons da interface
@@ -49,7 +52,8 @@ function safeAddEventListener(id, event, handler) {
     if (el) {
         el.addEventListener(event, handler);
     } else {
-        console.warn(`[UI Warning] Elemento com ID '${id}' não encontrado.`);
+        // Warning suprimido para elementos que podem não existir no modo Widget
+        // console.warn(`[UI Warning] Elemento com ID '${id}' não encontrado.`);
     }
 }
 
@@ -182,6 +186,28 @@ export function showToast(message, type = 'info') {
     }, 3000);
 }
 
+// --- FUNÇÃO DE ABERTURA DO WIDGET (NOVA) ---
+function openWidgetWindow() {
+    const width = 450;
+    const height = 550;
+
+    // Cálculo da posição no canto inferior esquerdo
+    // window.screen.availHeight desconta a barra de tarefas do SO
+    const left = 20; 
+    const top = window.screen.availHeight - height - 20;
+
+    const features = `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=no,status=no,menubar=no,toolbar=no,location=no`;
+
+    // Abre a mesma página com o parâmetro 'mode=widget'
+    window.open(`${window.location.pathname}?mode=widget`, 'ChessWidgetWindow', features);
+}
+
+function restoreMainWindow() {
+    // Abre a URL limpa (sem parâmetros) em nova aba ou foca se possível
+    window.open(window.location.pathname, '_blank');
+    window.close(); // Fecha a janela do widget
+}
+
 // --- FUNÇÕES EXPORTADAS ---
 
 export function registerUIHandlers(handlers) {
@@ -209,6 +235,14 @@ export function registerUIHandlers(handlers) {
     safeAddEventListener('downloadDocButton', 'click', handlers.onDownloadDoc);
     safeAddEventListener('versionCard', 'click', () => elements.changelogModal.classList.remove('hidden'));
     safeAddEventListener('closeChangelogButton', 'click', () => elements.changelogModal.classList.add('hidden'));
+    
+    // Handlers do Widget
+    if (elements.popOutWidgetBtn) {
+        elements.popOutWidgetBtn.addEventListener('click', openWidgetWindow);
+    }
+    if (elements.restoreWindowBtn) {
+        elements.restoreWindowBtn.addEventListener('click', restoreMainWindow);
+    }
     
     populateOpeningSelector(); 
     renderChangelog(); 
