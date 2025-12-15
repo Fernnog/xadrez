@@ -101,7 +101,7 @@ function handleUndo() {
         console.log("[Main] Desfeito o último lance (apenas um no histórico).");
     } else {
         console.log("[Main] Nenhum lance para desfazer.");
-        ui.showToast("Nenhum lance para desfazer.", "error"); // UX Upgrade
+        ui.showToast("Nenhum lance para desfazer.", "error");
         return;
     }
     
@@ -115,21 +115,13 @@ function handleUndo() {
 }
 
 // ==========================================================
-// 2. FUNÇÃO INIT
+// 2. FUNÇÃO INIT (COM LOGICA DE WIDGET ATUALIZADA)
 // ==========================================================
 
 function init() {
     console.log("[Main] Inicializando aplicação...");
     
-    // --- NOVO: Detecção do Modo Widget ---
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('mode') === 'widget') {
-        document.body.classList.add('widget-mode');
-        console.log("[Main] Inicializado em Modo Widget (Compacto).");
-    }
-    // -------------------------------------
-
-    // Registrar Handlers da UI com lógica de UX (Toasts)
+    // Registrar Handlers da UI
     ui.registerUIHandlers({
         onPlayWhite: () => { console.log("[UI] Jogar Brancas"); startGame('w'); },
         onPlayBlack: () => { console.log("[UI] Jogar Pretas"); startGame('b'); },
@@ -140,7 +132,6 @@ function init() {
         onPromotionSelect: handlePromotion,
         onUndo: handleUndo,
         
-        // Handler Atualizado: Copiar PGN com Feedback
         onCopyPgn: () => {
             utils.copyPgn(
                 game.getPgn(),
@@ -149,23 +140,48 @@ function init() {
             );
         },
         
-        // Handler Novo: Download DOC com Diagrama
         onDownloadDoc: () => {
             const pgn = game.getPgn();
             if (!pgn) {
                 ui.showToast('Não há lances para baixar.', 'error');
                 return;
             }
-            const board = game.getBoard(); // Obtém estado atual para o diagrama
+            const board = game.getBoard();
             utils.downloadHistoryAsDoc(pgn, board);
             ui.showToast('Download do DOC iniciado!', 'success');
         }
     });
     
     engine.initEngine(handleEngineMessage);
+
+    // --- NOVA LÓGICA: Detecção de Modo Widget e Auto-Resume ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const isWidgetMode = urlParams.get('mode') === 'widget';
+
+    if (isWidgetMode) {
+        document.body.classList.add('widget-mode');
+        console.log("[Main] Modo Widget Detectado via URL.");
+
+        // Verifica imediatamente se há um jogo para continuar
+        const savedState = utils.loadGameState();
+        
+        if (savedState) {
+            console.log("[Main] Estado salvo encontrado. Iniciando Auto-Resume no Widget.");
+            
+            // ATENÇÃO: Chamamos resumeGame() diretamente, pulando o checkForSavedGame() e o modal
+            resumeGame();
+            
+            // Interrompe o restante da inicialização padrão para não abrir o modal de menu
+            return; 
+        } else {
+            console.warn("[Main] Modo Widget ativo, mas sem jogo salvo. Mostrando menu padrão.");
+        }
+    }
+    // ------------------------------------------------------------
+
+    // Fluxo Padrão (só executa se não entrou no return acima)
     checkForSavedGame();
 
-    // Registro do Service Worker para Cache (Feature 2.a)
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js')
             .then(reg => console.log('[ServiceWorker] Registrado.', reg))
@@ -177,37 +193,28 @@ function init() {
 // 3. FUNÇÕES PRINCIPAIS E ANIMAÇÃO
 // ==========================================================
 
-// Função auxiliar para pausa (delay) na animação
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-// Nova lógica de animação de abertura
 async function playOpeningSequence(pgn) {
-    // 1. Carrega o PGN na engine apenas para extrair a lista de movimentos limpa
     game.loadPgn(pgn);
-    const history = game.getHistory(); // Obtém lista de lances (ex: ['e4', 'c5', ...])
+    const history = game.getHistory();
     
-    // 2. Reseta o tabuleiro visual para o início
     game.reset();
     ui.renderBoard(game.getBoard());
     ui.updateStatus(game.getGameState());
-    ui.updateMoveHistory([]); // Limpa histórico visual
+    ui.updateMoveHistory([]);
     
-    // Bloqueia interações durante a animação
     appState.isEngineTurn = true; 
     ui.setBoardCursor('wait');
 
-    // 3. Loop de animação
     for (const move of history) {
-        await sleep(800); // Espera 800ms entre lances (ajustável)
+        await sleep(800);
         
         game.makeMove(move);
         audio.playSound(audio.audioMove);
-        
-        // Atualiza UI passo a passo
         updateAllDisplays();
     }
 
-    // 4. Animação finalizada: Libera o jogo
     appState.isEngineTurn = (game.getTurn() !== appState.playerColor);
     
     if (!game.isGameOver()) {
@@ -239,13 +246,10 @@ function startGame(chosenColor) {
     
     ui.setupAndDisplayGame(appState.playerColor);
 
-    // Lógica condicional: Se tem PGN de abertura, anima. Se não, inicia normal.
     if (openingKey !== 'standard' && openingData && openingData.pgn) {
         console.log(`[Main] Animando Abertura: ${openingData.name}`);
-        // Inicia a animação (assíncrona)
         playOpeningSequence(openingData.pgn);
     } else {
-        // Fluxo padrão (sem animação, ou apenas FEN carregado anteriormente se necessário)
         if (openingKey !== 'standard' && openingData && openingData.fen && !openingData.pgn) {
              game.loadFen(openingData.fen);
         }
@@ -353,6 +357,7 @@ function resumeGame() {
         } else {
              ui.setBoardCursor('pointer'); 
         }
+        console.log("[Main] Jogo resumido com sucesso.");
     }
 }
 
