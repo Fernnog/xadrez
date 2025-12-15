@@ -18,20 +18,20 @@ const elements = {
     modalTitle: document.getElementById('modalTitle'),
     modalMessage: document.getElementById('modalMessage'),
     copyPgnButton: document.getElementById('copyPgnButton'),
-    downloadDocButton: document.getElementById('downloadDocButton'), 
+    downloadDocButton: document.getElementById('downloadDocButton'),
     mainBoardContainer: document.querySelector('.flex.flex-col.w-full.lg\\:w-auto.items-center'),
     rankLabels: document.querySelector('.rank-labels'),
     fileLabels: document.querySelector('.file-labels'),
     openingSelect: document.getElementById('openingSelect'),
     openingFilter: document.getElementById('openingFilter'),
     undoButton: document.getElementById('undoButton'),
-    versionCard: document.getElementById('versionCard'), 
-    currentVersionDisplay: document.getElementById('currentVersionDisplay'), 
-    changelogModal: document.getElementById('changelogModal'), 
-    changelogContent: document.getElementById('changelogContent'), 
-    closeChangelogButton: document.getElementById('closeChangelogButton'), 
-    toastContainer: document.getElementById('toastContainer'), 
-    // --- NOVOS ELEMENTOS WIDGET ---
+    versionCard: document.getElementById('versionCard'),
+    currentVersionDisplay: document.getElementById('currentVersionDisplay'),
+    changelogModal: document.getElementById('changelogModal'),
+    changelogContent: document.getElementById('changelogContent'),
+    closeChangelogButton: document.getElementById('closeChangelogButton'),
+    toastContainer: document.getElementById('toastContainer'),
+    // --- ELEMENTOS NOVOS DO WIDGET ---
     popOutWidgetBtn: document.getElementById('popOutWidgetBtn'),
     restoreWindowBtn: document.getElementById('restoreWindowBtn'),
 };
@@ -52,8 +52,7 @@ function safeAddEventListener(id, event, handler) {
     if (el) {
         el.addEventListener(event, handler);
     } else {
-        // Warning suprimido para elementos que podem não existir no modo Widget
-        // console.warn(`[UI Warning] Elemento com ID '${id}' não encontrado.`);
+        // Silencioso se o elemento não existir (comum se estivermos no modo widget onde elementos são removidos/ocultos)
     }
 }
 
@@ -135,7 +134,7 @@ function populateOpeningSelector(filterText = '') {
     }
 }
 
-// --- FUNÇÃO DE CHANGELOG (NOVA) ---
+// --- FUNÇÃO DE CHANGELOG ---
 function renderChangelog() {
     if (!elements.currentVersionDisplay || !elements.changelogContent) return;
     
@@ -164,7 +163,7 @@ function renderChangelog() {
     });
 }
 
-// --- FUNÇÃO DE TOAST (NOVA) ---
+// --- FUNÇÃO DE TOAST ---
 export function showToast(message, type = 'info') {
     if (!elements.toastContainer) return;
 
@@ -186,26 +185,22 @@ export function showToast(message, type = 'info') {
     }, 3000);
 }
 
-// --- FUNÇÃO DE ABERTURA DO WIDGET (NOVA) ---
+// --- FUNÇÃO DE ABRIR WIDGET (POP-OUT) ---
 function openWidgetWindow() {
+    // Definições de tamanho da janela compacta
     const width = 450;
     const height = 550;
-
-    // Cálculo da posição no canto inferior esquerdo
-    // window.screen.availHeight desconta a barra de tarefas do SO
+    
+    // Cálculo para posicionar no Canto Inferior Esquerdo
     const left = 20; 
-    const top = window.screen.availHeight - height - 20;
+    // availHeight desconta a barra de tarefas do SO
+    const top = window.screen.availHeight - height - 20; 
 
-    const features = `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=no,status=no,menubar=no,toolbar=no,location=no`;
-
-    // Abre a mesma página com o parâmetro 'mode=widget'
+    const features = `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=no,status=no`;
+    
+    // Abre a mesma página passando o parametro ?mode=widget
+    // Nota: O estado do jogo (localStorage) já está salvo automaticamente pelo main.js a cada lance.
     window.open(`${window.location.pathname}?mode=widget`, 'ChessWidgetWindow', features);
-}
-
-function restoreMainWindow() {
-    // Abre a URL limpa (sem parâmetros) em nova aba ou foca se possível
-    window.open(window.location.pathname, '_blank');
-    window.close(); // Fecha a janela do widget
 }
 
 // --- FUNÇÕES EXPORTADAS ---
@@ -231,19 +226,28 @@ export function registerUIHandlers(handlers) {
         elements.copyPgnButton.addEventListener('click', handlers.onCopyPgn);
     }
 
-    // --- NOVOS HANDLERS ---
     safeAddEventListener('downloadDocButton', 'click', handlers.onDownloadDoc);
     safeAddEventListener('versionCard', 'click', () => elements.changelogModal.classList.remove('hidden'));
     safeAddEventListener('closeChangelogButton', 'click', () => elements.changelogModal.classList.add('hidden'));
     
-    // Handlers do Widget
+    // --- HANDLERS DO WIDGET ---
     if (elements.popOutWidgetBtn) {
         elements.popOutWidgetBtn.addEventListener('click', openWidgetWindow);
     }
-    if (elements.restoreWindowBtn) {
-        elements.restoreWindowBtn.addEventListener('click', restoreMainWindow);
-    }
     
+    if (elements.restoreWindowBtn) {
+        elements.restoreWindowBtn.addEventListener('click', () => {
+            // Tenta focar na janela pai (opener) se existir, ou abre uma nova aba normal
+            if (window.opener) {
+                window.opener.focus();
+            } else {
+                // Remove o parametro widget para abrir normal
+                window.open(window.location.pathname, '_blank');
+            }
+            window.close(); // Fecha o widget
+        });
+    }
+
     populateOpeningSelector(); 
     renderChangelog(); 
 }
@@ -334,17 +338,19 @@ export function createBoard(onSquareClickCallback) {
 export function setupBoardOrientation(playerColor) {
     const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
     const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-    elements.rankLabels.innerHTML = '';
-    elements.fileLabels.innerHTML = '';
+    
+    // Verificação de segurança caso rankLabels não exista (no modo widget pode ser oculto)
+    if(elements.rankLabels) elements.rankLabels.innerHTML = '';
+    if(elements.fileLabels) elements.fileLabels.innerHTML = '';
 
     if (playerColor === 'b') {
         elements.board.classList.add('board-flipped');
-        ranks.reverse().forEach(r => elements.rankLabels.innerHTML += `<span>${r}</span>`);
-        files.reverse().forEach(f => elements.fileLabels.innerHTML += `<span>${f}</span>`);
+        if(elements.rankLabels) ranks.reverse().forEach(r => elements.rankLabels.innerHTML += `<span>${r}</span>`);
+        if(elements.fileLabels) files.reverse().forEach(f => elements.fileLabels.innerHTML += `<span>${f}</span>`);
     } else {
         elements.board.classList.remove('board-flipped');
-        ranks.forEach(r => elements.rankLabels.innerHTML += `<span>${r}</span>`);
-        files.forEach(f => elements.fileLabels.innerHTML += `<span>${f}</span>`);
+        if(elements.rankLabels) ranks.forEach(r => elements.rankLabels.innerHTML += `<span>${r}</span>`);
+        if(elements.fileLabels) files.forEach(f => elements.fileLabels.innerHTML += `<span>${f}</span>`);
     }
 }
 
@@ -435,6 +441,7 @@ export function updateCapturedPieces(history) {
     }
 
     const render = (container, pieces, color) => {
+        if(!container) return 0; // Segurança
         container.innerHTML = '';
         let material = 0;
         const pieceOrder = { q: 1, r: 2, b: 3, n: 4, p: 5 };
@@ -452,12 +459,13 @@ export function updateCapturedPieces(history) {
     const blackMaterial = render(elements.capturedForWhite, captured.b, 'b');
     const diff = whiteMaterial - blackMaterial;
 
-    if (diff > 0) {
+    // Só atualiza diferenças se os elementos existirem (no widget podem estar ocultos)
+    if (elements.capturedForBlack && diff > 0) {
         const diffEl = document.createElement('span');
         diffEl.className = 'material-diff';
         diffEl.textContent = `+${diff}`;
         elements.capturedForBlack.appendChild(diffEl);
-    } else if (diff < 0) {
+    } else if (elements.capturedForWhite && diff < 0) {
         const diffEl = document.createElement('span');
         diffEl.className = 'material-diff';
         diffEl.textContent = `+${Math.abs(diff)}`;
