@@ -1,10 +1,12 @@
 /* css/main.css */
 
+/* --- CONFIGURAÇÕES GERAIS --- */
 body { 
     font-family: 'Inter', sans-serif; 
     /* O background geral é controlado pelo Tailwind no HTML (bg-gray-800) */
 }
 
+/* --- ESTILOS DAS CASAS DO TABULEIRO --- */
 .square { 
     position: relative; 
     display: flex; 
@@ -12,7 +14,6 @@ body {
     justify-content: center; 
 }
 
-/* --- RESTAURAÇÃO DAS CORES ORIGINAIS (BEGE/MARROM) --- */
 .light { 
     background-color: #f0d9b5; 
 }
@@ -21,18 +22,36 @@ body {
     background-color: #b58863; 
 }
 
+.selected-square { 
+    background-color: rgba(250, 204, 21, 0.8) !important; 
+}
+
+/* --- MARCADOR DE MOVIMENTO VÁLIDO (Bolinha Verde) --- */
+.valid-move-marker { 
+    position: absolute; 
+    top: 50%; 
+    left: 50%; 
+    transform: translate(-50%, -50%); 
+    width: 30%; 
+    height: 30%; 
+    background-color: rgba(34, 197, 94, 0.6); 
+    border-radius: 50%; 
+    pointer-events: none; 
+    z-index: 5; 
+}
+
+/* --- PEÇAS DE XADREZ --- */
 .piece { 
-    font-size: 3.5rem; 
+    font-size: 3.5rem; /* Tamanho base para Desktop */
     cursor: pointer; 
     user-select: none; 
     z-index: 10; 
     transition: opacity 0.1s ease-in-out; 
+    line-height: 1; /* Garante que o caractere não tenha espaçamento extra vertical */
 }
 
-/* --- PEÇAS BRANCAS PREENCHIDAS --- */
 .white-piece { 
     color: #FFFFFF; 
-    /* Stroke simulado para dar contorno nas peças brancas */
     text-shadow: 
         -1px -1px 0 #000,  
          1px -1px 0 #000,
@@ -41,18 +60,9 @@ body {
          0 2px 5px rgba(0,0,0,0.5);
 }
 
-/* --- PEÇAS PRETAS --- */
 .black-piece { 
     color: #1a202c; 
     text-shadow: 0 1px 2px rgba(255,255,255,0.2); 
-}
-
-@media (max-width: 640px) { 
-    .piece { font-size: 2.5rem; } 
-}
-
-@media (max-width: 400px) { 
-    .piece { font-size: 2rem; } 
 }
 
 .animated-piece { 
@@ -66,26 +76,89 @@ body {
     opacity: 0; 
 }
 
-.selected-square { 
-    background-color: rgba(250, 204, 21, 0.8) !important; 
+/* Responsividade das Peças */
+@media (max-width: 640px) { 
+    .piece { font-size: 2.5rem; } 
+}
+@media (max-width: 400px) { 
+    .piece { font-size: 1.8rem; } 
 }
 
-.valid-move-marker { 
-    position: absolute; 
-    top: 50%; 
-    left: 50%; 
-    transform: translate(-50%, -50%); 
-    width: 30%; 
-    height: 30%; 
-    background-color: rgba(34, 197, 94, 0.5); 
-    border-radius: 50%; 
-    pointer-events: none; 
-    z-index: 5; 
+/* --- LAYOUT DO TABULEIRO (CORREÇÃO DE GRID) --- */
+.board-container { 
+    display: grid; 
+    /* Coluna 1: Numeração (2rem), Coluna 2: Tabuleiro (Restante) */
+    grid-template-columns: 2rem 1fr; 
+    /* Linha 1: Tabuleiro, Linha 2: Letras (2rem) */
+    grid-template-rows: 1fr 2rem; 
+    gap: 0; 
+    width: 100%;
+    /* O aspecto 1/1 aqui é crucial para o grid não colapsar */
+    aspect-ratio: 1 / 1; 
 }
 
+/* Numeração Esquerda (1-8) */
+.rank-labels { 
+    grid-column: 1 / 2; /* Ocupa a primeira coluna */
+    grid-row: 1 / 2;    /* Ocupa a primeira linha (mesma altura do board) */
+    
+    display: grid; 
+    grid-template-rows: repeat(8, 1fr); /* 8 divisões iguais */
+    
+    height: 100%;
+    font-weight: 600; 
+    color: #a0aec0; 
+    user-select: none; 
+    align-items: center;
+    justify-items: center;
+}
+
+/* O Tabuleiro em si */
+#board { 
+    grid-column: 2 / 3; /* Ocupa segunda coluna */
+    grid-row: 1 / 2;    /* Ocupa primeira linha */
+    
+    width: 100%; 
+    height: 100%; /* Força preencher a célula do grid */
+    
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    
+    position: relative; 
+    transition: transform 0.5s ease-in-out; 
+}
+
+/* Letras Inferiores (a-h) */
+.file-labels { 
+    grid-column: 2 / 3; /* Ocupa segunda coluna (abaixo do board) */
+    grid-row: 2 / 3;    /* Ocupa segunda linha */
+    
+    display: grid; 
+    grid-template-columns: repeat(8, 1fr); /* 8 divisões iguais */
+    
+    width: 100%;
+    font-weight: 600; 
+    color: #a0aec0; 
+    user-select: none; 
+    align-items: center;
+    justify-items: center;
+}
+
+/* Rotação do Tabuleiro */
+.board-flipped { 
+    transform: rotate(180deg); 
+}
+.board-flipped .piece, .board-flipped .animated-piece { 
+    transform: rotate(180deg); 
+}
+
+/* --- HISTÓRICO E UI --- */
 .move-history { 
-    /* Altura controlada via Tailwind no HTML agora, mas mantemos o scroll */
     overflow-y: auto;
+    /* Scrollbar fina para Webkit */
+    scrollbar-width: thin;
+    scrollbar-color: #4a5568 #2d3748;
 }
 
 .move-list-item { 
@@ -95,82 +168,17 @@ body {
     padding: 0.25rem 0.5rem; 
     border-radius: 0.25rem; 
 }
+.move-list-item:nth-child(odd) { background-color: #4a5568; }
+.move-number { color: #a0aec0; font-weight: 600; text-align: right; }
 
-.move-list-item:nth-child(odd) { 
-    background-color: #4a5568; 
-}
+/* Botões de Cor */
+.btn-play-white { background-color: #b58863; color: white; }
+.btn-play-white:hover { background-color: #c79d7f; }
 
-.move-number { 
-    color: #a0aec0; 
-    font-weight: 600; 
-    text-align: right; 
-}
+.btn-play-black { background-color: #f0d9b5; color: #1a202c; }
+.btn-play-black:hover { background-color: #e6c8a4; }
 
-.board-container { 
-    display: grid; 
-    grid-template-columns: 1.5rem 1fr; 
-    grid-template-rows: 1fr 1.5rem; 
-    gap: 0.5rem; 
-}
-
-#board { 
-    grid-column: 2; 
-    grid-row: 1; 
-    position: relative; 
-    transition: transform 0.5s ease-in-out; 
-}
-
-.rank-labels, .file-labels { 
-    display: grid; 
-    font-weight: 600; 
-    color: #a0aec0; 
-    user-select: none; 
-}
-
-.rank-labels { 
-    grid-template-rows: repeat(8, 1fr); 
-    grid-column: 1; 
-    grid-row: 1; 
-}
-
-.file-labels { 
-    grid-template-columns: repeat(8, 1fr); 
-    grid-column: 2; 
-    grid-row: 2; 
-}
-
-.rank-labels span, .file-labels span { 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-}
-
-.board-flipped { 
-    transform: rotate(180deg); 
-}
-
-.board-flipped .piece, .board-flipped .animated-piece { 
-    transform: rotate(180deg); 
-}
-
-.btn-play-white { 
-    background-color: #b58863; 
-    color: white;
-}
-
-.btn-play-white:hover { 
-    background-color: #c79d7f; 
-}
-
-.btn-play-black { 
-    background-color: #f0d9b5; 
-    color: #1a202c;
-}
-
-.btn-play-black:hover { 
-    background-color: #e6c8a4; 
-}
-
+/* Peças Capturadas */
 .captured-pieces-container { 
     min-height: 2.5rem; 
     display: flex; 
@@ -180,49 +188,27 @@ body {
     border-radius: 0.25rem; 
     background-color: rgba(31, 41, 55, 0.5); 
 }
+.captured-pieces-container .piece { font-size: 1.5rem; cursor: default; }
+.captured-pieces-container .material-diff { font-size: 0.9rem; font-weight: 600; color: #a0aec0; margin-left: 0.5rem; }
 
-.captured-pieces-container .piece { 
-    font-size: 1.5rem; 
-    cursor: default; 
-}
+/* Versão e Toast */
+#versionCard { transition: all 0.2s ease-in-out; }
+#versionCard:hover { background-color: rgba(55, 65, 81, 0.9); cursor: help; }
 
-.captured-pieces-container .material-diff { 
-    font-size: 0.9rem; 
-    font-weight: 600; 
-    color: #a0aec0; 
-    margin-left: 0.5rem; 
-}
-
-#versionCard {
-    transition: all 0.2s ease-in-out;
-}
-
-#versionCard:hover {
-    background-color: rgba(55, 65, 81, 0.9); /* bg-gray-700 com opacidade */
-    cursor: help;
-}
-
-.toast {
-    transform: translateX(100%);
-    transition: transform 0.3s ease-out, opacity 0.3s ease-out;
-    opacity: 0;
-}
-.toast-visible {
-    transform: translateX(0);
-    opacity: 1;
-}
+.toast { transform: translateX(100%); transition: transform 0.3s ease-out, opacity 0.3s ease-out; opacity: 0; }
+.toast-visible { transform: translateX(0); opacity: 1; }
 
 /* ========================================= */
-/* --- MODO WIDGET (POP-OUT) - NOVO BLOCO --- */
+/* --- MODO WIDGET (POP-OUT) - ATUALIZADO --- */
 /* ========================================= */
 
 /* 1. Esconde a interface padrão no modo widget */
 body.widget-mode #mainHeader,
 body.widget-mode #sidebarPanel,
-body.widget-mode #popOutWidgetBtn, /* O botão "Abrir Widget" deve sumir dentro da janela do widget */
+body.widget-mode #popOutWidgetBtn,
 body.widget-mode #versionCard,
 body.widget-mode #toastContainer,
-body.widget-mode #colorSelectionModal, /* Garante que o menu de seleção não apareça (Auto-Resume) */
+body.widget-mode #colorSelectionModal,
 body.widget-mode footer { 
     display: none !important; 
 }
@@ -230,32 +216,55 @@ body.widget-mode footer {
 /* 2. Ajustes estruturais da janela do widget */
 body.widget-mode {
     padding: 0 !important;
-    background-color: #1f2937; /* Mantém fundo escuro (bg-gray-800) */
-    overflow: hidden; /* Remove barras de rolagem */
+    background-color: #1f2937; /* bg-gray-800 */
+    overflow: hidden;
     width: 100vw;
     height: 100vh;
+    display: flex;             /* Garante centralização */
+    align-items: center;
+    justify-content: center;
 }
 
-/* O container do jogo ocupa toda a tela */
 body.widget-mode #gameContainer {
     margin: 0 !important;
     padding: 0 !important;
     width: 100%;
     height: 100%;
+    display: flex;
     justify-content: center;
     align-items: center;
-    gap: 0;
 }
 
-/* 3. O Tabuleiro ocupa quase toda a área disponível usando Viewport Min (vmin) */
-/* Isso garante que ele fique quadrado e grande independente se a janela for alta ou larga */
+/* 3. O Tabuleiro ocupa quase toda a área disponível */
+/* Usamos vmin para garantir que ele caiba tanto na largura quanto na altura */
 body.widget-mode .board-container {
-    width: 90vmin; 
-    height: 90vmin;
+    width: 95vmin; 
+    height: 95vmin;
+    max-width: none; /* Remove restrições do modo desktop */
+    
+    /* Reajuste da fonte das peças para o modo pequeno */
+    font-size: 1rem; 
+}
+
+/* Ajusta o tamanho da fonte dos números e letras no modo widget */
+body.widget-mode .rank-labels,
+body.widget-mode .file-labels {
+    font-size: 0.8rem;
+}
+
+/* As peças precisam ser responsivas dentro do widget */
+body.widget-mode .piece {
+    /* Cálculo dinâmico para a peça caber na casa do widget */
+    font-size: 10vmin; 
 }
 
 /* 4. Mostra o botão de restaurar APENAS no modo widget */
-/* Este botão deve ter display: none ou hidden no HTML por padrão */
 body.widget-mode #restoreWindowBtn {
     display: flex !important;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 50;
+    background-color: rgba(31, 41, 55, 0.8);
+    backdrop-filter: blur(4px);
 }
