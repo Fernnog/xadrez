@@ -209,3 +209,67 @@ body {
     transform: translateX(0);
     opacity: 1;
 }
+
+/* =========================================
+   MODO WIDGET (POP-OUT) - PRIORIDADE 2
+   ========================================= */
+
+/* 1. Reset estrutural para a janela pequena */
+body.widget-mode {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important; /* Remove barras de rolagem da janela */
+    background-color: #1f2937; /* Garante fundo cinza escuro */
+    justify-content: center;
+    align-items: center;
+}
+
+/* 2. Ocultação agressiva de elementos desnecessários */
+body.widget-mode #mainHeader,          /* Logo e Painel de Avaliação */
+body.widget-mode #sidebarPanel,        /* Histórico e Botões Laterais */
+body.widget-mode #popOutWidgetBtn,     /* Botão de abrir widget (inception) */
+body.widget-mode #versionCard,         /* Versão no rodapé */
+body.widget-mode #toastContainer,      /* Toasts podem atrapalhar no widget */
+body.widget-mode .captured-pieces-container /* Peças capturadas (opcional, economiza espaço) */
+{ 
+    display: none !important; 
+}
+
+/* 3. Ajuste do container principal */
+body.widget-mode #gameContainer {
+    display: flex !important; /* Garante que está visível */
+    margin: 0 !important;
+    width: 100vw;
+    height: 100vh;
+    max-width: none !important;
+    justify-content: center;
+    align-items: center;
+    gap: 0;
+    padding: 10px; /* Margem de segurança mínima */
+}
+
+/* 4. Ajuste responsivo do tabuleiro para preencher a janela quadrada */
+body.widget-mode .board-wrapper {
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+}
+
+body.widget-mode .board-container {
+    /* vmin usa a menor dimensão (largura ou altura) da janela.
+       Isso garante que o tabuleiro seja sempre o maior quadrado possível sem cortar. */
+    width: 90vmin !important; 
+    height: 90vmin !important;
+}
+
+/* 5. Ajuste das fontes das peças no modo widget para escalar corretamente */
+body.widget-mode .piece {
+    font-size: 11vmin !important; /* ~1/8 de 90vmin */
+}
+
+/* 6. Exibir botão de restaurar apenas neste modo */
+body.widget-mode #restoreWindowBtn {
+    display: block !important;
+}
