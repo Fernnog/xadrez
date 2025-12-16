@@ -32,22 +32,20 @@
         <!-- COLUNA ESQUERDA: Cabeçalho e Tabuleiro -->
         <div class="flex flex-col w-full lg:w-auto items-center relative">
             
-            <!-- Botão Pop-out Widget (Aparece no modo Normal Desktop) -->
+            <!-- Botão Pop-out Widget -->
             <button id="popOutWidgetBtn" class="absolute -left-16 top-2 hidden lg:flex items-center justify-center p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-lg transition-all z-20 group" title="Abrir como Widget (Pop-out)">
                 <svg class="w-6 h-6 transform group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
             </button>
             
-            <!-- Botão Restaurar Janela (Aparece APENAS no modo Widget via CSS) -->
+            <!-- Botão Restaurar Janela -->
             <button id="restoreWindowBtn" class="absolute top-2 right-2 hidden z-50 bg-gray-700 hover:bg-gray-600 text-white p-2 rounded shadow-lg transition-colors" title="Restaurar para Navegador">
                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
             </button>
 
-            <!-- CABEÇALHO: Logo (Esq) + Painel (Dir) -->
+            <!-- CABEÇALHO -->
             <div id="mainHeader" class="w-full max-w-[500px] flex items-center justify-between mb-4 gap-4">
-                <!-- Logo -->
                 <img src="img/logo.png" alt="Logo" class="h-16 w-auto object-contain">
                 
-                <!-- Painel de Avaliação unificado -->
                 <div class="flex-grow flex justify-between items-center bg-gray-900 rounded-lg p-2 shadow-lg h-16 px-4">
                     <div id="evaluationPanel" class="text-2xl font-bold text-center w-24 bg-gray-800 rounded-md py-1">
                         <span id="evaluationValue">0.00</span>
@@ -56,23 +54,27 @@
                 </div>
             </div>
 
-            <!-- ÁREA DO TABULEIRO (ATUALIZADO v1.0.3) -->
+            <!-- ÁREA DO TABULEIRO (Modificado v1.0.3) -->
             <div class="w-full max-w-[500px] flex flex-col board-container">
                 
-                <!-- Capturas das Pretas (Topo) - Com Label e Wrapper Flex -->
-                <div class="flex items-center gap-3 mb-2 w-full pl-1">
+                <!-- Capturas das Pretas (Topo) -->
+                <!-- Adicionado label descritivo e espaçamento -->
+                <div class="flex items-center gap-3 mb-1 w-full pl-1">
                     <span class="text-[0.65rem] font-bold text-gray-500 uppercase tracking-widest w-12 text-right leading-none">Pretas</span> 
                     <div id="capturedForBlack" class="captured-pieces-container w-full shadow-inner"></div>
                 </div>
                 
-                <div class="relative">
+                <!-- Wrapper do Tabuleiro com Margens de Proteção -->
+                <!-- mb-8 e ml-8 criam o espaço físico para as labels não colidirem com os painéis -->
+                <div class="relative mb-8 ml-8">
                     <div class="rank-labels"></div>
                     <div id="board" class="w-full aspect-square grid grid-cols-8 grid-rows-8 shadow-2xl rounded-lg overflow-hidden border-4 border-gray-900 bg-gray-700"></div>
                     <div class="file-labels"></div>
                 </div>
                 
-                <!-- Capturas das Brancas (Base) - Com Label e Wrapper Flex -->
-                <div class="flex items-center gap-3 mt-2 w-full pl-1">
+                <!-- Capturas das Brancas (Base) -->
+                <!-- Adicionado label descritivo e espaçamento -->
+                <div class="flex items-center gap-3 mt-1 w-full pl-1">
                     <span class="text-[0.65rem] font-bold text-gray-500 uppercase tracking-widest w-12 text-right leading-none">Brancas</span>
                     <div id="capturedForWhite" class="captured-pieces-container w-full shadow-inner"></div>
                 </div>
@@ -85,7 +87,6 @@
             <div class="bg-gray-900 p-4 rounded-lg shadow-lg w-full">
                 <div class="flex justify-between items-center mb-3">
                     <h2 class="text-xl font-bold">Histórico</h2>
-                    <!-- Grupo de botões DOC e Copiar -->
                     <div class="flex gap-2">
                         <button id="downloadDocButton" class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded transition-all flex items-center gap-1" title="Baixar histórico em DOC">
                             <span>📄</span> DOC
@@ -93,7 +94,6 @@
                         <button id="copyPgnButton" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded transition-all">COPIAR PGN</button>
                     </div>
                 </div>
-                <!-- Histórico com altura fixa -->
                 <div id="moveHistory" class="move-history bg-gray-800 rounded-md p-2 overflow-y-auto h-80 text-sm"></div>
             </div>
             
@@ -150,7 +150,6 @@
             <div class="mt-2 text-left">
                 <label for="openingSelect" class="block text-sm font-bold text-gray-600 uppercase mb-2">Escolha da Abertura</label>
                 <select id="openingSelect" class="w-full p-3 border border-gray-300 rounded-md text-lg bg-gray-50 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-inner">
-                    <!-- As opções serão preenchidas dinamicamente pelo src/modules/ui.js -->
                 </select>
                 <p class="text-xs text-gray-500 mt-1">O jogo começará nesta posição, e o Stockfish fará o próximo lance, se for a vez dele.</p>
             </div>
@@ -182,9 +181,7 @@
     <div id="promotionModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
         <div class="bg-white text-gray-900 p-8 rounded-lg shadow-xl text-center max-w-sm">
             <h3 class="text-xl font-bold mb-6">Escolha a Promoção</h3>
-            <div id="promotionOptions" class="flex justify-around bg-gray-100 p-4 rounded-md gap-2">
-                <!-- Opções inseridas via JS -->
-            </div>
+            <div id="promotionOptions" class="flex justify-around bg-gray-100 p-4 rounded-md gap-2"></div>
         </div>
     </div>
 
@@ -205,9 +202,7 @@
     </div>
 
     <!-- CONTAINER DE NOTIFICAÇÕES TOAST -->
-    <div id="toastContainer" class="fixed bottom-5 right-5 flex flex-col gap-2 z-50 pointer-events-none">
-        <!-- Toasts serão injetados aqui via JS -->
-    </div>
+    <div id="toastContainer" class="fixed bottom-5 right-5 flex flex-col gap-2 z-50 pointer-events-none"></div>
 
     <!-- Dependências JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
