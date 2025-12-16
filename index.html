@@ -20,18 +20,26 @@
 </head>
 <body class="bg-gray-800 text-white flex flex-col items-center min-h-screen p-4 sm:p-8">
 
+    <!-- NOVO (v1.0.2): Overlay para Modo Cinema (Widget Ativo) -->
+    <!-- Este overlay bloqueia a interface principal quando o jogo está rodando em janela pop-out -->
+    <div id="appOverlay" class="fixed inset-0 bg-gray-900 bg-opacity-95 z-[100] hidden flex flex-col items-center justify-center backdrop-blur-sm transition-all duration-300">
+        <div class="text-6xl mb-6 animate-pulse">📱 ↔️ 💻</div>
+        <h2 class="text-3xl font-bold text-white mb-2">Jogo em andamento no Widget</h2>
+        <p class="text-gray-400 text-lg max-w-md text-center">A interface principal está pausada. Feche a janela do Widget para retomar o controle aqui.</p>
+    </div>
+
     <div id="gameContainer" class="w-full max-w-7xl hidden flex flex-col lg:flex-row gap-8 items-start justify-center">
         
         <!-- COLUNA ESQUERDA: Cabeçalho e Tabuleiro -->
         <!-- ATENÇÃO: Classe 'relative' adicionada aqui para posicionar os botões flutuantes -->
         <div class="flex flex-col w-full lg:w-auto items-center relative">
             
-            <!-- NOVO: Botão Pop-out Widget (Aparece no modo Normal Desktop) -->
+            <!-- Botão Pop-out Widget (Aparece no modo Normal Desktop) -->
             <button id="popOutWidgetBtn" class="absolute -left-16 top-2 hidden lg:flex items-center justify-center p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-lg transition-all z-20 group" title="Abrir como Widget (Pop-out)">
                 <svg class="w-6 h-6 transform group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
             </button>
             
-            <!-- NOVO: Botão Restaurar Janela (Aparece APENAS no modo Widget via CSS) -->
+            <!-- Botão Restaurar Janela (Aparece APENAS no modo Widget via CSS) -->
             <button id="restoreWindowBtn" class="absolute top-2 right-2 hidden z-50 bg-gray-700 hover:bg-gray-600 text-white p-2 rounded shadow-lg transition-colors" title="Restaurar para Navegador">
                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
             </button>
@@ -72,7 +80,7 @@
             <div class="bg-gray-900 p-4 rounded-lg shadow-lg w-full">
                 <div class="flex justify-between items-center mb-3">
                     <h2 class="text-xl font-bold">Histórico</h2>
-                    <!-- ÁREA MODIFICADA: Grupo de botões DOC e Copiar -->
+                    <!-- Grupo de botões DOC e Copiar -->
                     <div class="flex gap-2">
                         <button id="downloadDocButton" class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded transition-all flex items-center gap-1" title="Baixar histórico em DOC">
                             <span>📄</span> DOC
@@ -175,7 +183,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE CHANGELOG (NOVO) -->
+    <!-- MODAL DE CHANGELOG -->
     <div id="changelogModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden backdrop-blur-sm">
         <div class="bg-white text-gray-900 p-6 rounded-lg shadow-2xl max-w-md w-full max-h-[80vh] flex flex-col animate-fade-in">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
@@ -186,12 +194,12 @@
         </div>
     </div>
     
-    <!-- CARD DE VERSÃO (MODIFICADO PARA CLICÁVEL) -->
+    <!-- CARD DE VERSÃO -->
     <div id="versionCard" class="fixed bottom-4 left-4 bg-gray-900 bg-opacity-90 text-gray-400 text-xs px-3 py-1 rounded-full shadow-lg z-20 cursor-pointer hover:bg-gray-700 hover:text-white transition-colors border border-gray-700">
         <span id="currentVersionDisplay">v1.0.1</span> ℹ️
     </div>
 
-    <!-- CONTAINER DE NOTIFICAÇÕES TOAST (NOVO) -->
+    <!-- CONTAINER DE NOTIFICAÇÕES TOAST -->
     <div id="toastContainer" class="fixed bottom-5 right-5 flex flex-col gap-2 z-50 pointer-events-none">
         <!-- Toasts serão injetados aqui via JS -->
     </div>
