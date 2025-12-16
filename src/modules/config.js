@@ -204,11 +204,21 @@ export const OPENING_FENS = {
 export const STOCKFISH_WORKER_PATH = 'https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.0/stockfish.js';
 
 // ATUALIZADO
-export const APP_VERSION = 'v1.0.2';
+export const APP_VERSION = 'v1.0.3';
 export const CACHE_NAME = `chess-pwa-${APP_VERSION}`; 
 
 // ATUALIZADO
 export const CHANGELOG = [
+    {
+        version: 'v1.0.3',
+        date: '2023-10-28',
+        changes: [
+            'UI Kit: Novo painel "Prateleira" para peças capturadas com alto contraste.',
+            'Acessibilidade: Sombras dinâmicas para melhor visualização das peças pretas.',
+            'Responsividade: Ajuste fluido do tamanho das peças no modo Widget (Clamp).',
+            'UX: Animação de entrada ao capturar peças.'
+        ]
+    },
     {
         version: 'v1.0.2',
         date: '2023-10-27',
