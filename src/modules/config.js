@@ -203,10 +203,22 @@ export const OPENING_FENS = {
  */
 export const STOCKFISH_WORKER_PATH = 'https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.0/stockfish.js';
 
-export const APP_VERSION = 'v1.0.1';
-export const CACHE_NAME = `chess-pwa-${APP_VERSION}`; // Para uso no SW
+// ATUALIZADO
+export const APP_VERSION = 'v1.0.2';
+export const CACHE_NAME = `chess-pwa-${APP_VERSION}`; 
 
+// ATUALIZADO
 export const CHANGELOG = [
+    {
+        version: 'v1.0.2',
+        date: '2023-10-27',
+        changes: [
+            'Live Sync: Sincronização em tempo real entre abas/janelas (Storage API).',
+            'Modo Cinema: Bloqueio da janela principal quando o Widget está ativo.',
+            'UX: Destaque visual dinâmico nas coordenadas (Ranks/Files) ao passar o mouse.',
+            'Core: Correção de loop de áudio na sincronização.'
+        ]
+    },
     {
         version: 'v1.0.1',
         date: '2023-10-27',
