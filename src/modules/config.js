@@ -211,7 +211,7 @@ export const CACHE_NAME = `chess-pwa-${APP_VERSION}`;
 export const CHANGELOG = [
     {
         version: 'v1.0.3',
-        date: '2023-10-28',
+        date: '2025-12-16',
         changes: [
             'UI Kit: Novo painel "Prateleira" para peças capturadas com alto contraste.',
             'Acessibilidade: Sombras dinâmicas para melhor visualização das peças pretas.',
@@ -221,7 +221,7 @@ export const CHANGELOG = [
     },
     {
         version: 'v1.0.2',
-        date: '2023-10-27',
+        date: '2025-12-15',
         changes: [
             'Live Sync: Sincronização em tempo real entre abas/janelas (Storage API).',
             'Modo Cinema: Bloqueio da janela principal quando o Widget está ativo.',
@@ -231,7 +231,7 @@ export const CHANGELOG = [
     },
     {
         version: 'v1.0.1',
-        date: '2023-10-27',
+        date: '2025-12-02',
         changes: [
             'Novo: Exportação de histórico para DOC com diagrama do tabuleiro.',
             'Novo: Histórico de versões interativo.',
@@ -241,7 +241,7 @@ export const CHANGELOG = [
     },
     {
         version: 'v1.0.0',
-        date: '2023-10-01',
+        date: '2025-12-01',
         changes: ['Lançamento inicial.']
     }
 ];
