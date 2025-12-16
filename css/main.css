@@ -34,6 +34,7 @@ body {
     border: 4px solid #111827; 
     border-radius: 0.5rem;
     overflow: hidden;
+    z-index: 10; /* Garante que o tabuleiro fique acima de elementos decorativos */
 }
 
 /* Casas (Squares) */
@@ -66,56 +67,46 @@ body {
 /* Números (1-8) à esquerda */
 .rank-labels { 
     position: absolute;
-    /* Move para a esquerda, entrando na área de padding-left do container */
     left: -1.5rem; 
     top: 0;
     width: 1.5rem; 
-    /* Altura total acompanha o tabuleiro */
     height: 100%; 
-    
-    /* GRID alinha perfeitamente com as linhas */
     display: grid;
     grid-template-rows: repeat(8, 1fr);
-    
     font-weight: 700; 
-    color: #9ca3af; /* Cinza mais claro para melhor contraste */
+    color: #9ca3af; 
     user-select: none;
     align-items: center;
+    z-index: 5; /* Z-index ajustado para evitar sobreposição acidental */
 }
 
 /* Letras (a-h) embaixo */
 .file-labels { 
     position: absolute;
-    /* Move para baixo, entrando na área de padding-bottom do container */
     bottom: -1.5rem; 
     left: 0;
-    /* Largura total acompanha o tabuleiro */
     width: 100%;
     height: 1.5rem; 
-    
-    /* GRID alinha perfeitamente com as colunas */
     display: grid; 
     grid-template-columns: repeat(8, 1fr);
-    
     font-weight: 700; 
     color: #9ca3af;
     user-select: none; 
     align-items: center;
+    z-index: 5;
 }
 
-/* Alinhamento e Interatividade */
 .rank-labels span, .file-labels span { 
     display: flex; 
     align-items: center; 
     justify-content: center; 
     width: 100%;
     height: 100%;
-    font-size: 0.875rem; /* Text-sm */
+    font-size: 0.875rem; 
     transition: color 0.2s ease, transform 0.2s ease;
     cursor: default;
 }
 
-/* Efeito Hover sutil para ajudar na identificação */
 .rank-labels span:hover, .file-labels span:hover {
     color: #ffffff;
     transform: scale(1.2);
@@ -153,29 +144,24 @@ body {
 }
 
 .piece-hidden { opacity: 0; }
-
-/* Rotação */
 .board-flipped { transform: rotate(180deg); }
 .board-flipped .piece, .board-flipped .animated-piece { transform: rotate(180deg); }
 
-/* Responsividade Mobile das Peças e Labels */
+/* Responsividade Mobile das Peças no Tabuleiro */
 @media (max-width: 640px) { 
     .piece { font-size: 2.5rem; } 
 }
 
 @media (max-width: 400px) { 
     .piece { font-size: 1.8rem; }
-    
-    /* Ajuste fino para telas muito pequenas */
     .board-container { padding-left: 1rem; padding-bottom: 1rem; }
     .rank-labels { width: 1rem; left: -1rem; }
     .file-labels { height: 1rem; bottom: -1rem; }
     .rank-labels span, .file-labels span { font-size: 0.7rem; }
 }
 
-
 /* ==========================================================================
-   4. UI AUXILIAR (ATUALIZADO v1.0.3)
+   4. UI AUXILIAR & UI KIT v1.0.3 (PEÇAS CAPTURADAS)
    ========================================================================== */
 
 .move-history { 
@@ -187,83 +173,80 @@ body {
 .move-list-item:nth-child(odd) { background-color: #4a5568; }
 .move-number { color: #a0aec0; font-weight: 600; text-align: right; }
 
-/* --- UI KIT v1.0.3: Painel de Peças Capturadas (Prateleira) --- */
-
-.captured-pieces-container {
-    display: flex;
-    align-items: center;
-    gap: 0.15rem; /* Peças mais próximas para compactação */
-    padding: 0.25rem 0.75rem;
-    min-height: 3rem; 
+/* --- PRATELEIRA DE CAPTURAS (NOVO v1.0.3) --- */
+.captured-pieces-container { 
+    display: flex; 
+    align-items: center; 
+    gap: 0.15rem; /* Peças mais próximas */
+    padding: 0.25rem 0.5rem; 
+    min-height: 2.5rem; /* Altura compacta */
     
-    /* A Prateleira de Alto Contraste */
-    background-color: #4b5563; /* Gray-600: Neutro ideal */
-    border: 1px solid #374151; /* Gray-700 */
-    border-radius: 0.5rem;
+    /* Prateleira Cinza Neutro para Contraste */
+    background-color: #4b5563; 
+    border: 1px solid #374151; 
+    border-radius: 0.375rem;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
     
-    flex-wrap: wrap;
+    flex-wrap: wrap; 
     overflow: hidden;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
 }
 
-/* Animação de Entrada (Pop-in) */
+/* Tratamento de Contraste v1.0.3 */
+.captured-pieces-container .white-piece {
+    /* Sombra escura para destacar no cinza */
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.6));
+}
+.captured-pieces-container .black-piece {
+    /* Halo branco sutil para destacar a peça preta no cinza */
+    color: #111827 !important;
+    filter: drop-shadow(0 0 2px rgba(255,255,255,0.4));
+}
+
+/* Animação de Entrada (Pop-in) v1.0.3 */
 @keyframes popIn {
     0% { transform: scale(0); opacity: 0; }
     70% { transform: scale(1.2); }
     100% { transform: scale(1); opacity: 1; }
 }
 
-/* Peças na Prateleira (Responsividade Fluida + Animação) */
-.captured-pieces-container .piece {
-    /* Clamp: Mínimo 1.2rem, Ideal 5% da Viewport, Máximo 1.8rem */
-    font-size: clamp(1.2rem, 5vmin, 1.8rem); 
+/* Tamanho Fluido das Peças Capturadas (Clamp) */
+.captured-pieces-container .piece { 
+    /* Desktop Padrão: 1.5rem / Mobile: Ajusta */
+    font-size: clamp(1.2rem, 5vmin, 1.5rem); 
     line-height: 1;
-    cursor: default;
+    cursor: default; 
     animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-/* Contraste: Sombra escura profunda para peça branca */
-.captured-pieces-container .white-piece {
-    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.6));
-    text-shadow: none; /* Remove shadow padrão do tabuleiro */
-}
-
-/* Contraste: Halo claro sutil para peça preta */
-.captured-pieces-container .black-piece {
-    color: #111827 !important; /* Força preto profundo */
-    filter: drop-shadow(0 0 2px rgba(255,255,255,0.4));
-    text-shadow: none; /* Remove shadow padrão do tabuleiro */
-}
-
-/* Placar de Material (+3, +5) */
-.captured-pieces-container .material-diff {
-    margin-left: auto; /* Empurra para a direita */
+/* Placar de Material */
+.captured-pieces-container .material-diff { 
+    margin-left: auto;
     background-color: rgba(0,0,0,0.5);
-    padding: 0.15rem 0.6rem;
+    padding: 0.1rem 0.5rem;
     border-radius: 99px;
-    font-size: 0.8rem;
-    color: #f3f4f6;
-    font-weight: 800;
+    font-size: 0.75rem; 
+    font-weight: 700; 
+    color: #f3f4f6; 
     letter-spacing: 0.05em;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
+/* Botões do Menu */
 .btn-play-white { background-color: #b58863; color: white; }
 .btn-play-white:hover { background-color: #c79d7f; }
 .btn-play-black { background-color: #f0d9b5; color: #1a202c; }
 .btn-play-black:hover { background-color: #e6c8a4; }
 
+/* Auxiliares Gerais */
 #versionCard:hover { background-color: rgba(55, 65, 81, 0.9); cursor: help; }
 .toast { transform: translateX(100%); transition: transform 0.3s ease-out, opacity 0.3s ease-out; opacity: 0; }
 .toast-visible { transform: translateX(0); opacity: 1; }
-
 
 /* ==========================================================================
    5. MODO WIDGET (POP-OUT)
    ========================================================================== */
 
-/* Esconde elementos desnecessários */
+/* Elementos Ocultos no Widget */
 body.widget-mode #mainHeader,
 body.widget-mode #sidebarPanel,
 body.widget-mode #popOutWidgetBtn,
@@ -274,7 +257,7 @@ body.widget-mode footer {
     display: none !important; 
 }
 
-/* Layout da Janela */
+/* Layout da Janela Widget */
 body.widget-mode {
     padding: 0 !important;
     background-color: #1f2937; 
@@ -296,26 +279,43 @@ body.widget-mode #gameContainer {
     align-items: center;
 }
 
-/* Tabuleiro no Widget */
+/* --- CORREÇÃO DE COLISÃO NO WIDGET (v1.0.3-fix) --- */
+
 body.widget-mode .board-container {
     width: 95vmin !important; 
     height: auto !important; 
     max-width: none;
     
-    /* Widget precisa de mais espaço para leitura das labels */
-    padding-left: 2rem; 
-    padding-bottom: 2rem;
+    /* Reduzimos o padding para compensar as margens externas adicionadas no HTML */
+    padding-left: 0 !important; 
+    padding-bottom: 0 !important;
+    /* Ajuste de centralização visual devido às labels */
+    margin-left: -0.5rem !important;
 }
 
-/* Ajusta posicionamento das barras de Labels no Widget */
+/* Prateleira Compacta para Widget */
+body.widget-mode .captured-pieces-container {
+    min-height: 2rem; /* Altura mínima reduzida agressivamente */
+    padding: 0.1rem 0.25rem;
+    gap: 0; /* Remove gap para economizar espaço */
+    background-color: #374151;
+}
+
+body.widget-mode .captured-pieces-container .piece {
+    /* Peças menores e mais juntas no modo widget */
+    font-size: clamp(1rem, 7vmin, 1.4rem); 
+    margin-right: -3px; 
+}
+
+/* Ajuste de Labels no Widget para não colidir com a Prateleira */
 body.widget-mode .rank-labels { 
     width: 2rem; 
-    left: -2rem;
+    left: -2rem !important; /* Move para fora */
     height: 100%;
 }
 body.widget-mode .file-labels { 
     height: 2rem; 
-    bottom: -2rem;
+    bottom: -2rem !important; /* Move para fora, longe da prateleira */
     left: 0; 
     width: 100%; 
 }
@@ -323,12 +323,12 @@ body.widget-mode .file-labels {
 /* Aumenta fonte dos números/letras no Widget para legibilidade */
 body.widget-mode .rank-labels span, 
 body.widget-mode .file-labels span { 
-    font-size: 1.1rem; 
+    font-size: 1rem; 
 }
 
-/* Peças Responsivas no Tabuleiro do Widget */
-body.widget-mode .piece {
-    font-size: 11vmin; 
+/* Peças do Tabuleiro no Widget */
+body.widget-mode #board .piece {
+    font-size: 10vmin; 
 }
 
 /* Botão Restaurar */
@@ -341,24 +341,12 @@ body.widget-mode #restoreWindowBtn {
     border: 1px solid rgba(255,255,255,0.1);
 }
 
-/* --- AJUSTES ESPECÍFICOS V1.0.3 PARA WIDGET (Capturas) --- */
-body.widget-mode .captured-pieces-container {
-    min-height: 2.5rem;
-    padding: 0.15rem 0.5rem;
-    background-color: #374151; /* Fundo ligeiramente mais escuro para foco no tabuleiro */
-}
-
-/* Ocultar labels de texto (Brancas/Pretas) no modo Widget para economizar espaço */
-body.widget-mode .text-gray-500.uppercase {
-    display: none !important; 
-}
-
 /* ==========================================================================
-   6. DESTAQUES DINÂMICOS (V1.0.2)
+   6. DESTAQUES DINÂMICOS
    ========================================================================== */
 
 .label-highlight {
-    color: #fbbf24 !important; /* Amber-400 (Amarelo Ouro) */
+    color: #fbbf24 !important; /* Amber-400 */
     font-weight: 800;
     transform: scale(1.4);
     text-shadow: 0 0 12px rgba(251, 191, 36, 0.6);
