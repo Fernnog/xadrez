@@ -12,7 +12,7 @@ body {
 /* Container Estrutural */
 .board-container { 
     position: relative;     
-    /* Espaços reservados para a numeração e letras */
+    /* Espaços reservados para a numeração e letras (Área de Respiro) */
     padding-left: 1.5rem;   
     padding-bottom: 1.5rem; 
     
@@ -60,51 +60,66 @@ body {
 }
 
 /* ==========================================================================
-   2. ETIQUETAS (LABELS) - CORRIGIDO
+   2. ETIQUETAS (LABELS) - CORRIGIDO E RESPONSIVO (PRIORIDADE 1 & 2)
    ========================================================================== */
 
 /* Números (1-8) à esquerda */
 .rank-labels { 
     position: absolute;
-    left: 0;
+    /* Move para a esquerda, entrando na área de padding-left do container */
+    left: -1.5rem; 
     top: 0;
     width: 1.5rem; 
-    /* Altura igual à do tabuleiro (100% menos o padding de baixo) */
-    height: calc(100% - 1.5rem); 
+    /* Altura total acompanha o tabuleiro */
+    height: 100%; 
     
-    /* GRID para alinhar perfeitamente com as linhas do tabuleiro */
+    /* GRID alinha perfeitamente com as linhas */
     display: grid;
     grid-template-rows: repeat(8, 1fr);
     
-    font-weight: 600; 
-    color: #a0aec0; 
+    font-weight: 700; 
+    color: #9ca3af; /* Cinza mais claro para melhor contraste */
     user-select: none;
+    align-items: center;
 }
 
 /* Letras (a-h) embaixo */
 .file-labels { 
     position: absolute;
-    bottom: 0;
-    left: 1.5rem; /* Começa depois do padding da esquerda */
-    width: calc(100% - 1.5rem);
+    /* Move para baixo, entrando na área de padding-bottom do container */
+    bottom: -1.5rem; 
+    left: 0;
+    /* Largura total acompanha o tabuleiro */
+    width: 100%;
     height: 1.5rem; 
     
-    /* GRID para alinhar perfeitamente com as colunas do tabuleiro */
+    /* GRID alinha perfeitamente com as colunas */
     display: grid; 
     grid-template-columns: repeat(8, 1fr);
     
-    font-weight: 600; 
-    color: #a0aec0; 
+    font-weight: 700; 
+    color: #9ca3af;
     user-select: none; 
+    align-items: center;
 }
 
-/* ESTILO DOS ITENS INTERNOS (SPANS) - O QUE FALTAVA */
+/* Alinhamento e Interatividade (PRIORIDADE 3 - Melhoria UX CSS) */
 .rank-labels span, .file-labels span { 
     display: flex; 
     align-items: center; 
     justify-content: center; 
     width: 100%;
     height: 100%;
+    font-size: 0.875rem; /* Text-sm */
+    transition: color 0.2s ease, transform 0.2s ease;
+    cursor: default;
+}
+
+/* Efeito Hover sutil para ajudar na identificação */
+.rank-labels span:hover, .file-labels span:hover {
+    color: #ffffff;
+    transform: scale(1.2);
+    text-shadow: 0 0 5px rgba(255,255,255,0.5);
 }
 
 /* ==========================================================================
@@ -143,9 +158,20 @@ body {
 .board-flipped { transform: rotate(180deg); }
 .board-flipped .piece, .board-flipped .animated-piece { transform: rotate(180deg); }
 
-/* Responsividade Mobile */
-@media (max-width: 640px) { .piece { font-size: 2.5rem; } }
-@media (max-width: 400px) { .piece { font-size: 1.8rem; } }
+/* Responsividade Mobile das Peças e Labels */
+@media (max-width: 640px) { 
+    .piece { font-size: 2.5rem; } 
+}
+
+@media (max-width: 400px) { 
+    .piece { font-size: 1.8rem; }
+    
+    /* Ajuste fino para telas muito pequenas: reduzimos o padding e o tamanho dos labels */
+    .board-container { padding-left: 1rem; padding-bottom: 1rem; }
+    .rank-labels { width: 1rem; left: -1rem; }
+    .file-labels { height: 1rem; bottom: -1rem; }
+    .rank-labels span, .file-labels span { font-size: 0.7rem; }
+}
 
 
 /* ==========================================================================
@@ -221,26 +247,28 @@ body.widget-mode .board-container {
     height: auto !important; 
     max-width: none;
     
-    /* Aumenta o espaço para números/letras no widget para facilitar leitura */
+    /* Widget precisa de mais espaço para leitura das labels */
     padding-left: 2rem; 
     padding-bottom: 2rem;
 }
 
-/* Ajusta largura/altura das barras de Labels no Widget */
+/* Ajusta posicionamento das barras de Labels no Widget */
 body.widget-mode .rank-labels { 
     width: 2rem; 
-    height: calc(100% - 2rem);
+    left: -2rem; /* CORRIGIDO: Move para fora da área do tabuleiro */
+    height: 100%;
 }
 body.widget-mode .file-labels { 
     height: 2rem; 
-    left: 2rem; 
-    width: calc(100% - 2rem); 
+    bottom: -2rem; /* CORRIGIDO: Move para fora da área do tabuleiro */
+    left: 0; 
+    width: 100%; 
 }
 
-/* Aumenta fonte dos números/letras no Widget */
+/* Aumenta fonte dos números/letras no Widget para legibilidade */
 body.widget-mode .rank-labels span, 
 body.widget-mode .file-labels span { 
-    font-size: 1rem; 
+    font-size: 1.1rem; 
 }
 
 /* Peças Responsivas no Widget */
