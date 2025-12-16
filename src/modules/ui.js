@@ -31,9 +31,10 @@ const elements = {
     changelogContent: document.getElementById('changelogContent'),
     closeChangelogButton: document.getElementById('closeChangelogButton'),
     toastContainer: document.getElementById('toastContainer'),
-    // --- ELEMENTOS NOVOS DO WIDGET ---
+    // --- ELEMENTOS NOVOS DO WIDGET E OVERLAY (v1.0.2) ---
     popOutWidgetBtn: document.getElementById('popOutWidgetBtn'),
     restoreWindowBtn: document.getElementById('restoreWindowBtn'),
+    appOverlay: document.getElementById('appOverlay'), // Novo Overlay de Bloqueio
 };
 
 // Sons da interface
@@ -46,13 +47,14 @@ function initAudio() {
 // --- ESTADO E HELPERS INTERNOS ---
 
 let uiHandlers = {}; 
+let widgetWindowRef = null; // Referência para a janela do widget (v1.0.2)
 
 function safeAddEventListener(id, event, handler) {
     const el = document.getElementById(id);
     if (el) {
         el.addEventListener(event, handler);
     } else {
-        // Silencioso se o elemento não existir (comum se estivermos no modo widget onde elementos são removidos/ocultos)
+        // Silencioso se o elemento não existir
     }
 }
 
@@ -138,7 +140,7 @@ function populateOpeningSelector(filterText = '') {
 function renderChangelog() {
     if (!elements.currentVersionDisplay || !elements.changelogContent) return;
     
-    elements.currentVersionDisplay.textContent = APP_VERSION || 'v1.0.1';
+    elements.currentVersionDisplay.textContent = APP_VERSION || 'v1.0.2';
     elements.changelogContent.innerHTML = '';
     
     if (!CHANGELOG) return;
@@ -185,7 +187,24 @@ export function showToast(message, type = 'info') {
     }, 3000);
 }
 
-// --- FUNÇÃO DE ABRIR WIDGET (POP-OUT) ---
+// --- NOVO: FUNÇÕES DE DESTAQUE DE COORDENADAS (v1.0.2) ---
+function highlightCoordinates(squareName) {
+    if (!squareName) return;
+    const file = squareName[0];
+    const rank = squareName[1];
+
+    const fileLabel = document.getElementById(`label-file-${file}`);
+    const rankLabel = document.getElementById(`label-rank-${rank}`);
+
+    if (fileLabel) fileLabel.classList.add('label-highlight');
+    if (rankLabel) rankLabel.classList.add('label-highlight');
+}
+
+function clearCoordinateHighlights() {
+    document.querySelectorAll('.label-highlight').forEach(el => el.classList.remove('label-highlight'));
+}
+
+// --- FUNÇÃO DE ABRIR WIDGET (POP-OUT) ATUALIZADA (v1.0.2) ---
 function openWidgetWindow() {
     // Definições de tamanho da janela compacta
     const width = 450;
@@ -193,14 +212,30 @@ function openWidgetWindow() {
     
     // Cálculo para posicionar no Canto Inferior Esquerdo
     const left = 20; 
-    // availHeight desconta a barra de tarefas do SO
     const top = window.screen.availHeight - height - 20; 
 
     const features = `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=no,status=no`;
     
     // Abre a mesma página passando o parametro ?mode=widget
-    // Nota: O estado do jogo (localStorage) já está salvo automaticamente pelo main.js a cada lance.
-    window.open(`${window.location.pathname}?mode=widget`, 'ChessWidgetWindow', features);
+    widgetWindowRef = window.open(`${window.location.pathname}?mode=widget`, 'ChessWidgetWindow', features);
+
+    // Lógica do Modo Cinema e Bloqueio da Janela Pai
+    if (widgetWindowRef) {
+        if (elements.appOverlay) elements.appOverlay.classList.remove('hidden');
+
+        // Polling para detectar fechamento
+        const checkTimer = setInterval(() => {
+            if (widgetWindowRef.closed) {
+                clearInterval(checkTimer);
+                if (elements.appOverlay) elements.appOverlay.classList.add('hidden');
+                
+                // Dispara evento para o main.js recarregar o estado final
+                window.dispatchEvent(new CustomEvent('widget-closed'));
+            }
+        }, 500);
+    } else {
+        showToast("Por favor, permita pop-ups para usar o modo Widget.", "error");
+    }
 }
 
 // --- FUNÇÕES EXPORTADAS ---
@@ -237,14 +272,12 @@ export function registerUIHandlers(handlers) {
     
     if (elements.restoreWindowBtn) {
         elements.restoreWindowBtn.addEventListener('click', () => {
-            // Tenta focar na janela pai (opener) se existir, ou abre uma nova aba normal
             if (window.opener) {
                 window.opener.focus();
             } else {
-                // Remove o parametro widget para abrir normal
-                window.open(window.location.pathname, '_blank');
+                window.open(window.location.pathname.replace('?mode=widget', ''), '_blank');
             }
-            window.close(); // Fecha o widget
+            window.close();
         });
     }
 
@@ -320,6 +353,10 @@ export function renderBoard(boardState) {
 export function createBoard(onSquareClickCallback) {
     if (!elements.board) return;
     elements.board.innerHTML = '';
+
+    // Detecta se é dispositivo touch para evitar UX ruim com hover (v1.0.2)
+    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
     for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
             const square = document.createElement('div');
@@ -327,9 +364,18 @@ export function createBoard(onSquareClickCallback) {
             const colorClass = (r + c) % 2 === 0 ? 'light' : 'dark';
             square.className = `square ${colorClass}`;
             square.dataset.square = squareName;
+            
+            // Eventos de Clique
             if (onSquareClickCallback) {
                 square.addEventListener('click', () => onSquareClickCallback(squareName));
             }
+
+            // NOVOS Eventos de Mouse para Destaque (Apenas Desktop - v1.0.2)
+            if (!isTouchDevice) {
+                square.addEventListener('mouseenter', () => highlightCoordinates(squareName));
+                square.addEventListener('mouseleave', clearCoordinateHighlights);
+            }
+
             elements.board.appendChild(square);
         }
     }
@@ -339,18 +385,28 @@ export function setupBoardOrientation(playerColor) {
     const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
     const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
     
-    // Verificação de segurança caso rankLabels não exista (no modo widget pode ser oculto)
     if(elements.rankLabels) elements.rankLabels.innerHTML = '';
     if(elements.fileLabels) elements.fileLabels.innerHTML = '';
 
+    const rList = playerColor === 'b' ? [...ranks].reverse() : ranks;
+    const fList = playerColor === 'b' ? [...files].reverse() : files;
+
+    // Adicionamos IDs específicos: 'label-rank-X' e 'label-file-Y' para o highlight (v1.0.2)
+    if(elements.rankLabels) {
+        rList.forEach(r => {
+            elements.rankLabels.innerHTML += `<span id="label-rank-${r}" class="transition-all duration-200">${r}</span>`;
+        });
+    }
+    if(elements.fileLabels) {
+        fList.forEach(f => {
+            elements.fileLabels.innerHTML += `<span id="label-file-${f}" class="transition-all duration-200">${f}</span>`;
+        });
+    }
+
     if (playerColor === 'b') {
         elements.board.classList.add('board-flipped');
-        if(elements.rankLabels) ranks.reverse().forEach(r => elements.rankLabels.innerHTML += `<span>${r}</span>`);
-        if(elements.fileLabels) files.reverse().forEach(f => elements.fileLabels.innerHTML += `<span>${f}</span>`);
     } else {
         elements.board.classList.remove('board-flipped');
-        if(elements.rankLabels) ranks.forEach(r => elements.rankLabels.innerHTML += `<span>${r}</span>`);
-        if(elements.fileLabels) files.forEach(f => elements.fileLabels.innerHTML += `<span>${f}</span>`);
     }
 }
 
