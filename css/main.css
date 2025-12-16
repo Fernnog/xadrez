@@ -60,7 +60,7 @@ body {
 }
 
 /* ==========================================================================
-   2. ETIQUETAS (LABELS) - CORRIGIDO E RESPONSIVO (PRIORIDADE 1 & 2)
+   2. ETIQUETAS (LABELS)
    ========================================================================== */
 
 /* Números (1-8) à esquerda */
@@ -103,7 +103,7 @@ body {
     align-items: center;
 }
 
-/* Alinhamento e Interatividade (PRIORIDADE 3 - Melhoria UX CSS) */
+/* Alinhamento e Interatividade */
 .rank-labels span, .file-labels span { 
     display: flex; 
     align-items: center; 
@@ -166,7 +166,7 @@ body {
 @media (max-width: 400px) { 
     .piece { font-size: 1.8rem; }
     
-    /* Ajuste fino para telas muito pequenas: reduzimos o padding e o tamanho dos labels */
+    /* Ajuste fino para telas muito pequenas */
     .board-container { padding-left: 1rem; padding-bottom: 1rem; }
     .rank-labels { width: 1rem; left: -1rem; }
     .file-labels { height: 1rem; bottom: -1rem; }
@@ -205,7 +205,7 @@ body {
 
 
 /* ==========================================================================
-   5. MODO WIDGET (POP-OUT) - FINAL
+   5. MODO WIDGET (POP-OUT)
    ========================================================================== */
 
 /* Esconde elementos desnecessários */
@@ -255,12 +255,12 @@ body.widget-mode .board-container {
 /* Ajusta posicionamento das barras de Labels no Widget */
 body.widget-mode .rank-labels { 
     width: 2rem; 
-    left: -2rem; /* CORRIGIDO: Move para fora da área do tabuleiro */
+    left: -2rem;
     height: 100%;
 }
 body.widget-mode .file-labels { 
     height: 2rem; 
-    bottom: -2rem; /* CORRIGIDO: Move para fora da área do tabuleiro */
+    bottom: -2rem;
     left: 0; 
     width: 100%; 
 }
@@ -284,4 +284,16 @@ body.widget-mode #restoreWindowBtn {
     background-color: rgba(31, 41, 55, 0.8);
     backdrop-filter: blur(4px);
     border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* ==========================================================================
+   6. DESTAQUES DINÂMICOS (V1.0.2)
+   ========================================================================== */
+
+.label-highlight {
+    color: #fbbf24 !important; /* Amber-400 (Amarelo Ouro) */
+    font-weight: 800;
+    transform: scale(1.4);
+    text-shadow: 0 0 12px rgba(251, 191, 36, 0.6);
+    z-index: 20;
 }
