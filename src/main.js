@@ -115,7 +115,7 @@ function handleUndo() {
 }
 
 // ==========================================================
-// 2. FUNÇÃO INIT (COM LOGICA DE WIDGET ATUALIZADA)
+// 2. FUNÇÃO INIT (COM LOGICA DE WIDGET E SYNC v1.0.2)
 // ==========================================================
 
 function init() {
@@ -154,7 +154,51 @@ function init() {
     
     engine.initEngine(handleEngineMessage);
 
-    // --- NOVA LÓGICA: Detecção de Modo Widget e Auto-Resume ---
+    // --- NOVA LÓGICA v1.0.2: Sincronização Live Sync ---
+    window.addEventListener('storage', (event) => {
+        // Ignora eventos que não sejam do nosso jogo
+        if (event.key === 'savedChessGameState') {
+            console.log("[Sync] Detectada alteração de estado em outra janela.");
+            
+            const newState = JSON.parse(event.newValue);
+            if (!newState) return;
+
+            // 1. Parar a engine local para evitar conflitos de cálculo se estiver pensando
+            engine.stopCalculation();
+            appState.isEngineTurn = false; 
+
+            // 2. Carregar o novo PGN vindo do Storage
+            game.loadPgn(newState.pgn);
+            
+            // 3. Atualizar Estado Local
+            appState.playerColor = newState.playerColor;
+            appState.skillLevel = newState.skillLevel;
+            
+            // 4. Atualizar UI (Sem tocar som para evitar eco)
+            ui.renderBoard(game.getBoard());
+            ui.updateStatus(game.getGameState());
+            ui.updateMoveHistory(game.getHistory());
+            ui.updateCapturedPieces(game.getHistory({verbose: true}));
+            
+            // 5. Verificar se agora é vez da engine (mas não disparamos o cálculo automaticamente na janela passiva)
+            if (!game.isGameOver() && game.getTurn() !== appState.playerColor) {
+                 appState.isEngineTurn = true; 
+            } else {
+                 appState.isEngineTurn = false;
+            }
+
+            // Atualiza a barra de avaliação com a nova posição
+            engine.requestEvaluation(game.getFen());
+        }
+    });
+
+    // --- NOVA LÓGICA v1.0.2: Listener para quando o Widget fecha (Modo Cinema) ---
+    window.addEventListener('widget-closed', () => {
+        console.log("[Main] Widget fechado. Retomando controle e atualizando estado.");
+        resumeGame(); // Força recarregamento do último estado salvo
+    });
+
+    // --- LÓGICA DE DETECÇÃO DE MODO WIDGET ---
     const urlParams = new URLSearchParams(window.location.search);
     const isWidgetMode = urlParams.get('mode') === 'widget';
 
