@@ -59,6 +59,12 @@ export const OPENING_FENS = {
         fen: 'rnbqkb1r/pppp1ppp/5n2/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3',
         category: 'Aberturas de Peão Rei (1. e4)'
     },
+    'kings_gambit': {
+        name: 'Gambito do Rei',
+        pgn: '1. e4 e5 2. f4',
+        fen: 'rnbqkbnr/pppp1ppp/8/4p3/4PP2/8/PPPP2PP/RNBQKBNR b KQkq - 0 2',
+        category: 'Aberturas de Peão Rei (1. e4)'
+    },
     'scotch_game': {
         name: 'Abertura Escocesa',
         pgn: '1. e4 e5 2. Nf3 Nc6 3. d4',
@@ -203,8 +209,8 @@ export const OPENING_FENS = {
  */
 export const STOCKFISH_WORKER_PATH = 'https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.0/stockfish.js';
 
-// ATUALIZADO: Versão 1.0.4
-export const APP_VERSION = 'v1.0.4';
+// ATUALIZADO: Versão 1.0.5
+export const APP_VERSION = 'v1.0.5';
 export const CACHE_NAME = `chess-pwa-${APP_VERSION}`; 
 
 // O CHANGELOG foi movido para um arquivo separado (src/modules/changelog.js)
