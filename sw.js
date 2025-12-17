@@ -12,6 +12,7 @@ const ASSETS_TO_CACHE = [
     REPO + '/src/modules/utils.js',
     REPO + '/src/modules/config.js',
     REPO + '/src/modules/audio.js',
+    REPO + '/src/modules/changelog.js', // NOVO: Arquivo adicionado ao cache
     'https://cdn.tailwindcss.com',
     'https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js'
 ];
