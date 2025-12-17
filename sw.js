@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chess-pwa-v1.0.4';
+const CACHE_NAME = 'chess-pwa-v1.0.5';
 const REPO = '/xadrez'; // Caminho exato do repositório
 
 const ASSETS_TO_CACHE = [
