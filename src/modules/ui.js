@@ -1,5 +1,3 @@
---- START OF FILE src/modules/ui.js ---
-
 // src/modules/ui.js
 
 import { PIECES, PIECE_VALUES, PROMOTION_PIECES, OPENING_FENS, APP_VERSION } from './config.js';
@@ -139,11 +137,11 @@ function populateOpeningSelector(filterText = '') {
     }
 }
 
-// --- FUNÇÃO DE CHANGELOG ---
+// --- FUNÇÃO DE CHANGELOG (Atualizada para usar o módulo separado) ---
 function renderChangelog() {
     if (!elements.currentVersionDisplay || !elements.changelogContent) return;
     
-    elements.currentVersionDisplay.textContent = APP_VERSION || 'v1.0.2';
+    elements.currentVersionDisplay.textContent = APP_VERSION || 'v1.0.4';
     elements.changelogContent.innerHTML = '';
     
     if (!CHANGELOG) return;
