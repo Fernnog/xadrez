@@ -1,6 +1,9 @@
+--- START OF FILE src/modules/ui.js ---
+
 // src/modules/ui.js
 
-import { PIECES, PIECE_VALUES, PROMOTION_PIECES, OPENING_FENS, APP_VERSION, CHANGELOG } from './config.js'; 
+import { PIECES, PIECE_VALUES, PROMOTION_PIECES, OPENING_FENS, APP_VERSION } from './config.js';
+import { CHANGELOG } from './changelog.js';
 
 // Centraliza a seleção de todos os elementos do DOM
 const elements = {
