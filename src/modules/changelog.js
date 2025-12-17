@@ -1,5 +1,8 @@
 // src/modules/changelog.js
 
+// 1. Defina a versão aqui (Fonte da Verdade)
+export const CURRENT_VERSION = 'v1.0.5';
+
 export const CHANGELOG = [
     {
         version: 'v1.0.5',
