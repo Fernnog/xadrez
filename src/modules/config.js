@@ -1,5 +1,7 @@
 // src/modules/config.js
 
+import { CHANGELOG } from './changelog.js';
+
 /**
  * Mapeamento dos tipos de peça para seus símbolos Unicode.
  * NOTA: Usamos os glifos "Pretos" (sólidos) para ambos os lados.
@@ -197,51 +199,20 @@ export const OPENING_FENS = {
     }
 };
 
-
 /**
  * Caminho para o worker do Stockfish.
  */
 export const STOCKFISH_WORKER_PATH = 'https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.0/stockfish.js';
 
-// ATUALIZADO
-export const APP_VERSION = 'v1.0.3';
-export const CACHE_NAME = `chess-pwa-${APP_VERSION}`; 
+// ===================================================================================
+// GESTÃO DE VERSÃO DINÂMICA
+// A versão é extraída automaticamente do topo do changelog.js
+// ===================================================================================
 
-// ATUALIZADO
-export const CHANGELOG = [
-    {
-        version: 'v1.0.3',
-        date: '2025-12-16',
-        changes: [
-            'UI Kit: Novo painel "Prateleira" para peças capturadas com alto contraste.',
-            'Acessibilidade: Sombras dinâmicas para melhor visualização das peças pretas.',
-            'Responsividade: Ajuste fluido do tamanho das peças no modo Widget (Clamp).',
-            'UX: Animação de entrada ao capturar peças.'
-        ]
-    },
-    {
-        version: 'v1.0.2',
-        date: '2025-12-15',
-        changes: [
-            'Live Sync: Sincronização em tempo real entre abas/janelas (Storage API).',
-            'Modo Cinema: Bloqueio da janela principal quando o Widget está ativo.',
-            'UX: Destaque visual dinâmico nas coordenadas (Ranks/Files) ao passar o mouse.',
-            'Core: Correção de loop de áudio na sincronização.'
-        ]
-    },
-    {
-        version: 'v1.0.1',
-        date: '2025-12-02',
-        changes: [
-            'Novo: Exportação de histórico para DOC com diagrama do tabuleiro.',
-            'Novo: Histórico de versões interativo.',
-            'UX: Notificações (Toasts) substituindo alertas.',
-            'Sistema: Melhoria de cache e atualização automática.'
-        ]
-    },
-    {
-        version: 'v1.0.0',
-        date: '2025-12-01',
-        changes: ['Lançamento inicial.']
-    }
-];
+const latest = CHANGELOG[0]; // Pega o primeiro item (o mais recente)
+
+// Extrai a versão ou usa um fallback de segurança
+export const APP_VERSION = latest ? latest.version : 'v1.0.0';
+
+// O nome do cache é atualizado automaticamente
+export const CACHE_NAME = `chess-pwa-${APP_VERSION}`;
