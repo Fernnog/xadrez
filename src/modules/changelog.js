@@ -3,12 +3,12 @@
 export const CHANGELOG = [
     {
         version: 'v1.0.4',
-        date: '2025-12-17',
+        date: '2023-10-29',
         changes: [
             'UX: Nova animação "Pop-in" elástica ao capturar peças.',
             'Arquitetura: Implementação de Variáveis CSS (Design Tokens).',
-            'Sistema: Separação do histórico de versões em arquivo dedicado (changelog.js).',
-            'Sistema: Preparação arquitetural para suporte a múltiplos temas visuais.'
+            'Sistema: Separação do histórico de versões para facilitar a manutenção.',
+            'Sistema: Preparação para suporte a múltiplos temas visuais.'
         ]
     },
     {
