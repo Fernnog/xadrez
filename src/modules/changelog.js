@@ -2,6 +2,15 @@
 
 export const CHANGELOG = [
     {
+        version: 'v1.0.5',
+        date: '2025-12-17',
+        changes: [
+            'Visual: Correção do "corte" no topo das peças (Rei/Rainha).',
+            'Conteúdo: Nova abertura adicionada: Gambito do Rei.',
+            'Sistema: Melhoria na responsividade das peças em telas móveis.'
+        ]
+    },
+    {
         version: 'v1.0.4',
         date: '2023-10-29',
         changes: [
