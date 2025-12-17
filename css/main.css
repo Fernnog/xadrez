@@ -1,12 +1,36 @@
 /* css/main.css */
 
 /* ==========================================================================
+   0. VARIÁVEIS GLOBAIS (DESIGN SYSTEM) - v1.0.4
+   ========================================================================== */
+:root {
+    /* Cores do Tabuleiro */
+    --board-light: #f0d9b5;
+    --board-dark: #b58863;
+    --board-border: #111827; /* Gray-900 */
+    
+    /* Cores da Interface (App) */
+    --bg-app: #1f2937;       /* Gray-800 */
+    --bg-panel: #4b5563;     /* Gray-600 (Prateleira de Captura) */
+    --bg-panel-widget: #374151; /* Gray-700 */
+    --border-panel: #374151;
+    
+    /* Cores de Destaque */
+    --highlight-last-move: rgba(250, 204, 21, 0.8); /* Yellow */
+    --highlight-valid-move: rgba(34, 197, 94, 0.6); /* Green */
+    
+    /* Sombras */
+    --shadow-piece-white: drop-shadow(0 2px 2px rgba(0,0,0,0.6));
+    --shadow-piece-black: drop-shadow(0 0 2px rgba(255,255,255,0.4));
+}
+
+/* ==========================================================================
    1. CONFIGURAÇÕES GERAIS E TABULEIRO
    ========================================================================== */
 
 body { 
     font-family: 'Inter', sans-serif; 
-    /* O background geral é controlado pelo Tailwind no HTML */
+    /* O background geral é controlado pelo Tailwind no HTML, mas definido na var para widget */
 }
 
 /* Container Estrutural */
@@ -31,7 +55,7 @@ body {
     transition: transform 0.5s ease-in-out; 
     
     /* Estética */
-    border: 4px solid #111827; 
+    border: 4px solid var(--board-border); 
     border-radius: 0.5rem;
     overflow: hidden;
     z-index: 10; /* Garante que o tabuleiro fique acima de elementos decorativos */
@@ -44,9 +68,9 @@ body {
     align-items: center; 
     justify-content: center; 
 }
-.light { background-color: #f0d9b5; }
-.dark { background-color: #b58863; }
-.selected-square { background-color: rgba(250, 204, 21, 0.8) !important; }
+.light { background-color: var(--board-light); }
+.dark { background-color: var(--board-dark); }
+.selected-square { background-color: var(--highlight-last-move) !important; }
 
 /* Marcador de Movimento */
 .valid-move-marker { 
@@ -54,7 +78,7 @@ body {
     top: 50%; left: 50%; 
     transform: translate(-50%, -50%); 
     width: 30%; height: 30%; 
-    background-color: rgba(34, 197, 94, 0.6); 
+    background-color: var(--highlight-valid-move); 
     border-radius: 50%; 
     pointer-events: none; 
     z-index: 5; 
@@ -161,7 +185,7 @@ body {
 }
 
 /* ==========================================================================
-   4. UI AUXILIAR & UI KIT v1.0.3 (PEÇAS CAPTURADAS)
+   4. UI AUXILIAR & UI KIT v1.0.4 (PEÇAS CAPTURADAS)
    ========================================================================== */
 
 .move-history { 
@@ -173,7 +197,7 @@ body {
 .move-list-item:nth-child(odd) { background-color: #4a5568; }
 .move-number { color: #a0aec0; font-weight: 600; text-align: right; }
 
-/* --- PRATELEIRA DE CAPTURAS (NOVO v1.0.3) --- */
+/* --- PRATELEIRA DE CAPTURAS (REFATORADO v1.0.4) --- */
 .captured-pieces-container { 
     display: flex; 
     align-items: center; 
@@ -181,9 +205,9 @@ body {
     padding: 0.25rem 0.5rem; 
     min-height: 2.5rem; /* Altura compacta */
     
-    /* Prateleira Cinza Neutro para Contraste */
-    background-color: #4b5563; 
-    border: 1px solid #374151; 
+    /* Prateleira com Variáveis CSS */
+    background-color: var(--bg-panel); 
+    border: 1px solid var(--border-panel); 
     border-radius: 0.375rem;
     box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
     
@@ -192,31 +216,41 @@ body {
     transition: all 0.3s ease;
 }
 
-/* Tratamento de Contraste v1.0.3 */
+/* Tratamento de Contraste v1.0.4 com Variáveis */
 .captured-pieces-container .white-piece {
     /* Sombra escura para destacar no cinza */
-    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.6));
+    filter: var(--shadow-piece-white);
 }
 .captured-pieces-container .black-piece {
     /* Halo branco sutil para destacar a peça preta no cinza */
     color: #111827 !important;
-    filter: drop-shadow(0 0 2px rgba(255,255,255,0.4));
+    filter: var(--shadow-piece-black);
 }
 
-/* Animação de Entrada (Pop-in) v1.0.3 */
+/* Animação de Entrada (Pop-in Elástico) v1.0.4 */
 @keyframes popIn {
-    0% { transform: scale(0); opacity: 0; }
-    70% { transform: scale(1.2); }
-    100% { transform: scale(1); opacity: 1; }
+    0% { 
+        transform: scale(0) translateY(-10px); /* Começa pequeno e um pouco acima */
+        opacity: 0; 
+    }
+    60% {
+        transform: scale(1.3); /* Cresce um pouco mais que o normal (Bounce) */
+    }
+    100% { 
+        transform: scale(1) translateY(0); 
+        opacity: 1; 
+    }
 }
 
-/* Tamanho Fluido das Peças Capturadas (Clamp) */
+/* Tamanho Fluido das Peças Capturadas (Clamp) + Animação */
 .captured-pieces-container .piece { 
     /* Desktop Padrão: 1.5rem / Mobile: Ajusta */
     font-size: clamp(1.2rem, 5vmin, 1.5rem); 
     line-height: 1;
     cursor: default; 
-    animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    
+    /* Animação de 0.4s com efeito elástico */
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
 /* Placar de Material */
@@ -232,9 +266,9 @@ body {
 }
 
 /* Botões do Menu */
-.btn-play-white { background-color: #b58863; color: white; }
+.btn-play-white { background-color: var(--board-dark); color: white; }
 .btn-play-white:hover { background-color: #c79d7f; }
-.btn-play-black { background-color: #f0d9b5; color: #1a202c; }
+.btn-play-black { background-color: var(--board-light); color: #1a202c; }
 .btn-play-black:hover { background-color: #e6c8a4; }
 
 /* Auxiliares Gerais */
@@ -260,7 +294,7 @@ body.widget-mode footer {
 /* Layout da Janela Widget */
 body.widget-mode {
     padding: 0 !important;
-    background-color: #1f2937; 
+    background-color: var(--bg-app); 
     overflow: hidden;
     width: 100vw;
     height: 100vh;
@@ -298,7 +332,7 @@ body.widget-mode .captured-pieces-container {
     min-height: 2rem; /* Altura mínima reduzida agressivamente */
     padding: 0.1rem 0.25rem;
     gap: 0; /* Remove gap para economizar espaço */
-    background-color: #374151;
+    background-color: var(--bg-panel-widget);
 }
 
 body.widget-mode .captured-pieces-container .piece {
