@@ -6,6 +6,7 @@ import * as engine from './modules/engine.js';
 import * as audio from './modules/audio.js';
 import * as utils from './modules/utils.js';
 import { OPENING_FENS } from './modules/config.js';
+import { CURRENT_VERSION } from './modules/changelog.js'; // NOVO: Importação da versão
 
 console.log("[Main] Módulo main.js carregado.");
 
@@ -226,9 +227,10 @@ function init() {
     // Fluxo Padrão (só executa se não entrou no return acima)
     checkForSavedGame();
 
+    // NOVO: Registro do Service Worker com versionamento via Query String
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('[ServiceWorker] Registrado.', reg))
+        navigator.serviceWorker.register(`./sw.js?v=${CURRENT_VERSION}`)
+            .then(reg => console.log(`[ServiceWorker] Registrado com versão: ${CURRENT_VERSION}`, reg))
             .catch(err => console.error('[ServiceWorker] Falha.', err));
     }
 }
