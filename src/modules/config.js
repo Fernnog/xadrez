@@ -1,7 +1,5 @@
 // src/modules/config.js
 
-import { CHANGELOG } from './changelog.js';
-
 /**
  * Mapeamento dos tipos de peça para seus símbolos Unicode.
  * NOTA: Usamos os glifos "Pretos" (sólidos) para ambos os lados.
@@ -199,20 +197,14 @@ export const OPENING_FENS = {
     }
 };
 
+
 /**
  * Caminho para o worker do Stockfish.
  */
 export const STOCKFISH_WORKER_PATH = 'https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.0/stockfish.js';
 
-// ===================================================================================
-// GESTÃO DE VERSÃO DINÂMICA
-// A versão é extraída automaticamente do topo do changelog.js
-// ===================================================================================
+// ATUALIZADO: Versão 1.0.4
+export const APP_VERSION = 'v1.0.4';
+export const CACHE_NAME = `chess-pwa-${APP_VERSION}`; 
 
-const latest = CHANGELOG[0]; // Pega o primeiro item (o mais recente)
-
-// Extrai a versão ou usa um fallback de segurança
-export const APP_VERSION = latest ? latest.version : 'v1.0.0';
-
-// O nome do cache é atualizado automaticamente
-export const CACHE_NAME = `chess-pwa-${APP_VERSION}`;
+// O CHANGELOG foi movido para um arquivo separado (src/modules/changelog.js)
