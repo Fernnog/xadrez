@@ -1,5 +1,7 @@
 // src/modules/config.js
 
+import { CURRENT_VERSION } from './changelog.js';
+
 /**
  * Mapeamento dos tipos de peça para seus símbolos Unicode.
  * NOTA: Usamos os glifos "Pretos" (sólidos) para ambos os lados.
@@ -53,16 +55,16 @@ export const OPENING_FENS = {
         fen: 'r1bqk1nr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4',
         category: 'Aberturas de Peão Rei (1. e4)'
     },
-    'petroff_defense': {
-        name: 'Defesa Petroff',
-        pgn: '1. e4 e5 2. Nf3 Nf6',
-        fen: 'rnbqkb1r/pppp1ppp/5n2/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3',
-        category: 'Aberturas de Peão Rei (1. e4)'
-    },
     'kings_gambit': {
         name: 'Gambito do Rei',
         pgn: '1. e4 e5 2. f4',
         fen: 'rnbqkbnr/pppp1ppp/8/4p3/4PP2/8/PPPP2PP/RNBQKBNR b KQkq - 0 2',
+        category: 'Aberturas de Peão Rei (1. e4)'
+    },
+    'petroff_defense': {
+        name: 'Defesa Petroff',
+        pgn: '1. e4 e5 2. Nf3 Nf6',
+        fen: 'rnbqkb1r/pppp1ppp/5n2/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3',
         category: 'Aberturas de Peão Rei (1. e4)'
     },
     'scotch_game': {
@@ -209,8 +211,6 @@ export const OPENING_FENS = {
  */
 export const STOCKFISH_WORKER_PATH = 'https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.0/stockfish.js';
 
-// ATUALIZADO: Versão 1.0.5
-export const APP_VERSION = 'v1.0.5';
-export const CACHE_NAME = `chess-pwa-${APP_VERSION}`; 
-
-// O CHANGELOG foi movido para um arquivo separado (src/modules/changelog.js)
+// ATUALIZADO: Versão vinda do Changelog (DRY)
+export const APP_VERSION = CURRENT_VERSION;
+export const CACHE_NAME = `chess-pwa-${APP_VERSION}`;
