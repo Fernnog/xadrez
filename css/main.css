@@ -40,6 +40,9 @@ body {
     padding-left: 1.5rem;   
     padding-bottom: 1.5rem; 
     
+    /* v1.0.5: Respiro superior para evitar cortes visuais em glifos altos */
+    padding-top: 0.5rem;
+    
     width: 100%;
     max-width: 100%;
     display: inline-block;  
@@ -138,15 +141,28 @@ body {
 }
 
 /* ==========================================================================
-   3. PEÇAS
+   3. PEÇAS (MODIFICADO v1.0.5)
    ========================================================================== */
 
 .piece { 
-    font-size: 3.5rem; 
+    /* v1.0.5: Uso de Clamp para responsividade fluida e segura */
+    font-size: clamp(2rem, 9vmin, 3.5rem); 
+    
+    /* v1.0.5: Centralização Flexbox Robusta */
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    line-height: 1; 
+    
+    /* v1.0.5: Ajuste óptico (Optical Balancing) para compensar a base da fonte */
+    transform: translateY(-3%);
+
     cursor: pointer; 
     user-select: none; 
     z-index: 10; 
-    line-height: 1; 
     transition: opacity 0.1s ease-in-out; 
 }
 
@@ -165,19 +181,28 @@ body {
     z-index: 1000; 
     pointer-events: none; 
     transition: top 0.25s ease-out, left 0.25s ease-out; 
+    /* v1.0.5: Garante que a peça animada tenha as mesmas propriedades de layout */
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .piece-hidden { opacity: 0; }
 .board-flipped { transform: rotate(180deg); }
 .board-flipped .piece, .board-flipped .animated-piece { transform: rotate(180deg); }
 
-/* Responsividade Mobile das Peças no Tabuleiro */
+/* Responsividade Mobile das Peças no Tabuleiro (Ajuste Fino v1.0.5) */
 @media (max-width: 640px) { 
-    .piece { font-size: 2.5rem; } 
+    .piece { 
+        /* Reduz ligeiramente em mobile para garantir margem de segurança */
+        font-size: clamp(1.8rem, 8.5vmin, 2.8rem); 
+    } 
 }
 
 @media (max-width: 400px) { 
-    .piece { font-size: 1.8rem; }
+    /* Ajustes extremos para telas muito pequenas */
+    .piece { font-size: clamp(1.5rem, 8vmin, 2rem); }
+    
     .board-container { padding-left: 1rem; padding-bottom: 1rem; }
     .rank-labels { width: 1rem; left: -1rem; }
     .file-labels { height: 1rem; bottom: -1rem; }
@@ -197,7 +222,7 @@ body {
 .move-list-item:nth-child(odd) { background-color: #4a5568; }
 .move-number { color: #a0aec0; font-weight: 600; text-align: right; }
 
-/* --- PRATELEIRA DE CAPTURAS (REFATORADO v1.0.4) --- */
+/* --- PRATELEIRA DE CAPTURAS --- */
 .captured-pieces-container { 
     display: flex; 
     align-items: center; 
@@ -227,7 +252,7 @@ body {
     filter: var(--shadow-piece-black);
 }
 
-/* Animação de Entrada (Pop-in Elástico) v1.0.4 */
+/* Animação de Entrada (Pop-in Elástico) */
 @keyframes popIn {
     0% { 
         transform: scale(0) translateY(-10px); /* Começa pequeno e um pouco acima */
@@ -244,10 +269,13 @@ body {
 
 /* Tamanho Fluido das Peças Capturadas (Clamp) + Animação */
 .captured-pieces-container .piece { 
-    /* Desktop Padrão: 1.5rem / Mobile: Ajusta */
+    /* v1.0.5: Override para garantir tamanho correto na prateleira vs tabuleiro */
     font-size: clamp(1.2rem, 5vmin, 1.5rem); 
     line-height: 1;
     cursor: default; 
+    width: auto; /* Prateleira não usa flex center do tabuleiro */
+    height: auto;
+    transform: none; /* Remove o translateY do tabuleiro */
     
     /* Animação de 0.4s com efeito elástico */
     animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
@@ -325,6 +353,7 @@ body.widget-mode .board-container {
     padding-bottom: 0 !important;
     /* Ajuste de centralização visual devido às labels */
     margin-left: -0.5rem !important;
+    padding-top: 0; /* Widget geralmente não precisa do respiro extra superior devido ao vmin */
 }
 
 /* Prateleira Compacta para Widget */
@@ -339,6 +368,10 @@ body.widget-mode .captured-pieces-container .piece {
     /* Peças menores e mais juntas no modo widget */
     font-size: clamp(1rem, 7vmin, 1.4rem); 
     margin-right: -3px; 
+    /* Reset de propriedades flex do tabuleiro para prateleira widget */
+    width: auto;
+    height: auto;
+    transform: none;
 }
 
 /* Ajuste de Labels no Widget para não colidir com a Prateleira */
