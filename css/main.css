@@ -122,7 +122,8 @@ body {
     font-size: 0.875rem; 
     transition: color 0.2s ease, transform 0.2s ease;
     cursor: default;
-    /* MELHORIA DE ESTABILIDADE: Garante largura numérica tabular */
+    
+    /* FIX ESTABILIDADE: Numerais tabulares para evitar mudança de largura */
     font-variant-numeric: tabular-nums; 
 }
 
@@ -180,9 +181,19 @@ body {
    4. UI AUXILIAR & UI KIT v1.1 (PEÇAS CAPTURADAS)
    ========================================================================== */
 
+/* FIX ESTABILIDADE: Containment para o histórico */
 .move-history { 
-    overflow-y: auto; scrollbar-width: thin; scrollbar-color: #4a5568 #2d3748; 
+    overflow-y: scroll !important; /* Força scrollbar visível para não pular layout */
+    scrollbar-width: thin; 
+    scrollbar-color: #4a5568 #2d3748; 
+    
+    height: 20rem; /* h-80 equivalente */
+    
+    /* Isola o layout interno para não afetar o tabuleiro externo */
+    contain: strict; 
+    will-change: transform;
 }
+
 .move-list-item { 
     display: grid; grid-template-columns: 2.5rem 1fr 1fr; gap: 0.5rem; padding: 0.25rem 0.5rem; 
 }
@@ -203,10 +214,10 @@ body {
     
     flex-wrap: wrap; 
     
-    /* MELHORIA DE ESTABILIDADE: Travando altura para evitar pulos */
+    /* FIX ESTABILIDADE: Tamanho fixo e overflow hidden */
     box-sizing: border-box;
     min-height: 2.5rem;
-    max-height: 2.5rem; 
+    max-height: 2.5rem;
     overflow: hidden;
     
     transition: all 0.3s ease;
@@ -351,14 +362,14 @@ body.widget-mode #restoreWindowBtn {
    6. DESTAQUES DINÂMICOS
    ========================================================================== */
 
-/* MELHORIA DE ESTABILIDADE: Evita mudança de layout ao não alterar font-weight */
+/* FIX ESTABILIDADE: Removemos font-weight 800 para evitar pulos de layout */
 .label-highlight {
     color: #fbbf24 !important; 
-    font-weight: 700; /* Mantém fixo igual ao base, apenas muda cor/escala */
+    font-weight: bold; /* Fixo */
     
     transform: scale(1.4);
-    text-shadow: 0 0 12px rgba(251, 191, 36, 0.8);
+    text-shadow: 0 0 12px rgba(251, 191, 36, 0.8); /* Brilho intensificado */
     z-index: 20;
     
-    will-change: transform; /* Dica de performance */
+    will-change: transform;
 }
