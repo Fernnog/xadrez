@@ -50,7 +50,7 @@
                     <div id="evaluationPanel" class="text-2xl font-bold text-center w-24 bg-gray-800 rounded-md py-1">
                         <span id="evaluationValue">0.00</span>
                     </div>
-                    <!-- MELHORIA DE ESTABILIDADE: truncate e whitespace-nowrap evitam quebra de linha -->
+                    <!-- FIX ESTABILIDADE: Adicionado truncate e whitespace-nowrap -->
                     <p class="text-sm sm:text-lg font-semibold text-center flex-grow pl-4 truncate whitespace-nowrap" id="status">Iniciando...</p>
                 </div>
             </div>
@@ -92,7 +92,8 @@
                         <button id="copyPgnButton" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded transition-all">COPIAR PGN</button>
                     </div>
                 </div>
-                <div id="moveHistory" class="move-history bg-gray-800 rounded-md p-2 overflow-y-auto h-80 text-sm"></div>
+                <!-- O CSS agora controla a estabilidade do moveHistory -->
+                <div id="moveHistory" class="move-history bg-gray-800 rounded-md p-2 text-sm"></div>
             </div>
             
             <div class="flex flex-col gap-2 items-center w-full">
@@ -138,7 +139,7 @@
                 </select>
             </div>
             
-            <!-- v1.0.7: NOVO UI PARA SELEÇÃO DE ABERTURA -->
+            <!-- NOVA ÁREA DE TREINO DE ABERTURA (Substituindo o antigo Select) -->
             <div class="mt-4 text-left border-t border-gray-200 pt-4">
                 <label class="block text-sm font-bold text-gray-600 uppercase mb-2">Treino de Abertura</label>
                 
@@ -149,9 +150,9 @@
                         <span id="selectedOpeningName" class="text-sm font-bold text-gray-800">Padrão (Início)</span>
                         <span id="selectedVariantName" class="text-xs text-blue-600 italic">--</span>
                     </div>
-                    <button id="clearOpeningBtn" class="text-gray-400 hover:text-red-500" title="Voltar ao Padrão">&times;</button>
+                    <button id="clearOpeningBtn" class="text-gray-400 hover:text-red-500 font-bold px-2" title="Voltar ao Padrão">&times;</button>
                 </div>
-            
+
                 <!-- Botão para Abrir o Explorador -->
                 <button id="openOpeningExplorerBtn" class="w-full py-3 px-4 bg-gray-800 hover:bg-gray-700 text-white font-semibold rounded shadow-md flex items-center justify-center gap-2 transition-all hover:shadow-lg">
                     <span class="text-xl">📚</span> Explorar Biblioteca
@@ -200,7 +201,7 @@
         </div>
     </div>
 
-    <!-- v1.0.7: MODAL EXPLORADOR DE ABERTURAS -->
+    <!-- MODAL EXPLORADOR DE ABERTURAS (Novo) -->
     <div id="openingExplorerModal" class="fixed inset-0 bg-gray-900 bg-opacity-95 z-[60] hidden flex items-center justify-center backdrop-blur-sm p-4 animate-fade-in">
         <div class="bg-white w-full max-w-5xl h-[85vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
             
@@ -239,7 +240,7 @@
     
     <!-- CARD DE VERSÃO -->
     <div id="versionCard" class="fixed bottom-4 left-4 bg-gray-900 bg-opacity-90 text-gray-400 text-xs px-3 py-1 rounded-full shadow-lg z-20 cursor-pointer hover:bg-gray-700 hover:text-white transition-colors border border-gray-700">
-        <span id="currentVersionDisplay">v1.0.3</span> ℹ️
+        <span id="currentVersionDisplay">v1.0.7</span> ℹ️
     </div>
 
     <!-- CONTAINER DE NOTIFICAÇÕES TOAST -->
