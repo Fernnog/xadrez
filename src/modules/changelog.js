@@ -1,9 +1,20 @@
 // src/modules/changelog.js
 
 // 1. Defina a versão aqui (Fonte da Verdade)
-export const CURRENT_VERSION = 'v1.0.6';
+export const CURRENT_VERSION = 'v1.0.7';
 
 export const CHANGELOG = [
+    {
+        version: 'v1.0.7',
+        date: '2025-12-19',
+        changes: [
+            'Novo Recurso: "Explorador de Aberturas" - Uma biblioteca visual e hierárquica para navegar por estratégias de jogo.',
+            'UX: Substituição da lista de seleção longa por um Modal interativo organizado por categorias (Peão do Rei, Peão da Dama, etc.).',
+            'Funcionalidade: Busca instantânea (Real-time Search) de aberturas por nome, variante ou código ECO.',
+            'Arquitetura: Nova estrutura de dados aninhada para suportar múltiplas variantes por abertura.',
+            'Sistema: Implementação de Event Bus para desacoplar a seleção de abertura do motor de jogo.'
+        ]
+    },
     {
         version: 'v1.0.6',
         date: '2025-12-18',
