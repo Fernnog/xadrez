@@ -20,7 +20,7 @@ const elements = {
     modalMessage: document.getElementById('modalMessage'),
     copyPgnButton: document.getElementById('copyPgnButton'),
     downloadDocButton: document.getElementById('downloadDocButton'),
-    mainBoardContainer: document.querySelector('.flex.flex-col.w-full.lg\\:w-auto.items-center'),
+    mainBoardContainer: document.querySelector('.board-container'),
     rankLabels: document.querySelector('.rank-labels'),
     fileLabels: document.querySelector('.file-labels'),
     openingSelect: document.getElementById('openingSelect'),
@@ -32,29 +32,17 @@ const elements = {
     changelogContent: document.getElementById('changelogContent'),
     closeChangelogButton: document.getElementById('closeChangelogButton'),
     toastContainer: document.getElementById('toastContainer'),
-    // --- ELEMENTOS NOVOS DO WIDGET E OVERLAY (v1.0.2) ---
     popOutWidgetBtn: document.getElementById('popOutWidgetBtn'),
     restoreWindowBtn: document.getElementById('restoreWindowBtn'),
-    appOverlay: document.getElementById('appOverlay'),
+    appOverlay: document.getElementById('appOverlay'), 
 };
 
-// Sons da interface
-let isAudioInitialized = false;
-
-function initAudio() {
-    // Implementação real da inicialização deve vir de audio.js
-}
-
-// --- ESTADO E HELPERS INTERNOS ---
-
 let uiHandlers = {}; 
-let widgetWindowRef = null;
+let widgetWindowRef = null; 
 
 function safeAddEventListener(id, event, handler) {
     const el = document.getElementById(id);
-    if (el) {
-        el.addEventListener(event, handler);
-    }
+    if (el) el.addEventListener(event, handler);
 }
 
 /**
@@ -116,11 +104,9 @@ function populateOpeningSelector(filterText = '') {
         matchingOpenings.forEach(data => {
             const option = document.createElement('option');
             option.value = data.key;
-            
             const fenParts = data.fen.split(' ');
             const turn = fenParts.length > 1 && fenParts[1] === 'w' ? '(Brancas Movem)' : '(Pretas Movem)';
             option.textContent = `${data.name} (${data.pgn}) ${turn}`;
-            
             optgroup.appendChild(option);
         });
         
@@ -135,11 +121,9 @@ function populateOpeningSelector(filterText = '') {
     }
 }
 
-// --- FUNÇÃO DE CHANGELOG ---
 function renderChangelog() {
     if (!elements.currentVersionDisplay || !elements.changelogContent) return;
-    
-    elements.currentVersionDisplay.textContent = APP_VERSION || 'v1.0.6';
+    elements.currentVersionDisplay.textContent = APP_VERSION || 'v1.0.4';
     elements.changelogContent.innerHTML = '';
     
     if (!CHANGELOG) return;
@@ -164,37 +148,26 @@ function renderChangelog() {
     });
 }
 
-// --- FUNÇÃO DE TOAST ---
 export function showToast(message, type = 'info') {
     if (!elements.toastContainer) return;
-
     const toast = document.createElement('div');
     const bgClass = type === 'error' ? 'bg-red-600' : (type === 'success' ? 'bg-green-600' : 'bg-blue-600');
-    
     toast.className = `toast pointer-events-auto px-4 py-3 rounded shadow-lg text-white text-sm font-bold flex items-center gap-2 ${bgClass}`;
     toast.innerHTML = `<span>${message}</span>`;
-    
     elements.toastContainer.appendChild(toast);
-
-    requestAnimationFrame(() => {
-        toast.classList.add('toast-visible');
-    });
-
+    requestAnimationFrame(() => toast.classList.add('toast-visible'));
     setTimeout(() => {
         toast.classList.remove('toast-visible');
         setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
 
-// --- FUNÇÕES DE DESTAQUE DE COORDENADAS ---
 function highlightCoordinates(squareName) {
     if (!squareName) return;
     const file = squareName[0];
     const rank = squareName[1];
-
     const fileLabel = document.getElementById(`label-file-${file}`);
     const rankLabel = document.getElementById(`label-rank-${rank}`);
-
     if (fileLabel) fileLabel.classList.add('label-highlight');
     if (rankLabel) rankLabel.classList.add('label-highlight');
 }
@@ -203,25 +176,20 @@ function clearCoordinateHighlights() {
     document.querySelectorAll('.label-highlight').forEach(el => el.classList.remove('label-highlight'));
 }
 
-// --- FUNÇÃO DE ABRIR WIDGET (POP-OUT) ---
 function openWidgetWindow() {
     const width = 450;
     const height = 550;
     const left = 20; 
     const top = window.screen.availHeight - height - 20; 
-
     const features = `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=no,status=no`;
-    
     widgetWindowRef = window.open(`${window.location.pathname}?mode=widget`, 'ChessWidgetWindow', features);
 
     if (widgetWindowRef) {
         if (elements.appOverlay) elements.appOverlay.classList.remove('hidden');
-
         const checkTimer = setInterval(() => {
             if (widgetWindowRef.closed) {
                 clearInterval(checkTimer);
                 if (elements.appOverlay) elements.appOverlay.classList.add('hidden');
-                
                 window.dispatchEvent(new CustomEvent('widget-closed'));
             }
         }, 500);
@@ -230,11 +198,8 @@ function openWidgetWindow() {
     }
 }
 
-// --- FUNÇÕES EXPORTADAS ---
-
 export function registerUIHandlers(handlers) {
     uiHandlers = handlers;
-
     const onStartWrapper = (callback) => {
         document.body.style.cursor = 'wait'; 
         setTimeout(() => callback(), 10); 
@@ -252,23 +217,16 @@ export function registerUIHandlers(handlers) {
     if (elements.copyPgnButton) {
         elements.copyPgnButton.addEventListener('click', handlers.onCopyPgn);
     }
-
     safeAddEventListener('downloadDocButton', 'click', handlers.onDownloadDoc);
     safeAddEventListener('versionCard', 'click', () => elements.changelogModal.classList.remove('hidden'));
     safeAddEventListener('closeChangelogButton', 'click', () => elements.changelogModal.classList.add('hidden'));
     
-    // --- HANDLERS DO WIDGET ---
-    if (elements.popOutWidgetBtn) {
-        elements.popOutWidgetBtn.addEventListener('click', openWidgetWindow);
-    }
+    if (elements.popOutWidgetBtn) elements.popOutWidgetBtn.addEventListener('click', openWidgetWindow);
     
     if (elements.restoreWindowBtn) {
         elements.restoreWindowBtn.addEventListener('click', () => {
-            if (window.opener) {
-                window.opener.focus();
-            } else {
-                window.open(window.location.pathname.replace('?mode=widget', ''), '_blank');
-            }
+            if (window.opener) window.opener.focus();
+            else window.open(window.location.pathname.replace('?mode=widget', ''), '_blank');
             window.close();
         });
     }
@@ -293,25 +251,16 @@ export function getPgnInput() {
 }
 
 export function setBoardCursor(cursor) {
-    if (elements.board) {
-        elements.board.style.cursor = cursor;
-    }
+    if (elements.board) elements.board.style.cursor = cursor;
 }
 
 export function showContinueGameOption(isVisible) {
     const container = document.getElementById('continueGameContainer');
-    if (container) {
-        if (isVisible) {
-            container.classList.remove('hidden');
-        } else {
-            container.classList.add('hidden');
-        }
-    }
+    if (container) isVisible ? container.classList.remove('hidden') : container.classList.add('hidden');
 }
 
 export function setupAndDisplayGame(playerColor) {
     document.body.style.cursor = 'default'; 
-    
     hideColorSelectionModal();
     hideGameOverModal();
     showGameContainer();
@@ -319,7 +268,6 @@ export function setupAndDisplayGame(playerColor) {
     createBoard(uiHandlers.onSquareClick);
 }
 
-// MODIFICADO (v1.0.6): Renderiza imagens SVG via backgroundImage
 export function renderBoard(boardState) {
     for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
@@ -330,17 +278,14 @@ export function renderBoard(boardState) {
             if (squareElement) {
                 squareElement.innerHTML = '';
                 if (piece) {
-                    // Mudança de span para div e uso de backgroundImage
+                    // ADAPTADO PARA SVG: Usa div e backgroundImage
                     const pieceElement = document.createElement('div');
-                    pieceElement.className = 'piece'; // A cor não é mais uma classe, é definida pela URL
-                    
-                    // Assume que PIECES no config.js agora retorna URLs
+                    pieceElement.className = 'piece';
                     pieceElement.style.backgroundImage = `url('${PIECES[piece.color][piece.type]}')`;
                     
                     if (elements.board.classList.contains('board-flipped')) {
                         pieceElement.style.transform = 'rotate(180deg)';
                     }
-                    // O texto (Unicode) foi removido
                     squareElement.appendChild(pieceElement);
                 }
             }
@@ -351,7 +296,6 @@ export function renderBoard(boardState) {
 export function createBoard(onSquareClickCallback) {
     if (!elements.board) return;
     elements.board.innerHTML = '';
-
     const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
     for (let r = 0; r < 8; r++) {
@@ -365,12 +309,10 @@ export function createBoard(onSquareClickCallback) {
             if (onSquareClickCallback) {
                 square.addEventListener('click', () => onSquareClickCallback(squareName));
             }
-
             if (!isTouchDevice) {
                 square.addEventListener('mouseenter', () => highlightCoordinates(squareName));
                 square.addEventListener('mouseleave', clearCoordinateHighlights);
             }
-
             elements.board.appendChild(square);
         }
     }
@@ -432,9 +374,7 @@ export function updateStatus(gameState, showGameOverCallback) {
 export function highlightMoves(fromSquare, moves) {
     clearHighlights();
     const fromElement = elements.board.querySelector(`[data-square="${fromSquare}"]`);
-    if (fromElement) {
-        fromElement.classList.add('selected-square');
-    }
+    if (fromElement) fromElement.classList.add('selected-square');
     moves.forEach(move => {
         const toElement = elements.board.querySelector(`[data-square="${move.to}"]`);
         if (toElement) {
@@ -453,7 +393,6 @@ export function clearHighlights() {
 export function updateMoveHistory(history) {
     elements.moveHistory.innerHTML = '';
     const movePairs = [];
-    
     const getSan = (move) => {
         if (!move) return '';
         if (typeof move === 'string') return move;
@@ -481,7 +420,6 @@ export function updateMoveHistory(history) {
     elements.moveHistory.scrollTop = 0;
 }
 
-// MODIFICADO (v1.0.6): Prateleira de Captura com SVGs
 export function updateCapturedPieces(history) {
     const captured = { w: [], b: [] };
     for (const move of history) {
@@ -492,13 +430,13 @@ export function updateCapturedPieces(history) {
     }
 
     const render = (container, pieces, color) => {
-        if(!container) return 0;
+        if(!container) return 0; 
         container.innerHTML = '';
         let material = 0;
         const pieceOrder = { q: 1, r: 2, b: 3, n: 4, p: 5 };
         
         pieces.sort((a, b) => pieceOrder[a] - pieceOrder[b]).forEach(p => {
-            // Usa div e backgroundImage em vez de texto e unicode
+            // ADAPTADO PARA SVG: Usa div e backgroundImage
             const pieceEl = document.createElement('div');
             pieceEl.className = 'piece';
             pieceEl.style.backgroundImage = `url('${PIECES[color][p]}')`;
@@ -512,37 +450,34 @@ export function updateCapturedPieces(history) {
     const blackMaterial = render(elements.capturedForWhite, captured.b, 'b');
     const diff = whiteMaterial - blackMaterial;
 
+    // Helper para criar o badge de pontuação com Tooltip (v1.1)
+    const createBadge = (score) => {
+        const diffEl = document.createElement('span');
+        diffEl.className = 'material-diff';
+        diffEl.textContent = `+${Math.abs(score)}`;
+        diffEl.title = "Vantagem Material (Pontos baseados no valor das peças)"; 
+        return diffEl;
+    };
+
     if (elements.capturedForBlack && diff > 0) {
-        const diffEl = document.createElement('span');
-        diffEl.className = 'material-diff';
-        diffEl.textContent = `+${diff}`;
-        elements.capturedForBlack.appendChild(diffEl);
+        elements.capturedForBlack.appendChild(createBadge(diff));
     } else if (elements.capturedForWhite && diff < 0) {
-        const diffEl = document.createElement('span');
-        diffEl.className = 'material-diff';
-        diffEl.textContent = `+${Math.abs(diff)}`;
-        elements.capturedForWhite.appendChild(diffEl);
+        elements.capturedForWhite.appendChild(createBadge(diff));
     }
 }
 
-// MODIFICADO (v1.0.6): Modal de Promoção com SVGs
 export function showPromotionModal(color) {
     if (!elements.promotionOptions || !elements.promotionModal) return;
-
     elements.promotionOptions.innerHTML = '';
-    // PIECES[color] agora contém URLs
-    const symbols = PIECES[color];
 
     PROMOTION_PIECES.forEach(type => {
         const button = document.createElement('button');
-        // Adicionadas classes de tamanho (w-16 h-16) pois não há mais texto
+        // Adaptado para usar fundo e estilo de bloco em vez de texto
         button.className = `piece w-16 h-16 mx-1 hover:scale-110 transition-transform bg-gray-200 rounded-lg`;
-        button.style.backgroundImage = `url('${symbols[type]}')`;
-        // Removemos button.textContent
+        button.style.backgroundImage = `url('${PIECES[color][type]}')`;
+        
         button.onclick = () => {
-            if (uiHandlers.onPromotionSelect) {
-                uiHandlers.onPromotionSelect(type);
-            }
+            if (uiHandlers.onPromotionSelect) uiHandlers.onPromotionSelect(type);
         };
         elements.promotionOptions.appendChild(button);
     });
@@ -552,10 +487,6 @@ export function showPromotionModal(color) {
 
 export function hidePromotionModal() {
     elements.promotionModal.classList.add('hidden');
-}
-
-export function playSound(soundType) {
-    // Implementação removida/comentada para usar o módulo audio.js diretamente no main.js
 }
 
 export function showGameContainer() { elements.gameContainer.classList.remove('hidden'); }
