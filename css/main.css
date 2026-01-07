@@ -18,8 +18,6 @@
     /* Cores de Destaque */
     --highlight-last-move: rgba(250, 204, 21, 0.8); /* Yellow */
     --highlight-valid-move: rgba(34, 197, 94, 0.6); /* Green */
-    
-    /* Sombras - Removidas as sombras baseadas em texto (text-shadow) para SVG */
 }
 
 /* ==========================================================================
@@ -28,19 +26,13 @@
 
 body { 
     font-family: 'Inter', sans-serif; 
-    /* O background geral é controlado pelo Tailwind no HTML, mas definido na var para widget */
 }
 
 /* Container Estrutural */
 .board-container { 
     position: relative;     
-    /* Espaços reservados para a numeração e letras (Área de Respiro) */
-    padding-left: 1.5rem;   
-    padding-bottom: 1.5rem; 
-    
-    /* v1.0.5: Respiro superior para evitar cortes visuais em glifos altos */
+    /* Padding e layout controlados via HTML/Tailwind agora para melhor alinhamento */
     padding-top: 0.5rem;
-    
     width: 100%;
     max-width: 100%;
     display: inline-block;  
@@ -59,7 +51,7 @@ body {
     border: 4px solid var(--board-border); 
     border-radius: 0.5rem;
     overflow: hidden;
-    z-index: 10; /* Garante que o tabuleiro fique acima de elementos decorativos */
+    z-index: 10; 
 }
 
 /* Casas (Squares) */
@@ -102,7 +94,7 @@ body {
     color: #9ca3af; 
     user-select: none;
     align-items: center;
-    z-index: 5; /* Z-index ajustado para evitar sobreposição acidental */
+    z-index: 5; 
 }
 
 /* Letras (a-h) embaixo */
@@ -139,56 +131,51 @@ body {
 }
 
 /* ==========================================================================
-   3. PEÇAS (MODIFICADO PARA SVG / IMAGEM DE FUNDO)
+   3. PEÇAS (MODIFICADO PARA SVG E BACKGROUND IMAGE)
    ========================================================================== */
 
 .piece { 
-    /* Reset de Propriedades de Fonte Antigas */
+    /* Reset de Texto para suportar background-image */
     font-size: 0; 
-    line-height: 0;
-    color: transparent;
+    color: transparent; 
     text-shadow: none !important;
     
-    /* Configuração de Imagem de Fundo (SVG) */
+    /* Configuração de Imagem de Fundo */
     width: 100%;
     height: 100%;
     background-position: center;
     background-repeat: no-repeat;
-    background-size: contain; /* Garante que a peça caiba perfeitamente */
+    background-size: contain; 
     
+    transform: none; 
     cursor: pointer; 
     user-select: none; 
     z-index: 10; 
     transition: transform 0.1s ease-in-out, opacity 0.1s; 
     
-    /* Filtro leve para destacar sobre o tabuleiro */
-    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
+    /* Filtro Sutil para dar peso visual */
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));
 }
-
-/* Seletores antigos mantidos vazios para compatibilidade se existirem no JS */
-.white-piece { }
-.black-piece { }
 
 .animated-piece { 
     position: absolute; 
     z-index: 1000; 
     pointer-events: none; 
     transition: top 0.25s ease-out, left 0.25s ease-out; 
-    /* Garante propriedades de layout no SVG animado */
-    width: 100%;
-    height: 100%;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: contain;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Garante que peça animada também tenha tamanho */
+    width: 12.5%; /* 1/8 do tabuleiro */
+    height: 12.5%;
 }
 
 .piece-hidden { opacity: 0; }
 .board-flipped { transform: rotate(180deg); }
-.board-flipped .piece, .board-flipped .animated-piece { transform: rotate(180deg); }
-
+.board-flipped .piece { transform: rotate(180deg); }
 
 /* ==========================================================================
-   4. UI AUXILIAR & UI KIT (PEÇAS CAPTURADAS)
+   4. UI AUXILIAR & UI KIT v1.1 (PEÇAS CAPTURADAS)
    ========================================================================== */
 
 .move-history { 
@@ -204,11 +191,9 @@ body {
 .captured-pieces-container { 
     display: flex; 
     align-items: center; 
-    gap: 0.15rem; /* Peças mais próximas */
+    gap: 0; /* Gap zero para permitir sobreposição sutil ou compactação */
     padding: 0.25rem 0.5rem; 
-    min-height: 2.5rem; /* Altura compacta */
     
-    /* Prateleira com Variáveis CSS */
     background-color: var(--bg-panel); 
     border: 1px solid var(--border-panel); 
     border-radius: 0.375rem;
@@ -219,45 +204,44 @@ body {
     transition: all 0.3s ease;
 }
 
-/* Animação de Entrada (Pop-in Elástico) */
+/* Animação de Entrada */
 @keyframes popIn {
-    0% { 
-        transform: scale(0) translateY(-10px); 
-        opacity: 0; 
-    }
-    60% {
-        transform: scale(1.3); 
-    }
-    100% { 
-        transform: scale(1) translateY(0); 
-        opacity: 1; 
-    }
+    0% { transform: scale(0) translateY(-10px); opacity: 0; }
+    60% { transform: scale(1.3); }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
 }
 
-/* Tamanho Fixo das Peças Capturadas (SVG) + Animação */
+/* PEÇAS REDUZIDAS (50% menor) na Prateleira */
 .captured-pieces-container .piece { 
-    /* Substituição do font-size por width/height explícitos para SVG */
-    width: clamp(1.8rem, 6vmin, 2.8rem);
-    height: clamp(1.8rem, 6vmin, 2.8rem);
-
-    /* Reset de propriedades do tabuleiro */
-    transform: none; 
-    margin: 0;
+    /* Tamanho fixo base reduzido */
+    width: 1.5rem; 
+    height: 1.5rem;
     
-    cursor: default; 
+    /* Clamp responsivo bem menor: entre 1rem (mobile) e 1.8rem (desktop) */
+    width: clamp(1rem, 3.5vmin, 1.8rem);
+    height: clamp(1rem, 3.5vmin, 1.8rem);
+    
+    position: relative;
+    transform: none !important;
+    
+    /* Margem negativa para agrupar as peças levemente */
+    margin-right: -2px; 
+    
     animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    cursor: default;
 }
 
-/* Placar de Material */
+/* Placar de Material (Tooltip cursor) */
 .captured-pieces-container .material-diff { 
     margin-left: auto;
-    background-color: rgba(0,0,0,0.5);
-    padding: 0.1rem 0.5rem;
-    border-radius: 99px;
+    background-color: rgba(0,0,0,0.6);
+    padding: 0.1rem 0.6rem;
+    border-radius: 4px;
     font-size: 0.75rem; 
     font-weight: 700; 
     color: #f3f4f6; 
     letter-spacing: 0.05em;
+    cursor: help; /* Cursor de interrogação */
 }
 
 /* Botões do Menu */
@@ -275,7 +259,6 @@ body {
    5. MODO WIDGET (POP-OUT)
    ========================================================================== */
 
-/* Elementos Ocultos no Widget */
 body.widget-mode #mainHeader,
 body.widget-mode #sidebarPanel,
 body.widget-mode #popOutWidgetBtn,
@@ -286,7 +269,6 @@ body.widget-mode footer {
     display: none !important; 
 }
 
-/* Layout da Janela Widget */
 body.widget-mode {
     padding: 0 !important;
     background-color: var(--bg-app); 
@@ -308,13 +290,10 @@ body.widget-mode #gameContainer {
     align-items: center;
 }
 
-/* --- CORREÇÃO DE COLISÃO NO WIDGET (v1.0.3-fix) --- */
-
 body.widget-mode .board-container {
     width: 95vmin !important; 
     height: auto !important; 
     max-width: none;
-    
     padding-left: 0 !important; 
     padding-bottom: 0 !important;
     margin-left: -0.5rem !important;
@@ -325,20 +304,15 @@ body.widget-mode .board-container {
 body.widget-mode .captured-pieces-container {
     min-height: 2rem; 
     padding: 0.1rem 0.25rem;
-    gap: 0; 
     background-color: var(--bg-panel-widget);
 }
 
 body.widget-mode .captured-pieces-container .piece {
-    /* Ajuste de tamanho para SVG no Widget */
-    width: clamp(1rem, 7vmin, 1.4rem);
-    height: clamp(1rem, 7vmin, 1.4rem);
-    
-    margin-right: -3px; 
-    transform: none;
+    /* Peças ainda menores no widget */
+    width: clamp(0.8rem, 4vmin, 1.2rem);
+    height: clamp(0.8rem, 4vmin, 1.2rem);
 }
 
-/* Ajuste de Labels no Widget para não colidir com a Prateleira */
 body.widget-mode .rank-labels { 
     width: 2rem; 
     left: -2rem !important; 
@@ -351,16 +325,11 @@ body.widget-mode .file-labels {
     width: 100%; 
 }
 
-/* Aumenta fonte dos números/letras no Widget para legibilidade */
 body.widget-mode .rank-labels span, 
 body.widget-mode .file-labels span { 
     font-size: 1rem; 
 }
 
-/* Peças do Tabuleiro no Widget */
-/* Como agora é SVG e ocupa 100% da casa, não precisamos de override de font-size aqui */
-
-/* Botão Restaurar */
 body.widget-mode #restoreWindowBtn {
     display: flex !important;
     position: absolute;
@@ -375,7 +344,7 @@ body.widget-mode #restoreWindowBtn {
    ========================================================================== */
 
 .label-highlight {
-    color: #fbbf24 !important; /* Amber-400 */
+    color: #fbbf24 !important; 
     font-weight: 800;
     transform: scale(1.4);
     text-shadow: 0 0 12px rgba(251, 191, 36, 0.6);
