@@ -122,6 +122,8 @@ body {
     font-size: 0.875rem; 
     transition: color 0.2s ease, transform 0.2s ease;
     cursor: default;
+    /* MELHORIA DE ESTABILIDADE: Garante largura numérica tabular */
+    font-variant-numeric: tabular-nums; 
 }
 
 .rank-labels span:hover, .file-labels span:hover {
@@ -200,7 +202,13 @@ body {
     box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
     
     flex-wrap: wrap; 
+    
+    /* MELHORIA DE ESTABILIDADE: Travando altura para evitar pulos */
+    box-sizing: border-box;
+    min-height: 2.5rem;
+    max-height: 2.5rem; 
     overflow: hidden;
+    
     transition: all 0.3s ease;
 }
 
@@ -343,10 +351,14 @@ body.widget-mode #restoreWindowBtn {
    6. DESTAQUES DINÂMICOS
    ========================================================================== */
 
+/* MELHORIA DE ESTABILIDADE: Evita mudança de layout ao não alterar font-weight */
 .label-highlight {
     color: #fbbf24 !important; 
-    font-weight: 800;
+    font-weight: 700; /* Mantém fixo igual ao base, apenas muda cor/escala */
+    
     transform: scale(1.4);
-    text-shadow: 0 0 12px rgba(251, 191, 36, 0.6);
+    text-shadow: 0 0 12px rgba(251, 191, 36, 0.8);
     z-index: 20;
+    
+    will-change: transform; /* Dica de performance */
 }
