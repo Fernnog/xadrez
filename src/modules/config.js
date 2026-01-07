@@ -2,14 +2,31 @@
 
 import { CURRENT_VERSION } from './changelog.js';
 
+// Base URL para peças SVG (Wikimedia Commons - Domínio Público)
+const BASE_URL = 'https://upload.wikimedia.org/wikipedia/commons';
+
 /**
- * Mapeamento dos tipos de peça para seus símbolos Unicode.
- * NOTA: Usamos os glifos "Pretos" (sólidos) para ambos os lados.
- * O CSS cuidará de pintar as peças brancas de branco.
+ * Mapeamento dos tipos de peça para seus arquivos SVG.
+ * Substituímos os glifos de texto por URLs de imagens vetoriais para garantir
+ * consistência visual entre plataformas e alta definição.
  */
 export const PIECES = {
-    w: { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' },
-    b: { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' }
+    w: { 
+        p: `${BASE_URL}/4/45/Chess_plt45.svg`, 
+        r: `${BASE_URL}/7/72/Chess_rlt45.svg`, 
+        n: `${BASE_URL}/7/70/Chess_nlt45.svg`, 
+        b: `${BASE_URL}/b/b1/Chess_blt45.svg`, 
+        q: `${BASE_URL}/1/15/Chess_qlt45.svg`, 
+        k: `${BASE_URL}/4/42/Chess_klt45.svg` 
+    },
+    b: { 
+        p: `${BASE_URL}/c/c7/Chess_pdt45.svg`, 
+        r: `${BASE_URL}/f/ff/Chess_rdt45.svg`, 
+        n: `${BASE_URL}/e/ef/Chess_ndt45.svg`, 
+        b: `${BASE_URL}/9/98/Chess_bdt45.svg`, 
+        q: `${BASE_URL}/4/47/Chess_qdt45.svg`, 
+        k: `${BASE_URL}/f/f0/Chess_kdt45.svg` 
+    }
 };
 
 /**
