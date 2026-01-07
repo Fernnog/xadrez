@@ -27,11 +27,10 @@
         <p class="text-gray-400 text-lg max-w-md text-center">A interface principal está pausada. Feche a janela do Widget para retomar o controle aqui.</p>
     </div>
 
-    <!-- MUDANÇA ESTRUTURAL: Grid Layout para estabilidade total do tabuleiro -->
-    <div id="gameContainer" class="w-full max-w-[1400px] hidden grid grid-cols-1 lg:grid-cols-[1fr_20rem] gap-8 items-start justify-items-center lg:justify-items-stretch">
+    <div id="gameContainer" class="w-full max-w-7xl hidden flex flex-col lg:flex-row gap-8 items-start justify-center">
         
-        <!-- ZONA PRINCIPAL (Tabuleiro): Centraliza-se na sua coluna do Grid -->
-        <div class="flex flex-col w-full lg:w-auto items-center relative lg:justify-self-center lg:place-self-center">
+        <!-- COLUNA ESQUERDA: Cabeçalho e Tabuleiro -->
+        <div class="flex flex-col w-full lg:w-auto items-center relative">
             
             <!-- Botão Pop-out Widget -->
             <button id="popOutWidgetBtn" class="absolute -left-16 top-2 hidden lg:flex items-center justify-center p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-lg transition-all z-20 group" title="Abrir como Widget (Pop-out)">
@@ -51,20 +50,21 @@
                     <div id="evaluationPanel" class="text-2xl font-bold text-center w-24 bg-gray-800 rounded-md py-1">
                         <span id="evaluationValue">0.00</span>
                     </div>
-                    <!-- FIX: Truncate e Whitespace para evitar layout shift no texto de status -->
+                    <!-- FIX ESTABILIDADE: Adicionado truncate e whitespace-nowrap -->
                     <p class="text-sm sm:text-lg font-semibold text-center flex-grow pl-4 truncate whitespace-nowrap" id="status">Iniciando...</p>
                 </div>
             </div>
 
-            <!-- ÁREA DO TABULEIRO -->
+            <!-- ÁREA DO TABULEIRO (Ajuste de Margens e Alinhamento v1.1) -->
             <div class="w-full max-w-[500px] flex flex-col board-container">
                 
                 <!-- Capturas das Pretas (Topo) -->
+                <!-- ml-8 e pr-8 garantem alinhamento com o tabuleiro e respiro à direita -->
                 <div class="flex items-center mb-1 w-full ml-8 pr-8"> 
                     <div id="capturedForBlack" class="captured-pieces-container w-full shadow-inner justify-start pl-2"></div>
                 </div>
                 
-                <!-- Wrapper do Tabuleiro -->
+                <!-- Wrapper do Tabuleiro com Margens de Proteção -->
                 <div class="relative mb-8 ml-8">
                     <div class="rank-labels"></div>
                     <div id="board" class="w-full aspect-square grid grid-cols-8 grid-rows-8 shadow-2xl rounded-lg overflow-hidden border-4 border-gray-900 bg-gray-700"></div>
@@ -72,16 +72,17 @@
                 </div>
                 
                 <!-- Capturas das Brancas (Base) -->
+                <!-- ml-8 e pr-8 garantem simetria com o topo -->
                 <div class="flex items-center mt-1 w-full ml-8 pr-8">
                     <div id="capturedForWhite" class="captured-pieces-container w-full shadow-inner justify-start pl-2"></div>
                 </div>
             </div>
         </div>
 
-        <!-- ZONA DE CONTROLE (Painel): Ocupa a coluna fixa do Grid -->
-        <div id="sidebarPanel" class="w-full max-w-[500px] lg:max-w-none flex flex-col gap-4 mt-0 lg:mt-20"> 
+        <!-- COLUNA DIREITA: Histórico e Controles -->
+        <div id="sidebarPanel" class="w-full max-w-[500px] lg:w-80 flex flex-col gap-4 mt-0 lg:mt-20"> 
             
-            <div class="bg-gray-900 p-4 rounded-lg shadow-lg w-full flex-shrink-0">
+            <div class="bg-gray-900 p-4 rounded-lg shadow-lg w-full">
                 <div class="flex justify-between items-center mb-3">
                     <h2 class="text-xl font-bold">Histórico</h2>
                     <div class="flex gap-2">
@@ -91,7 +92,8 @@
                         <button id="copyPgnButton" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded transition-all">COPIAR PGN</button>
                     </div>
                 </div>
-                <div id="moveHistory" class="move-history bg-gray-800 rounded-md p-2 overflow-y-auto text-sm"></div>
+                <!-- O CSS agora controla a estabilidade do moveHistory -->
+                <div id="moveHistory" class="move-history bg-gray-800 rounded-md p-2 text-sm"></div>
             </div>
             
             <div class="flex flex-col gap-2 items-center w-full">
@@ -137,7 +139,7 @@
                 </select>
             </div>
             
-            <!-- SEÇÃO DE ABERTURA - NOVA INTERFACE v1.0.7 -->
+            <!-- NOVA ÁREA DE TREINO DE ABERTURA (Substituindo o antigo Select) -->
             <div class="mt-4 text-left border-t border-gray-200 pt-4">
                 <label class="block text-sm font-bold text-gray-600 uppercase mb-2">Treino de Abertura</label>
                 
@@ -148,15 +150,14 @@
                         <span id="selectedOpeningName" class="text-sm font-bold text-gray-800">Padrão (Início)</span>
                         <span id="selectedVariantName" class="text-xs text-blue-600 italic">--</span>
                     </div>
-                    <button id="clearOpeningBtn" class="text-gray-400 hover:text-red-500" title="Voltar ao Padrão">&times;</button>
+                    <button id="clearOpeningBtn" class="text-gray-400 hover:text-red-500 font-bold px-2" title="Voltar ao Padrão">&times;</button>
                 </div>
-            
+
                 <!-- Botão para Abrir o Explorador -->
                 <button id="openOpeningExplorerBtn" class="w-full py-3 px-4 bg-gray-800 hover:bg-gray-700 text-white font-semibold rounded shadow-md flex items-center justify-center gap-2 transition-all hover:shadow-lg">
                     <span class="text-xl">📚</span> Explorar Biblioteca
                 </button>
             </div>
-            <!-- FIM SEÇÃO ABERTURA -->
 
             <div id="importPgnContainer" class="mt-6 pt-6 border-t border-gray-300">
                 <a href="#" onclick="document.getElementById('pgnInputArea').classList.toggle('hidden'); return false;" class="text-blue-600 hover:underline font-semibold text-sm">
@@ -167,34 +168,6 @@
                     <button id="importPgnButton" class="w-full mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded shadow transition-transform">
                         Carregar
                     </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL EXPLORADOR DE ABERTURAS (NOVO v1.0.7) -->
-    <div id="openingExplorerModal" class="fixed inset-0 bg-gray-900 bg-opacity-95 z-[60] hidden flex items-center justify-center backdrop-blur-sm p-4 animate-fade-in">
-        <div class="bg-white w-full max-w-5xl h-[85vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
-            <!-- Header -->
-            <div class="bg-gray-800 text-white p-4 flex justify-between items-center shadow-md z-10">
-                <div class="flex items-center gap-3">
-                    <span class="text-2xl">📚</span>
-                    <div>
-                        <h3 class="text-xl font-bold leading-none">Biblioteca de Aberturas</h3>
-                        <p class="text-xs text-gray-400 mt-1">Selecione uma linha para praticar</p>
-                    </div>
-                </div>
-                <button id="closeExplorerBtn" class="text-gray-400 hover:text-white text-3xl font-light leading-none">&times;</button>
-            </div>
-            <!-- Layout 2 Colunas -->
-            <div class="flex flex-1 overflow-hidden">
-                <div id="explorerCategories" class="w-1/3 md:w-1/4 bg-gray-50 border-r border-gray-200 overflow-y-auto"></div>
-                <div id="explorerContent" class="w-2/3 md:w-3/4 bg-white overflow-y-auto p-6">
-                    <div id="explorerPlaceholder" class="flex flex-col items-center justify-center h-full text-gray-400 opacity-50">
-                        <span class="text-6xl mb-4">👈</span>
-                        <p class="text-lg">Selecione uma categoria à esquerda</p>
-                    </div>
-                    <div id="explorerList" class="hidden space-y-4"></div>
                 </div>
             </div>
         </div>
@@ -225,6 +198,43 @@
                 <button id="closeChangelogButton" class="text-gray-400 hover:text-red-600 font-bold text-2xl leading-none">&times;</button>
             </div>
             <div id="changelogContent" class="overflow-y-auto flex-grow pr-2"></div>
+        </div>
+    </div>
+
+    <!-- MODAL EXPLORADOR DE ABERTURAS (Novo) -->
+    <div id="openingExplorerModal" class="fixed inset-0 bg-gray-900 bg-opacity-95 z-[60] hidden flex items-center justify-center backdrop-blur-sm p-4 animate-fade-in">
+        <div class="bg-white w-full max-w-5xl h-[85vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
+            
+            <!-- Header -->
+            <div class="bg-gray-800 text-white p-4 flex justify-between items-center shadow-md z-10">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">📚</span>
+                    <div>
+                        <h3 class="text-xl font-bold leading-none">Biblioteca de Aberturas</h3>
+                        <p class="text-xs text-gray-400 mt-1">Selecione uma linha para praticar contra o Stockfish</p>
+                    </div>
+                </div>
+                <button id="closeExplorerBtn" class="text-gray-400 hover:text-white text-3xl font-light leading-none">&times;</button>
+            </div>
+
+            <!-- Layout 2 Colunas -->
+            <div class="flex flex-1 overflow-hidden">
+                <!-- Coluna Esquerda: Categorias -->
+                <div id="explorerCategories" class="w-1/3 md:w-1/4 bg-gray-50 border-r border-gray-200 overflow-y-auto">
+                    <!-- Preenchido via JS -->
+                </div>
+
+                <!-- Coluna Direita: Conteúdo -->
+                <div id="explorerContent" class="w-2/3 md:w-3/4 bg-white overflow-y-auto p-6">
+                    <div id="explorerPlaceholder" class="flex flex-col items-center justify-center h-full text-gray-400 opacity-50">
+                        <span class="text-6xl mb-4">👈</span>
+                        <p class="text-lg">Selecione uma categoria à esquerda</p>
+                    </div>
+                    <div id="explorerList" class="hidden space-y-4">
+                        <!-- Preenchido via JS (Cards de Abertura) -->
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     
