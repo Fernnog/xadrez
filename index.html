@@ -20,7 +20,7 @@
 </head>
 <body class="bg-gray-800 text-white flex flex-col items-center min-h-screen p-4 sm:p-8">
 
-    <!-- NOVO (v1.0.2): Overlay para Modo Cinema (Widget Ativo) -->
+    <!-- Overlay para Modo Cinema (Widget Ativo) -->
     <div id="appOverlay" class="fixed inset-0 bg-gray-900 bg-opacity-95 z-[100] hidden flex flex-col items-center justify-center backdrop-blur-sm transition-all duration-300">
         <div class="text-6xl mb-6 animate-pulse">📱 ↔️ 💻</div>
         <h2 class="text-3xl font-bold text-white mb-2">Jogo em andamento no Widget</h2>
@@ -54,12 +54,13 @@
                 </div>
             </div>
 
-            <!-- ÁREA DO TABULEIRO (Modificado v1.0.6: Simetria e Limpeza de Labels) -->
+            <!-- ÁREA DO TABULEIRO (Ajuste de Margens e Alinhamento v1.1) -->
             <div class="w-full max-w-[500px] flex flex-col board-container">
                 
-                <!-- Capturas das Pretas (Topo) - REMOVIDO TEXTO E ALINHADO -->
-                <div class="flex items-center mb-1 w-full">
-                    <div id="capturedForBlack" class="captured-pieces-container w-full shadow-inner justify-center min-h-[3rem]"></div>
+                <!-- Capturas das Pretas (Topo) -->
+                <!-- ml-8 e pr-8 garantem alinhamento com o tabuleiro e respiro à direita -->
+                <div class="flex items-center mb-1 w-full ml-8 pr-8"> 
+                    <div id="capturedForBlack" class="captured-pieces-container w-full shadow-inner justify-start pl-2 min-h-[2.5rem]"></div>
                 </div>
                 
                 <!-- Wrapper do Tabuleiro com Margens de Proteção -->
@@ -69,9 +70,10 @@
                     <div class="file-labels"></div>
                 </div>
                 
-                <!-- Capturas das Brancas (Base) - REMOVIDO TEXTO E ALINHADO -->
-                <div class="flex items-center mt-1 w-full">
-                    <div id="capturedForWhite" class="captured-pieces-container w-full shadow-inner justify-center min-h-[3rem]"></div>
+                <!-- Capturas das Brancas (Base) -->
+                <!-- ml-8 e pr-8 garantem simetria com o topo -->
+                <div class="flex items-center mt-1 w-full ml-8 pr-8">
+                    <div id="capturedForWhite" class="captured-pieces-container w-full shadow-inner justify-start pl-2 min-h-[2.5rem]"></div>
                 </div>
             </div>
         </div>
@@ -120,7 +122,6 @@
             
             <h2 id="newGameTitle" class="text-3xl font-bold mb-6">Comece um Novo Jogo</h2>
             <div class="flex gap-4 justify-center mb-6">
-                <!-- SVGs aplicados via CSS/JS, botões mantêm estrutura -->
                 <button id="playWhiteButton" class="btn-play-white px-8 py-4 font-bold rounded-lg text-5xl transition-all transform hover:scale-110 shadow-md border border-gray-300">♟</button>
                 <button id="playBlackButton" class="btn-play-black px-8 py-4 font-bold rounded-lg text-5xl transition-all transform hover:scale-110 shadow-md border border-gray-300">♟</button>
             </div>
@@ -194,7 +195,7 @@
     
     <!-- CARD DE VERSÃO -->
     <div id="versionCard" class="fixed bottom-4 left-4 bg-gray-900 bg-opacity-90 text-gray-400 text-xs px-3 py-1 rounded-full shadow-lg z-20 cursor-pointer hover:bg-gray-700 hover:text-white transition-colors border border-gray-700">
-        <span id="currentVersionDisplay">v1.0.6</span> ℹ️
+        <span id="currentVersionDisplay">v1.0.3</span> ℹ️
     </div>
 
     <!-- CONTAINER DE NOTIFICAÇÕES TOAST -->
