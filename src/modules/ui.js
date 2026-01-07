@@ -35,7 +35,7 @@ const elements = {
     // --- ELEMENTOS NOVOS DO WIDGET E OVERLAY (v1.0.2) ---
     popOutWidgetBtn: document.getElementById('popOutWidgetBtn'),
     restoreWindowBtn: document.getElementById('restoreWindowBtn'),
-    appOverlay: document.getElementById('appOverlay'), // Novo Overlay de Bloqueio
+    appOverlay: document.getElementById('appOverlay'),
 };
 
 // Sons da interface
@@ -48,14 +48,12 @@ function initAudio() {
 // --- ESTADO E HELPERS INTERNOS ---
 
 let uiHandlers = {}; 
-let widgetWindowRef = null; // Referência para a janela do widget (v1.0.2)
+let widgetWindowRef = null;
 
 function safeAddEventListener(id, event, handler) {
     const el = document.getElementById(id);
     if (el) {
         el.addEventListener(event, handler);
-    } else {
-        // Silencioso se o elemento não existir
     }
 }
 
@@ -137,11 +135,11 @@ function populateOpeningSelector(filterText = '') {
     }
 }
 
-// --- FUNÇÃO DE CHANGELOG (Atualizada para usar o módulo separado) ---
+// --- FUNÇÃO DE CHANGELOG ---
 function renderChangelog() {
     if (!elements.currentVersionDisplay || !elements.changelogContent) return;
     
-    elements.currentVersionDisplay.textContent = APP_VERSION || 'v1.0.4';
+    elements.currentVersionDisplay.textContent = APP_VERSION || 'v1.0.6';
     elements.changelogContent.innerHTML = '';
     
     if (!CHANGELOG) return;
@@ -188,7 +186,7 @@ export function showToast(message, type = 'info') {
     }, 3000);
 }
 
-// --- NOVO: FUNÇÕES DE DESTAQUE DE COORDENADAS (v1.0.2) ---
+// --- FUNÇÕES DE DESTAQUE DE COORDENADAS ---
 function highlightCoordinates(squareName) {
     if (!squareName) return;
     const file = squareName[0];
@@ -205,32 +203,25 @@ function clearCoordinateHighlights() {
     document.querySelectorAll('.label-highlight').forEach(el => el.classList.remove('label-highlight'));
 }
 
-// --- FUNÇÃO DE ABRIR WIDGET (POP-OUT) ATUALIZADA (v1.0.2) ---
+// --- FUNÇÃO DE ABRIR WIDGET (POP-OUT) ---
 function openWidgetWindow() {
-    // Definições de tamanho da janela compacta
     const width = 450;
     const height = 550;
-    
-    // Cálculo para posicionar no Canto Inferior Esquerdo
     const left = 20; 
     const top = window.screen.availHeight - height - 20; 
 
     const features = `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=no,status=no`;
     
-    // Abre a mesma página passando o parametro ?mode=widget
     widgetWindowRef = window.open(`${window.location.pathname}?mode=widget`, 'ChessWidgetWindow', features);
 
-    // Lógica do Modo Cinema e Bloqueio da Janela Pai
     if (widgetWindowRef) {
         if (elements.appOverlay) elements.appOverlay.classList.remove('hidden');
 
-        // Polling para detectar fechamento
         const checkTimer = setInterval(() => {
             if (widgetWindowRef.closed) {
                 clearInterval(checkTimer);
                 if (elements.appOverlay) elements.appOverlay.classList.add('hidden');
                 
-                // Dispara evento para o main.js recarregar o estado final
                 window.dispatchEvent(new CustomEvent('widget-closed'));
             }
         }, 500);
@@ -328,6 +319,7 @@ export function setupAndDisplayGame(playerColor) {
     createBoard(uiHandlers.onSquareClick);
 }
 
+// MODIFICADO (v1.0.6): Renderiza imagens SVG via backgroundImage
 export function renderBoard(boardState) {
     for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
@@ -338,12 +330,17 @@ export function renderBoard(boardState) {
             if (squareElement) {
                 squareElement.innerHTML = '';
                 if (piece) {
-                    const pieceElement = document.createElement('span');
-                    pieceElement.className = `piece ${piece.color === 'w' ? 'white-piece' : 'black-piece'}`;
+                    // Mudança de span para div e uso de backgroundImage
+                    const pieceElement = document.createElement('div');
+                    pieceElement.className = 'piece'; // A cor não é mais uma classe, é definida pela URL
+                    
+                    // Assume que PIECES no config.js agora retorna URLs
+                    pieceElement.style.backgroundImage = `url('${PIECES[piece.color][piece.type]}')`;
+                    
                     if (elements.board.classList.contains('board-flipped')) {
                         pieceElement.style.transform = 'rotate(180deg)';
                     }
-                    pieceElement.textContent = PIECES[piece.color][piece.type];
+                    // O texto (Unicode) foi removido
                     squareElement.appendChild(pieceElement);
                 }
             }
@@ -355,7 +352,6 @@ export function createBoard(onSquareClickCallback) {
     if (!elements.board) return;
     elements.board.innerHTML = '';
 
-    // Detecta se é dispositivo touch para evitar UX ruim com hover (v1.0.2)
     const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
     for (let r = 0; r < 8; r++) {
@@ -366,12 +362,10 @@ export function createBoard(onSquareClickCallback) {
             square.className = `square ${colorClass}`;
             square.dataset.square = squareName;
             
-            // Eventos de Clique
             if (onSquareClickCallback) {
                 square.addEventListener('click', () => onSquareClickCallback(squareName));
             }
 
-            // NOVOS Eventos de Mouse para Destaque (Apenas Desktop - v1.0.2)
             if (!isTouchDevice) {
                 square.addEventListener('mouseenter', () => highlightCoordinates(squareName));
                 square.addEventListener('mouseleave', clearCoordinateHighlights);
@@ -392,7 +386,6 @@ export function setupBoardOrientation(playerColor) {
     const rList = playerColor === 'b' ? [...ranks].reverse() : ranks;
     const fList = playerColor === 'b' ? [...files].reverse() : files;
 
-    // Adicionamos IDs específicos: 'label-rank-X' e 'label-file-Y' para o highlight (v1.0.2)
     if(elements.rankLabels) {
         rList.forEach(r => {
             elements.rankLabels.innerHTML += `<span id="label-rank-${r}" class="transition-all duration-200">${r}</span>`;
@@ -488,6 +481,7 @@ export function updateMoveHistory(history) {
     elements.moveHistory.scrollTop = 0;
 }
 
+// MODIFICADO (v1.0.6): Prateleira de Captura com SVGs
 export function updateCapturedPieces(history) {
     const captured = { w: [], b: [] };
     for (const move of history) {
@@ -498,14 +492,16 @@ export function updateCapturedPieces(history) {
     }
 
     const render = (container, pieces, color) => {
-        if(!container) return 0; // Segurança
+        if(!container) return 0;
         container.innerHTML = '';
         let material = 0;
         const pieceOrder = { q: 1, r: 2, b: 3, n: 4, p: 5 };
+        
         pieces.sort((a, b) => pieceOrder[a] - pieceOrder[b]).forEach(p => {
-            const pieceEl = document.createElement('span');
-            pieceEl.className = `piece ${color === 'w' ? 'white-piece' : 'black-piece'}`;
-            pieceEl.textContent = PIECES[color][p];
+            // Usa div e backgroundImage em vez de texto e unicode
+            const pieceEl = document.createElement('div');
+            pieceEl.className = 'piece';
+            pieceEl.style.backgroundImage = `url('${PIECES[color][p]}')`;
             container.appendChild(pieceEl);
             material += PIECE_VALUES[p];
         });
@@ -516,7 +512,6 @@ export function updateCapturedPieces(history) {
     const blackMaterial = render(elements.capturedForWhite, captured.b, 'b');
     const diff = whiteMaterial - blackMaterial;
 
-    // Só atualiza diferenças se os elementos existirem (no widget podem estar ocultos)
     if (elements.capturedForBlack && diff > 0) {
         const diffEl = document.createElement('span');
         diffEl.className = 'material-diff';
@@ -530,16 +525,20 @@ export function updateCapturedPieces(history) {
     }
 }
 
+// MODIFICADO (v1.0.6): Modal de Promoção com SVGs
 export function showPromotionModal(color) {
     if (!elements.promotionOptions || !elements.promotionModal) return;
 
     elements.promotionOptions.innerHTML = '';
+    // PIECES[color] agora contém URLs
     const symbols = PIECES[color];
 
     PROMOTION_PIECES.forEach(type => {
         const button = document.createElement('button');
-        button.className = `piece ${color === 'w' ? 'white-piece' : 'black-piece'} text-5xl sm:text-6xl p-3 rounded hover:scale-105 transition-transform`;
-        button.textContent = symbols[type];
+        // Adicionadas classes de tamanho (w-16 h-16) pois não há mais texto
+        button.className = `piece w-16 h-16 mx-1 hover:scale-110 transition-transform bg-gray-200 rounded-lg`;
+        button.style.backgroundImage = `url('${symbols[type]}')`;
+        // Removemos button.textContent
         button.onclick = () => {
             if (uiHandlers.onPromotionSelect) {
                 uiHandlers.onPromotionSelect(type);
