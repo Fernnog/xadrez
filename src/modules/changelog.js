@@ -1,9 +1,19 @@
 // src/modules/changelog.js
 
 // 1. Defina a versão aqui (Fonte da Verdade)
-export const CURRENT_VERSION = 'v1.0.5';
+export const CURRENT_VERSION = 'v1.0.6';
 
 export const CHANGELOG = [
+    {
+        version: 'v1.0.6',
+        date: '2025-12-18',
+        changes: [
+            'Visual: Migração completa de peças de fonte Unicode para imagens Vetoriais (SVG) de alta definição.',
+            'UI: Remoção dos rótulos de texto ("Pretas"/"Brancas") nos painéis de captura para garantir simetria visual perfeita.',
+            'Sistema: Refatoração da renderização de peças utilizando CSS Background Image para consistência entre dispositivos.',
+            'UX: Melhoria na nitidez e alinhamento vertical das peças no tabuleiro e na prateleira de capturas.'
+        ]
+    },
     {
         version: 'v1.0.5',
         date: '2025-12-17',
