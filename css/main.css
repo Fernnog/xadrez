@@ -1,7 +1,7 @@
 /* css/main.css */
 
 /* ==========================================================================
-   0. VARIÁVEIS GLOBAIS (DESIGN SYSTEM)
+   0. VARIÁVEIS GLOBAIS (DESIGN SYSTEM) - v1.0.4
    ========================================================================== */
 :root {
     /* Cores do Tabuleiro */
@@ -31,6 +31,7 @@ body {
 /* Container Estrutural */
 .board-container { 
     position: relative;     
+    /* Padding e layout controlados via HTML/Tailwind agora para melhor alinhamento */
     padding-top: 0.5rem;
     width: 100%;
     max-width: 100%;
@@ -122,7 +123,7 @@ body {
     transition: color 0.2s ease, transform 0.2s ease;
     cursor: default;
     
-    /* FIX: Garante largura numérica tabular para evitar shifts */
+    /* FIX ESTABILIDADE: Numerais tabulares para evitar mudança de largura */
     font-variant-numeric: tabular-nums; 
 }
 
@@ -133,14 +134,16 @@ body {
 }
 
 /* ==========================================================================
-   3. PEÇAS (SVG E BACKGROUND IMAGE)
+   3. PEÇAS (MODIFICADO PARA SVG E BACKGROUND IMAGE)
    ========================================================================== */
 
 .piece { 
+    /* Reset de Texto para suportar background-image */
     font-size: 0; 
     color: transparent; 
     text-shadow: none !important;
     
+    /* Configuração de Imagem de Fundo */
     width: 100%;
     height: 100%;
     background-position: center;
@@ -152,7 +155,22 @@ body {
     user-select: none; 
     z-index: 10; 
     transition: transform 0.1s ease-in-out, opacity 0.1s; 
+    
+    /* Filtro Sutil para dar peso visual */
     filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));
+}
+
+.animated-piece { 
+    position: absolute; 
+    z-index: 1000; 
+    pointer-events: none; 
+    transition: top 0.25s ease-out, left 0.25s ease-out; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Garante que peça animada também tenha tamanho */
+    width: 12.5%; /* 1/8 do tabuleiro */
+    height: 12.5%;
 }
 
 .piece-hidden { opacity: 0; }
@@ -160,17 +178,19 @@ body {
 .board-flipped .piece { transform: rotate(180deg); }
 
 /* ==========================================================================
-   4. UI AUXILIAR & UI KIT v1.1
+   4. UI AUXILIAR & UI KIT v1.1 (PEÇAS CAPTURADAS)
    ========================================================================== */
 
+/* FIX ESTABILIDADE: Containment para o histórico */
 .move-history { 
-    /* FIX: Layout fixo e blindado contra reflow */
-    height: 20rem; 
-    overflow-y: scroll !important; /* Sempre mostra scrollbar para reservar espaço */
+    overflow-y: scroll !important; /* Força scrollbar visível para não pular layout */
     scrollbar-width: thin; 
     scrollbar-color: #4a5568 #2d3748; 
-    scrollbar-gutter: stable; /* Garante que a scrollbar não empurre conteúdo */
-    contain: strict; /* Isola o layout interno do externo */
+    
+    height: 20rem; /* h-80 equivalente */
+    
+    /* Isola o layout interno para não afetar o tabuleiro externo */
+    contain: strict; 
     will-change: transform;
 }
 
@@ -184,7 +204,7 @@ body {
 .captured-pieces-container { 
     display: flex; 
     align-items: center; 
-    gap: 0; 
+    gap: 0; /* Gap zero para permitir sobreposição sutil ou compactação */
     padding: 0.25rem 0.5rem; 
     
     background-color: var(--bg-panel); 
@@ -194,30 +214,43 @@ body {
     
     flex-wrap: wrap; 
     
-    /* FIX: Trava dimensional */
+    /* FIX ESTABILIDADE: Tamanho fixo e overflow hidden */
     box-sizing: border-box;
-    min-height: 2.5rem;     
-    max-height: 2.5rem;     
-    overflow: hidden; 
+    min-height: 2.5rem;
+    max-height: 2.5rem;
+    overflow: hidden;
+    
     transition: all 0.3s ease;
 }
 
+/* Animação de Entrada */
 @keyframes popIn {
     0% { transform: scale(0) translateY(-10px); opacity: 0; }
     60% { transform: scale(1.3); }
     100% { transform: scale(1) translateY(0); opacity: 1; }
 }
 
+/* PEÇAS REDUZIDAS (50% menor) na Prateleira */
 .captured-pieces-container .piece { 
+    /* Tamanho fixo base reduzido */
+    width: 1.5rem; 
+    height: 1.5rem;
+    
+    /* Clamp responsivo bem menor: entre 1rem (mobile) e 1.8rem (desktop) */
     width: clamp(1rem, 3.5vmin, 1.8rem);
     height: clamp(1rem, 3.5vmin, 1.8rem);
+    
     position: relative;
     transform: none !important;
+    
+    /* Margem negativa para agrupar as peças levemente */
     margin-right: -2px; 
+    
     animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     cursor: default;
 }
 
+/* Placar de Material (Tooltip cursor) */
 .captured-pieces-container .material-diff { 
     margin-left: auto;
     background-color: rgba(0,0,0,0.6);
@@ -227,7 +260,7 @@ body {
     font-weight: 700; 
     color: #f3f4f6; 
     letter-spacing: 0.05em;
-    cursor: help;
+    cursor: help; /* Cursor de interrogação */
 }
 
 /* Botões do Menu */
@@ -267,11 +300,11 @@ body.widget-mode {
 }
 
 body.widget-mode #gameContainer {
-    display: flex !important; /* Widget usa Flex, não Grid */
     margin: 0 !important;
     padding: 0 !important;
     width: 100%;
     height: 100%;
+    display: flex;
     justify-content: center;
     align-items: center;
 }
@@ -286,25 +319,33 @@ body.widget-mode .board-container {
     padding-top: 0; 
 }
 
+/* Prateleira Compacta para Widget */
 body.widget-mode .captured-pieces-container {
     min-height: 2rem; 
-    max-height: 2rem;
     padding: 0.1rem 0.25rem;
     background-color: var(--bg-panel-widget);
 }
 
 body.widget-mode .captured-pieces-container .piece {
+    /* Peças ainda menores no widget */
     width: clamp(0.8rem, 4vmin, 1.2rem);
     height: clamp(0.8rem, 4vmin, 1.2rem);
 }
 
 body.widget-mode .rank-labels { 
-    width: 2rem; left: -2rem !important; height: 100%;
+    width: 2rem; 
+    left: -2rem !important; 
+    height: 100%;
 }
 body.widget-mode .file-labels { 
-    height: 2rem; bottom: -2rem !important; left: 0; width: 100%; 
+    height: 2rem; 
+    bottom: -2rem !important; 
+    left: 0; 
+    width: 100%; 
 }
-body.widget-mode .rank-labels span, body.widget-mode .file-labels span { 
+
+body.widget-mode .rank-labels span, 
+body.widget-mode .file-labels span { 
     font-size: 1rem; 
 }
 
@@ -318,15 +359,17 @@ body.widget-mode #restoreWindowBtn {
 }
 
 /* ==========================================================================
-   6. DESTAQUES DINÂMICOS (FIXADO)
+   6. DESTAQUES DINÂMICOS
    ========================================================================== */
 
+/* FIX ESTABILIDADE: Removemos font-weight 800 para evitar pulos de layout */
 .label-highlight {
     color: #fbbf24 !important; 
-    /* FIX: Font-weight removido para evitar pulos no layout */
-    font-weight: bold; 
+    font-weight: bold; /* Fixo */
+    
     transform: scale(1.4);
-    text-shadow: 0 0 12px rgba(251, 191, 36, 0.8);
+    text-shadow: 0 0 12px rgba(251, 191, 36, 0.8); /* Brilho intensificado */
     z-index: 20;
+    
     will-change: transform;
 }
