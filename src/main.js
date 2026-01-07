@@ -5,8 +5,8 @@ import * as game from './modules/game.js';
 import * as engine from './modules/engine.js';
 import * as audio from './modules/audio.js';
 import * as utils from './modules/utils.js';
-import { OPENING_FENS } from './modules/config.js';
-import { CURRENT_VERSION } from './modules/changelog.js'; // NOVO: Importação da versão
+// Removemos importação direta de OPENING_FENS pois agora o fluxo é via evento
+import { CURRENT_VERSION } from './modules/changelog.js'; 
 
 console.log("[Main] Módulo main.js carregado.");
 
@@ -18,6 +18,9 @@ let appState = {
     isEngineTurn: false, 
     pendingPromotionMove: null,
 };
+
+// --- NOVO ESTADO: Armazena a Abertura Selecionada via Modal (Prioridade 3) ---
+let selectedOpeningPgn = ''; 
 
 // ==========================================================
 // 1. FUNÇÕES DE CALLBACK
@@ -155,6 +158,13 @@ function init() {
     
     engine.initEngine(handleEngineMessage);
 
+    // --- LISTENER DO EXPLORADOR DE ABERTURAS (Prioridade 3) ---
+    window.addEventListener('opening-selected', (e) => {
+        console.log(`[Main] Abertura definida via Explorer: ${e.detail.name}`);
+        selectedOpeningPgn = e.detail.pgn;
+        // Não iniciamos o jogo imediatamente, apenas guardamos o PGN para quando o usuário clicar em "Jogar"
+    });
+
     // --- NOVA LÓGICA v1.0.2: Sincronização Live Sync ---
     window.addEventListener('storage', (event) => {
         // Ignora eventos que não sejam do nosso jogo
@@ -287,19 +297,14 @@ function startGame(chosenColor) {
     
     game.reset(); 
 
-    const openingKey = ui.getOpeningKey();
-    const openingData = OPENING_FENS[openingKey];
-    
     ui.setupAndDisplayGame(appState.playerColor);
 
-    if (openingKey !== 'standard' && openingData && openingData.pgn) {
-        console.log(`[Main] Animando Abertura: ${openingData.name}`);
-        playOpeningSequence(openingData.pgn);
+    // --- NOVA LÓGICA DE INÍCIO: Verifica se há PGN do Explorador (Prioridade 3) ---
+    if (selectedOpeningPgn && selectedOpeningPgn.trim() !== '') {
+        console.log(`[Main] Animando Abertura Selecionada`);
+        playOpeningSequence(selectedOpeningPgn);
     } else {
-        if (openingKey !== 'standard' && openingData && openingData.fen && !openingData.pgn) {
-             game.loadFen(openingData.fen);
-        }
-
+        // Fluxo Padrão (Sem abertura selecionada ou "Standard")
         updateAllDisplays();
 
         if (!game.isGameOver()) {
@@ -374,6 +379,10 @@ function updateAllDisplays() {
 
 function resetGame() {
     utils.clearGameState();
+    
+    // Reseta estado da abertura para garantir um novo começo limpo se desejar
+    selectedOpeningPgn = ''; 
+    
     ui.showColorSelectionModal();
     checkForSavedGame();
 }
