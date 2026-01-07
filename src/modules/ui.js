@@ -1,6 +1,6 @@
 // src/modules/ui.js
 
-import { PIECES, PIECE_VALUES, PROMOTION_PIECES, OPENING_FENS, APP_VERSION } from './config.js';
+import { PIECES, PIECE_VALUES, PROMOTION_PIECES, OPENING_BOOK, APP_VERSION } from './config.js';
 import { CHANGELOG } from './changelog.js';
 
 // Centraliza a seleção de todos os elementos do DOM
@@ -23,8 +23,6 @@ const elements = {
     mainBoardContainer: document.querySelector('.board-container'),
     rankLabels: document.querySelector('.rank-labels'),
     fileLabels: document.querySelector('.file-labels'),
-    openingSelect: document.getElementById('openingSelect'),
-    openingFilter: document.getElementById('openingFilter'),
     undoButton: document.getElementById('undoButton'),
     versionCard: document.getElementById('versionCard'),
     currentVersionDisplay: document.getElementById('currentVersionDisplay'),
@@ -34,96 +32,187 @@ const elements = {
     toastContainer: document.getElementById('toastContainer'),
     popOutWidgetBtn: document.getElementById('popOutWidgetBtn'),
     restoreWindowBtn: document.getElementById('restoreWindowBtn'),
-    appOverlay: document.getElementById('appOverlay'), 
+    appOverlay: document.getElementById('appOverlay'),
+    
+    // --- NOVOS ELEMENTOS DO EXPLORADOR (v1.0.7) ---
+    openOpeningExplorerBtn: document.getElementById('openOpeningExplorerBtn'),
+    openingExplorerModal: document.getElementById('openingExplorerModal'),
+    closeExplorerBtn: document.getElementById('closeExplorerBtn'),
+    explorerCategories: document.getElementById('explorerCategories'),
+    explorerList: document.getElementById('explorerList'),
+    explorerPlaceholder: document.getElementById('explorerPlaceholder'),
+    explorerSearchInput: document.getElementById('explorerSearchInput'), // Prioridade 4
+    selectedOpeningName: document.getElementById('selectedOpeningName'),
+    selectedVariantName: document.getElementById('selectedVariantName'),
+    clearOpeningBtn: document.getElementById('clearOpeningBtn'),
 };
 
 let uiHandlers = {}; 
 let widgetWindowRef = null; 
+let activeCategory = null; // Rastreia a categoria ativa para o renderizador
 
 function safeAddEventListener(id, event, handler) {
     const el = document.getElementById(id);
     if (el) el.addEventListener(event, handler);
 }
 
-/**
- * Preenche dinamicamente o seletor de aberturas, com filtro opcional.
- */
-function populateOpeningSelector(filterText = '') {
-    if (!elements.openingSelect) return;
+// ==========================================================
+// LÓGICA DO EXPLORADOR DE ABERTURAS (v1.0.7)
+// ==========================================================
+
+function initOpeningExplorer() {
+    if (!elements.explorerCategories) return;
+    elements.explorerCategories.innerHTML = '';
     
-    const filter = filterText.toLowerCase().trim();
-    elements.openingSelect.innerHTML = '';
+    // Limpa busca ao abrir
+    if(elements.explorerSearchInput) elements.explorerSearchInput.value = '';
 
-    const groupedOpenings = {};
-    for (const key in OPENING_FENS) {
-        const opening = OPENING_FENS[key];
-        const category = opening.category || 'Outras';
-        if (!groupedOpenings[category]) {
-            groupedOpenings[category] = [];
-        }
-        groupedOpenings[category].push({ key, ...opening });
-    }
-
-    const categoryOrder = [
-        'Padrão', 
-        'Aberturas de Peão Rei (1. e4)', 
-        'Aberturas de Peão Dama (1. d4)',
-        'Outras Aberturas',
-        'Outras'
-    ];
-
-    let hasVisibleOptions = false;
-
-    categoryOrder.forEach(categoryName => {
-        if (!groupedOpenings[categoryName]) return;
-
-        const openingsInCategory = groupedOpenings[categoryName];
+    OPENING_BOOK.forEach((category, index) => {
+        const btn = document.createElement('button');
+        // Estilo base
+        const baseClass = "w-full text-left p-4 border-b border-gray-200 transition-colors flex flex-col gap-1 focus:outline-none";
+        const inactiveClass = "text-gray-600 hover:bg-white hover:text-gray-800";
+        const activeClass = "bg-white text-gray-900 border-l-4 border-l-blue-600 shadow-sm";
         
-        const matchingOpenings = openingsInCategory.filter(data =>
-            filter === '' ||
-            data.name.toLowerCase().includes(filter) ||
-            data.pgn.toLowerCase().includes(filter)
-        );
-
-        if (matchingOpenings.length === 0) return; 
-
-        hasVisibleOptions = true;
-
-        if (categoryName === 'Padrão') {
-            const openingData = matchingOpenings[0];
-            const option = document.createElement('option');
-            option.value = openingData.key;
-            option.textContent = openingData.name;
-            elements.openingSelect.appendChild(option);
-            return;
-        }
+        // Define classe inicial
+        btn.className = `${baseClass} ${index === 0 ? activeClass : inactiveClass}`;
         
-        const optgroup = document.createElement('optgroup');
-        optgroup.label = categoryName;
-
-        matchingOpenings.forEach(data => {
-            const option = document.createElement('option');
-            option.value = data.key;
-            const fenParts = data.fen.split(' ');
-            const turn = fenParts.length > 1 && fenParts[1] === 'w' ? '(Brancas Movem)' : '(Pretas Movem)';
-            option.textContent = `${data.name} (${data.pgn}) ${turn}`;
-            optgroup.appendChild(option);
-        });
+        btn.innerHTML = `
+            <span class="font-bold text-sm sm:text-base pointer-events-none">${category.label}</span>
+            <span class="text-xs text-gray-400 truncate pointer-events-none">${category.description}</span>
+        `;
         
-        elements.openingSelect.appendChild(optgroup);
+        btn.onclick = () => {
+            // Remove estilo ativo dos irmãos
+            Array.from(elements.explorerCategories.children).forEach(c => {
+                c.className = `${baseClass} ${inactiveClass}`;
+            });
+            // Ativa este botão
+            btn.className = `${baseClass} ${activeClass}`;
+            
+            activeCategory = category;
+            renderCategoryContent(category);
+        };
+
+        elements.explorerCategories.appendChild(btn);
     });
 
-    if (!hasVisibleOptions) {
-        const option = document.createElement('option');
-        option.disabled = true;
-        option.textContent = 'Nenhuma abertura encontrada';
-        elements.openingSelect.appendChild(option);
+    // Inicia renderizando a primeira categoria se existir
+    if (OPENING_BOOK.length > 0) {
+        activeCategory = OPENING_BOOK[0];
+        renderCategoryContent(OPENING_BOOK[0]);
     }
 }
 
+function renderCategoryContent(category, searchTerm = '') {
+    elements.explorerPlaceholder.classList.add('hidden');
+    elements.explorerList.classList.remove('hidden');
+    elements.explorerList.innerHTML = '';
+
+    // Se houver termo de busca, ignoramos a categoria atual e buscamos em tudo (Prioridade 4)
+    let openingsToRender = [];
+    let titleText = category ? category.label : 'Resultados da Busca';
+
+    if (searchTerm.trim().length > 0) {
+        const term = searchTerm.toLowerCase();
+        titleText = `Resultados para "${searchTerm}"`;
+        
+        // Busca Flat em todo o livro
+        OPENING_BOOK.forEach(cat => {
+            cat.openings.forEach(op => {
+                const matchName = op.name.toLowerCase().includes(term);
+                const matchEco = op.eco && op.eco.toLowerCase().includes(term);
+                const matchVariant = op.variants.some(v => v.name.toLowerCase().includes(term));
+                
+                if (matchName || matchEco || matchVariant) {
+                    openingsToRender.push(op);
+                }
+            });
+        });
+    } else {
+        openingsToRender = category.openings;
+    }
+
+    // Renderiza Título da Seção
+    const title = document.createElement('h2');
+    title.className = "text-2xl font-bold text-gray-800 mb-6 pb-2 border-b border-gray-100";
+    title.textContent = titleText;
+    elements.explorerList.appendChild(title);
+
+    if (openingsToRender.length === 0) {
+        const noRes = document.createElement('p');
+        noRes.className = "text-gray-500 text-center mt-10";
+        noRes.textContent = "Nenhuma abertura encontrada.";
+        elements.explorerList.appendChild(noRes);
+        return;
+    }
+
+    // Renderiza Cards
+    openingsToRender.forEach(opening => {
+        const card = document.createElement('div');
+        card.className = "bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden mb-4";
+        
+        // Cabeçalho da Abertura
+        const header = document.createElement('div');
+        header.className = "bg-gray-50 p-4 border-b border-gray-100 flex justify-between items-center";
+        header.innerHTML = `
+            <div>
+                <div class="flex items-center gap-2">
+                    <h3 class="font-bold text-lg text-gray-800">${opening.name}</h3>
+                    ${opening.eco ? `<span class="text-xs font-mono bg-gray-200 text-gray-600 px-2 py-0.5 rounded border border-gray-300" title="Código ECO">${opening.eco}</span>` : ''}
+                </div>
+            </div>
+            <span class="text-gray-400 text-xs font-semibold uppercase tracking-wide">${opening.variants.length} variantes</span>
+        `;
+        
+        // Área de Variantes (Chips)
+        const variantsContainer = document.createElement('div');
+        variantsContainer.className = "p-4 flex flex-wrap gap-2";
+        
+        opening.variants.forEach(variant => {
+            const chip = document.createElement('button');
+            chip.className = "group relative px-3 py-1.5 bg-blue-50 text-blue-700 text-sm font-semibold rounded-full border border-blue-100 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all cursor-pointer";
+            chip.textContent = variant.name;
+            
+            // Prioridade 2: Hover e Seleção
+            chip.onclick = () => selectOpening(opening, variant);
+            
+            variantsContainer.appendChild(chip);
+        });
+
+        card.appendChild(header);
+        card.appendChild(variantsContainer);
+        elements.explorerList.appendChild(card);
+    });
+}
+
+function selectOpening(opening, variant) {
+    // Atualiza Visual
+    if (elements.selectedOpeningName) elements.selectedOpeningName.textContent = opening.name;
+    if (elements.selectedVariantName) elements.selectedVariantName.textContent = variant.name;
+
+    // Fecha Modal
+    elements.openingExplorerModal.classList.add('hidden');
+    showToast(`Abertura selecionada: ${opening.name}`, 'success');
+
+    // Dispara evento para o Main (Prioridade 3 - Preparação)
+    const event = new CustomEvent('opening-selected', { 
+        detail: { 
+            pgn: variant.pgn, 
+            name: `${opening.name} - ${variant.name}`,
+            fen: variant.fen || null // Suporte a FEN se existir
+        } 
+    });
+    window.dispatchEvent(event);
+}
+
+// ==========================================================
+// FUNÇÕES AUXILIARES DE UI (GENÉRICAS)
+// ==========================================================
+
 function renderChangelog() {
     if (!elements.currentVersionDisplay || !elements.changelogContent) return;
-    elements.currentVersionDisplay.textContent = APP_VERSION || 'v1.0.4';
+    elements.currentVersionDisplay.textContent = APP_VERSION || 'v1.0.7';
     elements.changelogContent.innerHTML = '';
     
     if (!CHANGELOG) return;
@@ -211,7 +300,6 @@ export function registerUIHandlers(handlers) {
     safeAddEventListener('modalResetButton', 'click', handlers.onResetGame);
     safeAddEventListener('continueGameButton', 'click', handlers.onContinueGame);
     safeAddEventListener('importPgnButton', 'click', handlers.onImportPgn);
-    safeAddEventListener('openingFilter', 'input', (e) => populateOpeningSelector(e.target.value));
     safeAddEventListener('undoButton', 'click', handlers.onUndo); 
 
     if (elements.copyPgnButton) {
@@ -231,18 +319,41 @@ export function registerUIHandlers(handlers) {
         });
     }
 
-    populateOpeningSelector(); 
+    // --- HANDLERS DO EXPLORADOR DE ABERTURAS (v1.0.7) ---
+    if (elements.openOpeningExplorerBtn) {
+        elements.openOpeningExplorerBtn.addEventListener('click', () => {
+            elements.openingExplorerModal.classList.remove('hidden');
+            initOpeningExplorer();
+        });
+    }
+    if (elements.closeExplorerBtn) {
+        elements.closeExplorerBtn.addEventListener('click', () => elements.openingExplorerModal.classList.add('hidden'));
+    }
+    if (elements.clearOpeningBtn) {
+        elements.clearOpeningBtn.addEventListener('click', () => {
+             elements.selectedOpeningName.textContent = 'Padrão (Início)';
+             elements.selectedVariantName.textContent = '--';
+             
+             // Reseta a abertura no Main
+             const event = new CustomEvent('opening-selected', { detail: { pgn: '', name: 'Standard' } });
+             window.dispatchEvent(event);
+             
+             showToast("Abertura redefinida para Padrão.", "info");
+        });
+    }
+    // Prioridade 4: Handler de Busca
+    if (elements.explorerSearchInput) {
+        elements.explorerSearchInput.addEventListener('input', (e) => {
+             renderCategoryContent(activeCategory, e.target.value);
+        });
+    }
+
     renderChangelog(); 
 }
 
 export function getSkillLevel() {
     const el = document.getElementById('difficultyLevel');
     return el ? parseInt(el.value, 10) : 12;
-}
-
-export function getOpeningKey() {
-    const el = document.getElementById('openingSelect');
-    return el ? el.value : 'standard';
 }
 
 export function getPgnInput() {
@@ -278,7 +389,6 @@ export function renderBoard(boardState) {
             if (squareElement) {
                 squareElement.innerHTML = '';
                 if (piece) {
-                    // ADAPTADO PARA SVG: Usa div e backgroundImage
                     const pieceElement = document.createElement('div');
                     pieceElement.className = 'piece';
                     pieceElement.style.backgroundImage = `url('${PIECES[piece.color][piece.type]}')`;
@@ -436,7 +546,6 @@ export function updateCapturedPieces(history) {
         const pieceOrder = { q: 1, r: 2, b: 3, n: 4, p: 5 };
         
         pieces.sort((a, b) => pieceOrder[a] - pieceOrder[b]).forEach(p => {
-            // ADAPTADO PARA SVG: Usa div e backgroundImage
             const pieceEl = document.createElement('div');
             pieceEl.className = 'piece';
             pieceEl.style.backgroundImage = `url('${PIECES[color][p]}')`;
@@ -450,7 +559,6 @@ export function updateCapturedPieces(history) {
     const blackMaterial = render(elements.capturedForWhite, captured.b, 'b');
     const diff = whiteMaterial - blackMaterial;
 
-    // Helper para criar o badge de pontuação com Tooltip (v1.1)
     const createBadge = (score) => {
         const diffEl = document.createElement('span');
         diffEl.className = 'material-diff';
@@ -472,7 +580,6 @@ export function showPromotionModal(color) {
 
     PROMOTION_PIECES.forEach(type => {
         const button = document.createElement('button');
-        // Adaptado para usar fundo e estilo de bloco em vez de texto
         button.className = `piece w-16 h-16 mx-1 hover:scale-110 transition-transform bg-gray-200 rounded-lg`;
         button.style.backgroundImage = `url('${PIECES[color][type]}')`;
         
