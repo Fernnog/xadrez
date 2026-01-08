@@ -1,15 +1,8 @@
 /* css/main.css */
 
 /* ==========================================================================
-   0. ESTABILIDADE GLOBAL (ANTI-JITTER) - v2.0
+   0. VARIÁVEIS GLOBAIS (DESIGN SYSTEM) - v1.0.4
    ========================================================================== */
-
-/* FIX: Força a barra de rolagem sempre presente e reserva o espaço */
-html {
-    overflow-y: scroll !important; 
-    scrollbar-gutter: stable !important;
-}
-
 :root {
     /* Cores do Tabuleiro */
     --board-light: #f0d9b5;
@@ -27,78 +20,74 @@ html {
     --highlight-valid-move: rgba(34, 197, 94, 0.6); /* Green */
 }
 
-body { 
-    font-family: 'Inter', sans-serif; 
+/* ==========================================================================
+   1. LAYOUT DE APLICAÇÃO (ANTI-JITTER / ESTABILIDADE)
+   ========================================================================== */
+
+/* Trava a rolagem da janela principal. O site se comporta como um App. */
+html, body { 
+    font-family: 'Inter', sans-serif;
+    height: 100% !important;
+    width: 100% !important;
+    overflow: hidden !important; /* CRÍTICO: Elimina barra de rolagem global */
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Scrollbar Personalizada para o Painel Lateral (único lugar que rola) */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #1f2937; 
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #4b5563; 
+    border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #6b7280; 
 }
 
 /* ==========================================================================
-   1. ESTRUTURA RÍGIDA DO TABULEIRO (GRID LAYOUT)
+   2. ESTRUTURA DO TABULEIRO (GRID RÍGIDO)
    ========================================================================== */
 
-/* FIX: Substitui Flexbox por Grid para evitar encolhimento */
+/* Transforma o container em um Grid com linhas fixas.
+   Substitui o layout flexível antigo para garantir estabilidade vertical */
 .board-container { 
-    position: relative;     
-    display: grid !important; 
-    
-    /* Linhas: Topo (40px) | Tabuleiro (Auto) | Base (40px) */
+    position: relative;
+    display: grid !important;
+    /* Topo (Captura): 40px | Meio (Tabuleiro): Auto | Base (Captura): 40px */
     grid-template-rows: 40px 1fr 40px !important; 
     gap: 0.5rem !important;
     
-    width: 100% !important;
-    max-width: 500px !important;
-    
-    padding: 0 !important; 
-    
-    /* Removemos comportamento flex herdado */
-    flex-direction: unset !important;
-    align-items: unset !important;
-}
-
-/* FIX: Força altura fixa nas prateleiras de captura */
-.captured-pieces-container { 
-    height: 100% !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    
-    display: flex; 
-    align-items: center; 
-    gap: 0; 
-    padding: 0.25rem 0.5rem; 
-    
-    background-color: var(--bg-panel); 
-    border: 1px solid var(--border-panel); 
-    border-radius: 0.375rem;
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
-    
-    flex-wrap: wrap; 
-    overflow: hidden !important;
-    
-    transition: all 0.3s ease;
-    
-    /* Garante que ocupe a célula do grid */
-    box-sizing: border-box;
     width: 100%;
+    /* Clamp garante que o tabuleiro não fique gigante nem minúsculo */
+    width: clamp(300px, 80vh, 500px) !important;
+    max-width: 100%;
+    
+    margin: 0 auto !important;
+    padding: 0 !important;
+    
+    flex-shrink: 0 !important; /* Impede encolhimento no flexbox pai */
 }
 
-/* FIX: Blindagem do Tabuleiro (Containment) */
+/* O Tabuleiro de Xadrez */
 #board { 
-    /* Isola o layout interno */
-    contain: size layout paint style;
-    
     width: 100% !important; 
-    aspect-ratio: 1 / 1 !important; 
-    
+    aspect-ratio: 1 / 1 !important;    
     display: grid; 
     grid-template-columns: repeat(8, 1fr); 
     grid-template-rows: repeat(8, 1fr); 
+    transition: transform 0.5s ease-in-out; 
     
-    /* Estética */
+    /* Estética e Isolamento */
     border: 4px solid var(--board-border); 
     border-radius: 0.5rem;
     overflow: hidden;
     z-index: 10; 
-    
-    transition: none !important; /* Evita repaints globais */
+    contain: size layout paint style; /* Blindagem de Renderização */
 }
 
 /* Casas (Squares) */
@@ -108,13 +97,14 @@ body {
     align-items: center; 
     justify-content: center; 
     
-    /* FIX: Impede que a casa mude de tamanho */
-    flex: 1 1 0px; 
-    min-width: 0; 
+    /* Isolamento */
+    flex: 1 1 0px;
+    min-width: 0;
     min-height: 0;
     overflow: hidden;
-    contain: strict;
+    contain: strict; 
 }
+
 .light { background-color: var(--board-light); }
 .dark { background-color: var(--board-dark); }
 .selected-square { background-color: var(--highlight-last-move) !important; }
@@ -132,7 +122,7 @@ body {
 }
 
 /* ==========================================================================
-   2. ETIQUETAS (LABELS)
+   3. ETIQUETAS (LABELS)
    ========================================================================== */
 
 /* Números (1-8) à esquerda */
@@ -186,30 +176,26 @@ body {
 }
 
 /* ==========================================================================
-   3. PEÇAS (ABSOLUTE POSITIONING FIX)
+   4. PEÇAS
    ========================================================================== */
 
 .piece { 
-    font-size: 0; 
-    color: transparent; 
-    text-shadow: none !important;
-    
-    /* FIX: Absolute Position para não forçar tamanho da casa */
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%;
-    height: 100%;
-    
+    /* Configuração de Imagem de Fundo */
+    font-size: 0; color: transparent; text-shadow: none !important;
+    width: 100%; height: 100%;
     background-position: center;
     background-repeat: no-repeat;
     background-size: contain; 
+    
+    /* Absolute position para não alterar tamanho da casa */
+    position: absolute; 
+    top: 0; left: 0;
     
     transform: none; 
     cursor: pointer; 
     user-select: none; 
     z-index: 10; 
     transition: transform 0.1s ease-in-out, opacity 0.1s; 
-    
     filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));
 }
 
@@ -221,8 +207,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 12.5%; 
-    height: 12.5%;
+    width: 12.5%; height: 12.5%;
 }
 
 .piece-hidden { opacity: 0; }
@@ -230,17 +215,14 @@ body {
 .board-flipped .piece { transform: rotate(180deg); }
 
 /* ==========================================================================
-   4. UI AUXILIAR
+   5. CAPTURAS E HISTÓRICO
    ========================================================================== */
 
-/* FIX: Scrollbar Estável */
 .move-history { 
     overflow-y: scroll !important; 
-    scrollbar-gutter: stable;
     scrollbar-width: thin; 
     scrollbar-color: #4a5568 #2d3748; 
-    
-    height: 20rem; 
+    /* Altura agora é controlada pelo container pai ou classes utilitárias */
     contain: strict; 
     will-change: transform;
 }
@@ -251,22 +233,43 @@ body {
 .move-list-item:nth-child(odd) { background-color: #4a5568; }
 .move-number { color: #a0aec0; font-weight: 600; text-align: right; }
 
-/* Animação de Entrada Capturas */
+/* PRATELEIRA DE CAPTURAS - ESTABILIZADA */
+.captured-pieces-container { 
+    display: flex; 
+    align-items: center; 
+    gap: 0; 
+    padding: 0.25rem 0.5rem; 
+    
+    background-color: var(--bg-panel); 
+    border: 1px solid var(--border-panel); 
+    border-radius: 0.375rem;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+    
+    flex-wrap: wrap; 
+    
+    /* FIX: Altura rígida respeitando o Grid */
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: hidden !important;
+    box-sizing: border-box;
+    margin: 0 !important;
+    
+    transition: all 0.3s ease;
+}
+
+/* Animação de Entrada */
 @keyframes popIn {
     0% { transform: scale(0) translateY(-10px); opacity: 0; }
     60% { transform: scale(1.3); }
     100% { transform: scale(1) translateY(0); opacity: 1; }
 }
 
-/* PEÇAS REDUZIDAS (50% menor) na Prateleira */
 .captured-pieces-container .piece { 
-    position: relative !important; /* Override do absolute geral */
-    width: 1.5rem; 
-    height: 1.5rem;
-    
     width: clamp(1rem, 3.5vmin, 1.8rem);
     height: clamp(1rem, 3.5vmin, 1.8rem);
-    
+    position: relative; /* Aqui é relativo pois é flex item */
+    transform: none !important;
     margin-right: -2px; 
     animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     cursor: default;
@@ -282,7 +285,7 @@ body {
     font-weight: 700; 
     color: #f3f4f6; 
     letter-spacing: 0.05em;
-    cursor: help; 
+    cursor: help;
 }
 
 /* Botões do Menu */
@@ -297,7 +300,7 @@ body {
 .toast-visible { transform: translateX(0); opacity: 1; }
 
 /* ==========================================================================
-   5. MODO WIDGET (POP-OUT)
+   6. MODO WIDGET (POP-OUT) - MANTIDO
    ========================================================================== */
 
 body.widget-mode #mainHeader,
@@ -313,7 +316,7 @@ body.widget-mode footer {
 body.widget-mode {
     padding: 0 !important;
     background-color: var(--bg-app); 
-    overflow: hidden !important; /* No widget, scrollbar não é necessária */
+    overflow: hidden;
     width: 100vw;
     height: 100vh;
     display: flex;
@@ -335,15 +338,12 @@ body.widget-mode .board-container {
     width: 95vmin !important; 
     height: auto !important; 
     max-width: none;
-    padding-left: 0 !important; 
-    padding-bottom: 0 !important;
-    margin-left: -0.5rem !important;
-    padding-top: 0; 
+    padding: 0 !important; 
+    margin: 0 !important;
 }
 
 /* Prateleira Compacta para Widget */
 body.widget-mode .captured-pieces-container {
-    height: 2rem !important; 
     padding: 0.1rem 0.25rem;
     background-color: var(--bg-panel-widget);
 }
@@ -354,21 +354,13 @@ body.widget-mode .captured-pieces-container .piece {
 }
 
 body.widget-mode .rank-labels { 
-    width: 2rem; 
-    left: -2rem !important; 
-    height: 100%;
+    width: 2rem; left: -2rem !important; height: 100%;
 }
 body.widget-mode .file-labels { 
-    height: 2rem; 
-    bottom: -2rem !important; 
-    left: 0; 
-    width: 100%; 
+    height: 2rem; bottom: -2rem !important; left: 0; width: 100%; 
 }
-
 body.widget-mode .rank-labels span, 
-body.widget-mode .file-labels span { 
-    font-size: 1rem; 
-}
+body.widget-mode .file-labels span { font-size: 1rem; }
 
 body.widget-mode #restoreWindowBtn {
     display: flex !important;
@@ -379,10 +371,7 @@ body.widget-mode #restoreWindowBtn {
     border: 1px solid rgba(255,255,255,0.1);
 }
 
-/* ==========================================================================
-   6. DESTAQUES DINÂMICOS
-   ========================================================================== */
-
+/* Destaques Dinâmicos */
 .label-highlight {
     color: #fbbf24 !important; 
     font-weight: bold; 
