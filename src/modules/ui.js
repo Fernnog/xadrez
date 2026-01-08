@@ -21,8 +21,7 @@ const elements = {
     copyPgnButton: document.getElementById('copyPgnButton'),
     downloadDocButton: document.getElementById('downloadDocButton'),
     mainBoardContainer: document.querySelector('.board-container'),
-    rankLabels: document.querySelector('.rank-labels'),
-    fileLabels: document.querySelector('.file-labels'),
+    // Removidos rankLabels e fileLabels pois não existem mais no HTML
     undoButton: document.getElementById('undoButton'),
     versionCard: document.getElementById('versionCard'),
     currentVersionDisplay: document.getElementById('currentVersionDisplay'),
@@ -41,7 +40,7 @@ const elements = {
     explorerCategories: document.getElementById('explorerCategories'),
     explorerList: document.getElementById('explorerList'),
     explorerPlaceholder: document.getElementById('explorerPlaceholder'),
-    explorerSearchInput: document.getElementById('explorerSearchInput'), // Prioridade 4
+    explorerSearchInput: document.getElementById('explorerSearchInput'),
     selectedOpeningName: document.getElementById('selectedOpeningName'),
     selectedVariantName: document.getElementById('selectedVariantName'),
     clearOpeningBtn: document.getElementById('clearOpeningBtn'),
@@ -49,7 +48,7 @@ const elements = {
 
 let uiHandlers = {}; 
 let widgetWindowRef = null; 
-let activeCategory = null; // Rastreia a categoria ativa para o renderizador
+let activeCategory = null; 
 
 function safeAddEventListener(id, event, handler) {
     const el = document.getElementById(id);
@@ -64,17 +63,14 @@ function initOpeningExplorer() {
     if (!elements.explorerCategories) return;
     elements.explorerCategories.innerHTML = '';
     
-    // Limpa busca ao abrir
     if(elements.explorerSearchInput) elements.explorerSearchInput.value = '';
 
     OPENING_BOOK.forEach((category, index) => {
         const btn = document.createElement('button');
-        // Estilo base
         const baseClass = "w-full text-left p-4 border-b border-gray-200 transition-colors flex flex-col gap-1 focus:outline-none";
         const inactiveClass = "text-gray-600 hover:bg-white hover:text-gray-800";
         const activeClass = "bg-white text-gray-900 border-l-4 border-l-blue-600 shadow-sm";
         
-        // Define classe inicial
         btn.className = `${baseClass} ${index === 0 ? activeClass : inactiveClass}`;
         
         btn.innerHTML = `
@@ -83,11 +79,9 @@ function initOpeningExplorer() {
         `;
         
         btn.onclick = () => {
-            // Remove estilo ativo dos irmãos
             Array.from(elements.explorerCategories.children).forEach(c => {
                 c.className = `${baseClass} ${inactiveClass}`;
             });
-            // Ativa este botão
             btn.className = `${baseClass} ${activeClass}`;
             
             activeCategory = category;
@@ -97,7 +91,6 @@ function initOpeningExplorer() {
         elements.explorerCategories.appendChild(btn);
     });
 
-    // Inicia renderizando a primeira categoria se existir
     if (OPENING_BOOK.length > 0) {
         activeCategory = OPENING_BOOK[0];
         renderCategoryContent(OPENING_BOOK[0]);
@@ -109,7 +102,6 @@ function renderCategoryContent(category, searchTerm = '') {
     elements.explorerList.classList.remove('hidden');
     elements.explorerList.innerHTML = '';
 
-    // Se houver termo de busca, ignoramos a categoria atual e buscamos em tudo (Prioridade 4)
     let openingsToRender = [];
     let titleText = category ? category.label : 'Resultados da Busca';
 
@@ -117,7 +109,6 @@ function renderCategoryContent(category, searchTerm = '') {
         const term = searchTerm.toLowerCase();
         titleText = `Resultados para "${searchTerm}"`;
         
-        // Busca Flat em todo o livro
         OPENING_BOOK.forEach(cat => {
             cat.openings.forEach(op => {
                 const matchName = op.name.toLowerCase().includes(term);
@@ -133,7 +124,6 @@ function renderCategoryContent(category, searchTerm = '') {
         openingsToRender = category.openings;
     }
 
-    // Renderiza Título da Seção
     const title = document.createElement('h2');
     title.className = "text-2xl font-bold text-gray-800 mb-6 pb-2 border-b border-gray-100";
     title.textContent = titleText;
@@ -147,12 +137,10 @@ function renderCategoryContent(category, searchTerm = '') {
         return;
     }
 
-    // Renderiza Cards
     openingsToRender.forEach(opening => {
         const card = document.createElement('div');
         card.className = "bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden mb-4";
         
-        // Cabeçalho da Abertura
         const header = document.createElement('div');
         header.className = "bg-gray-50 p-4 border-b border-gray-100 flex justify-between items-center";
         header.innerHTML = `
@@ -165,7 +153,6 @@ function renderCategoryContent(category, searchTerm = '') {
             <span class="text-gray-400 text-xs font-semibold uppercase tracking-wide">${opening.variants.length} variantes</span>
         `;
         
-        // Área de Variantes (Chips)
         const variantsContainer = document.createElement('div');
         variantsContainer.className = "p-4 flex flex-wrap gap-2";
         
@@ -174,7 +161,6 @@ function renderCategoryContent(category, searchTerm = '') {
             chip.className = "group relative px-3 py-1.5 bg-blue-50 text-blue-700 text-sm font-semibold rounded-full border border-blue-100 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all cursor-pointer";
             chip.textContent = variant.name;
             
-            // Prioridade 2: Hover e Seleção
             chip.onclick = () => selectOpening(opening, variant);
             
             variantsContainer.appendChild(chip);
@@ -187,20 +173,17 @@ function renderCategoryContent(category, searchTerm = '') {
 }
 
 function selectOpening(opening, variant) {
-    // Atualiza Visual
     if (elements.selectedOpeningName) elements.selectedOpeningName.textContent = opening.name;
     if (elements.selectedVariantName) elements.selectedVariantName.textContent = variant.name;
 
-    // Fecha Modal
     elements.openingExplorerModal.classList.add('hidden');
     showToast(`Abertura selecionada: ${opening.name}`, 'success');
 
-    // Dispara evento para o Main (Prioridade 3 - Preparação)
     const event = new CustomEvent('opening-selected', { 
         detail: { 
             pgn: variant.pgn, 
             name: `${opening.name} - ${variant.name}`,
-            fen: variant.fen || null // Suporte a FEN se existir
+            fen: variant.fen || null
         } 
     });
     window.dispatchEvent(event);
@@ -253,16 +236,12 @@ export function showToast(message, type = 'info') {
 
 function highlightCoordinates(squareName) {
     if (!squareName) return;
-    const file = squareName[0];
-    const rank = squareName[1];
-    const fileLabel = document.getElementById(`label-file-${file}`);
-    const rankLabel = document.getElementById(`label-rank-${rank}`);
-    if (fileLabel) fileLabel.classList.add('label-highlight');
-    if (rankLabel) rankLabel.classList.add('label-highlight');
+    // Opcional: Aqui poderiamos adicionar lógica para iluminar as coordenadas internas.
+    // Atualmente desativado para manter a limpeza visual.
 }
 
 function clearCoordinateHighlights() {
-    document.querySelectorAll('.label-highlight').forEach(el => el.classList.remove('label-highlight'));
+    // Limpeza de destaques opcionais
 }
 
 function openWidgetWindow() {
@@ -319,7 +298,6 @@ export function registerUIHandlers(handlers) {
         });
     }
 
-    // --- HANDLERS DO EXPLORADOR DE ABERTURAS (v1.0.7) ---
     if (elements.openOpeningExplorerBtn) {
         elements.openOpeningExplorerBtn.addEventListener('click', () => {
             elements.openingExplorerModal.classList.remove('hidden');
@@ -334,14 +312,12 @@ export function registerUIHandlers(handlers) {
              elements.selectedOpeningName.textContent = 'Padrão (Início)';
              elements.selectedVariantName.textContent = '--';
              
-             // Reseta a abertura no Main
              const event = new CustomEvent('opening-selected', { detail: { pgn: '', name: 'Standard' } });
              window.dispatchEvent(event);
              
              showToast("Abertura redefinida para Padrão.", "info");
         });
     }
-    // Prioridade 4: Handler de Busca
     if (elements.explorerSearchInput) {
         elements.explorerSearchInput.addEventListener('input', (e) => {
              renderCategoryContent(activeCategory, e.target.value);
@@ -387,7 +363,11 @@ export function renderBoard(boardState) {
             const piece = boardState[r][c];
             
             if (squareElement) {
-                squareElement.innerHTML = '';
+                // Limpa apenas as peças antigas (mantém as coordenadas que estão como spans)
+                // Para evitar remover as coordenadas, removemos apenas elementos com a classe .piece
+                const existingPiece = squareElement.querySelector('.piece');
+                if (existingPiece) existingPiece.remove();
+
                 if (piece) {
                     const pieceElement = document.createElement('div');
                     pieceElement.className = 'piece';
@@ -426,34 +406,54 @@ export function createBoard(onSquareClickCallback) {
             elements.board.appendChild(square);
         }
     }
+    
+    // Injeta coordenadas internas
+    const isFlipped = elements.board.classList.contains('board-flipped');
+    updateCoordinates(isFlipped ? 'b' : 'w');
 }
 
 export function setupBoardOrientation(playerColor) {
-    const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
-    const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-    
-    if(elements.rankLabels) elements.rankLabels.innerHTML = '';
-    if(elements.fileLabels) elements.fileLabels.innerHTML = '';
-
-    const rList = playerColor === 'b' ? [...ranks].reverse() : ranks;
-    const fList = playerColor === 'b' ? [...files].reverse() : files;
-
-    if(elements.rankLabels) {
-        rList.forEach(r => {
-            elements.rankLabels.innerHTML += `<span id="label-rank-${r}" class="transition-all duration-200">${r}</span>`;
-        });
-    }
-    if(elements.fileLabels) {
-        fList.forEach(f => {
-            elements.fileLabels.innerHTML += `<span id="label-file-${f}" class="transition-all duration-200">${f}</span>`;
-        });
-    }
-
     if (playerColor === 'b') {
         elements.board.classList.add('board-flipped');
     } else {
         elements.board.classList.remove('board-flipped');
     }
+    // Redesenha coordenadas para ficarem na posição correta após o flip
+    updateCoordinates(playerColor);
+}
+
+// NOVA FUNÇÃO PARA GERENCIAR COORDENADAS INTERNAS
+function updateCoordinates(playerColor) {
+    // Remove coordenadas antigas para evitar duplicidade
+    document.querySelectorAll('.coord-label').forEach(el => el.remove());
+
+    const squares = document.querySelectorAll('.square');
+    
+    squares.forEach(square => {
+        const squareName = square.dataset.square; // ex: "e4"
+        const file = squareName[0]; // "e"
+        const rank = squareName[1]; // "4"
+
+        // Lógica para coordenadas internas nas bordas
+        const isLeftEdge = (playerColor === 'w' && file === 'a') || (playerColor === 'b' && file === 'h');
+        const isBottomEdge = (playerColor === 'w' && rank === '1') || (playerColor === 'b' && rank === '8');
+
+        // Adicionar Número (Rank) na lateral esquerda
+        if (isLeftEdge) {
+            const rankLabel = document.createElement('span');
+            rankLabel.className = 'coord-label coord-rank';
+            rankLabel.innerText = rank;
+            square.appendChild(rankLabel);
+        }
+
+        // Adicionar Letra (File) na lateral inferior
+        if (isBottomEdge) {
+            const fileLabel = document.createElement('span');
+            fileLabel.className = 'coord-label coord-file';
+            fileLabel.innerText = file;
+            square.appendChild(fileLabel);
+        }
+    });
 }
 
 export function updateStatus(gameState, showGameOverCallback) {
