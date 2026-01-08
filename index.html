@@ -30,7 +30,8 @@
     <div id="gameContainer" class="w-full max-w-7xl hidden flex flex-col lg:flex-row gap-8 items-start justify-center">
         
         <!-- COLUNA ESQUERDA: Cabeçalho e Tabuleiro -->
-        <div class="flex flex-col w-full lg:w-auto items-center relative">
+        <!-- FIX: Adicionado 'shrink-0' para impedir que o flexbox esmague o tabuleiro -->
+        <div class="flex flex-col w-full lg:w-auto items-center relative shrink-0">
             
             <!-- Botão Pop-out Widget -->
             <button id="popOutWidgetBtn" class="absolute -left-16 top-2 hidden lg:flex items-center justify-center p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-lg transition-all z-20 group" title="Abrir como Widget (Pop-out)">
@@ -47,27 +48,27 @@
                 <img src="img/logo.png" alt="Logo" class="h-16 w-auto object-contain">
                 
                 <div class="flex-grow flex justify-between items-center bg-gray-900 rounded-lg p-2 shadow-lg h-16 px-4">
-                    <!-- ADIÇÃO: tabular-nums para evitar pulos na largura dos números -->
+                    <!-- FIX: Adicionado 'tabular-nums' para evitar pulos nos números -->
                     <div id="evaluationPanel" class="text-2xl font-bold text-center w-24 bg-gray-800 rounded-md py-1 tabular-nums">
                         <span id="evaluationValue">0.00</span>
                     </div>
-                    <!-- ADIÇÃO: tabular-nums para texto que contenha números -->
+                    <!-- FIX: Adicionado 'tabular-nums' -->
                     <p class="text-sm sm:text-lg font-semibold text-center flex-grow pl-4 truncate whitespace-nowrap tabular-nums" id="status">Iniciando...</p>
                 </div>
             </div>
 
-            <!-- ÁREA DO TABULEIRO (Estrutura Grid Rígida) -->
-            <!-- MUDANÇA: Substituído flex-col por grid para estabilidade vertical e removido comportamentos flex -->
+            <!-- ÁREA DO TABULEIRO (Refatorado para Grid e sem Margens Manuais) -->
+            <!-- FIX: Mudança de 'flex' para 'grid' para estabilidade vertical -->
             <div class="w-full max-w-[500px] grid grid-rows-[auto_1fr_auto] gap-1 board-container">
                 
                 <!-- Capturas das Pretas (Topo) -->
-                <!-- LIMPEZA: Removido ml-8 pr-8 mb-1. A grade e o container controlam o layout agora. -->
-                <div class="flex items-center w-full overflow-hidden"> 
+                <!-- FIX: Removidas margens manuais (ml-8, pr-8) pois o CSS agora controla o layout -->
+                <div class="flex items-center mb-1 w-full"> 
                     <div id="capturedForBlack" class="captured-pieces-container w-full shadow-inner justify-start pl-2"></div>
                 </div>
                 
                 <!-- Wrapper do Tabuleiro -->
-                <!-- LIMPEZA: Removido mb-8 ml-8. Margens externas eliminadas em favor do gap da grid. -->
+                <!-- FIX: Removidas margens manuais -->
                 <div class="relative w-full">
                     <div class="rank-labels"></div>
                     <div id="board" class="w-full aspect-square grid grid-cols-8 grid-rows-8 shadow-2xl rounded-lg overflow-hidden border-4 border-gray-900 bg-gray-700"></div>
@@ -75,8 +76,8 @@
                 </div>
                 
                 <!-- Capturas das Brancas (Base) -->
-                <!-- LIMPEZA: Removido mt-1 ml-8 pr-8. -->
-                <div class="flex items-center w-full overflow-hidden">
+                <!-- FIX: Removidas margens manuais -->
+                <div class="flex items-center mt-1 w-full">
                     <div id="capturedForWhite" class="captured-pieces-container w-full shadow-inner justify-start pl-2"></div>
                 </div>
             </div>
@@ -142,7 +143,7 @@
                 </select>
             </div>
             
-            <!-- NOVA ÁREA DE TREINO DE ABERTURA (Substituindo o antigo Select) -->
+            <!-- NOVA ÁREA DE TREINO DE ABERTURA -->
             <div class="mt-4 text-left border-t border-gray-200 pt-4">
                 <label class="block text-sm font-bold text-gray-600 uppercase mb-2">Treino de Abertura</label>
                 
@@ -204,7 +205,7 @@
         </div>
     </div>
 
-    <!-- MODAL EXPLORADOR DE ABERTURAS (Novo) -->
+    <!-- MODAL EXPLORADOR DE ABERTURAS -->
     <div id="openingExplorerModal" class="fixed inset-0 bg-gray-900 bg-opacity-95 z-[60] hidden flex items-center justify-center backdrop-blur-sm p-4 animate-fade-in">
         <div class="bg-white w-full max-w-5xl h-[85vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
             
@@ -223,9 +224,7 @@
             <!-- Layout 2 Colunas -->
             <div class="flex flex-1 overflow-hidden">
                 <!-- Coluna Esquerda: Categorias -->
-                <div id="explorerCategories" class="w-1/3 md:w-1/4 bg-gray-50 border-r border-gray-200 overflow-y-auto">
-                    <!-- Preenchido via JS -->
-                </div>
+                <div id="explorerCategories" class="w-1/3 md:w-1/4 bg-gray-50 border-r border-gray-200 overflow-y-auto"></div>
 
                 <!-- Coluna Direita: Conteúdo -->
                 <div id="explorerContent" class="w-2/3 md:w-3/4 bg-white overflow-y-auto p-6">
@@ -233,9 +232,7 @@
                         <span class="text-6xl mb-4">👈</span>
                         <p class="text-lg">Selecione uma categoria à esquerda</p>
                     </div>
-                    <div id="explorerList" class="hidden space-y-4">
-                        <!-- Preenchido via JS (Cards de Abertura) -->
-                    </div>
+                    <div id="explorerList" class="hidden space-y-4"></div>
                 </div>
             </div>
         </div>
