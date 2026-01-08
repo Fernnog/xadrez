@@ -15,8 +15,8 @@
     <!-- Fontes do Google -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     
-    <!-- Folha de Estilo Personalizada -->
-    <link rel="stylesheet" href="css/main.css">
+    <!-- Folha de Estilo Personalizada (Cache Buster v2) -->
+    <link rel="stylesheet" href="css/main.css?v=2">
 </head>
 <body class="bg-gray-800 text-white flex flex-col items-center min-h-screen p-4 sm:p-8">
 
@@ -30,7 +30,7 @@
     <div id="gameContainer" class="w-full max-w-7xl hidden flex flex-col lg:flex-row gap-8 items-start justify-center">
         
         <!-- COLUNA ESQUERDA: Cabeçalho e Tabuleiro -->
-        <!-- FIX ESTABILIDADE: Adicionado 'shrink-0' para impedir que esta coluna encolha quando a scrollbar aparecer -->
+        <!-- FIX: Adicionado 'shrink-0' para impedir encolhimento flexbox -->
         <div class="flex flex-col w-full lg:w-auto items-center relative shrink-0">
             
             <!-- Botão Pop-out Widget -->
@@ -48,20 +48,20 @@
                 <img src="img/logo.png" alt="Logo" class="h-16 w-auto object-contain">
                 
                 <div class="flex-grow flex justify-between items-center bg-gray-900 rounded-lg p-2 shadow-lg h-16 px-4">
-                    <!-- FIX ESTABILIDADE: Adicionado 'tabular-nums' para evitar jitter nos números -->
+                    <!-- FIX: Adicionado 'tabular-nums' para largura fixa dos números -->
                     <div id="evaluationPanel" class="text-2xl font-bold text-center w-24 bg-gray-800 rounded-md py-1 tabular-nums">
                         <span id="evaluationValue">0.00</span>
                     </div>
-                    <!-- FIX ESTABILIDADE: Adicionado 'tabular-nums' e mantido truncate -->
+                    <!-- FIX: Adicionado 'tabular-nums' -->
                     <p class="text-sm sm:text-lg font-semibold text-center flex-grow pl-4 truncate whitespace-nowrap tabular-nums" id="status">Iniciando...</p>
                 </div>
             </div>
 
-            <!-- ÁREA DO TABULEIRO (Ajuste de Margens e Alinhamento v1.1) -->
-            <div class="w-full max-w-[500px] flex flex-col board-container">
+            <!-- ÁREA DO TABULEIRO (GRID LAYOUT FIXO) -->
+            <!-- FIX: Removido 'flex flex-col' para que o CSS Grid (main.css) assuma -->
+            <div class="w-full max-w-[500px] board-container">
                 
                 <!-- Capturas das Pretas (Topo) -->
-                <!-- ml-8 e pr-8 garantem alinhamento com o tabuleiro e respiro à direita -->
                 <div class="flex items-center mb-1 w-full ml-8 pr-8"> 
                     <div id="capturedForBlack" class="captured-pieces-container w-full shadow-inner justify-start pl-2"></div>
                 </div>
@@ -74,7 +74,6 @@
                 </div>
                 
                 <!-- Capturas das Brancas (Base) -->
-                <!-- ml-8 e pr-8 garantem simetria com o topo -->
                 <div class="flex items-center mt-1 w-full ml-8 pr-8">
                     <div id="capturedForWhite" class="captured-pieces-container w-full shadow-inner justify-start pl-2"></div>
                 </div>
@@ -141,7 +140,7 @@
                 </select>
             </div>
             
-            <!-- NOVA ÁREA DE TREINO DE ABERTURA (Substituindo o antigo Select) -->
+            <!-- NOVA ÁREA DE TREINO DE ABERTURA -->
             <div class="mt-4 text-left border-t border-gray-200 pt-4">
                 <label class="block text-sm font-bold text-gray-600 uppercase mb-2">Treino de Abertura</label>
                 
@@ -203,7 +202,7 @@
         </div>
     </div>
 
-    <!-- MODAL EXPLORADOR DE ABERTURAS (Novo) -->
+    <!-- MODAL EXPLORADOR DE ABERTURAS -->
     <div id="openingExplorerModal" class="fixed inset-0 bg-gray-900 bg-opacity-95 z-[60] hidden flex items-center justify-center backdrop-blur-sm p-4 animate-fade-in">
         <div class="bg-white w-full max-w-5xl h-[85vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
             
@@ -222,19 +221,19 @@
             <!-- Layout 2 Colunas -->
             <div class="flex flex-1 overflow-hidden">
                 <!-- Coluna Esquerda: Categorias -->
-                <div id="explorerCategories" class="w-1/3 md:w-1/4 bg-gray-50 border-r border-gray-200 overflow-y-auto">
-                    <!-- Preenchido via JS -->
-                </div>
+                <div id="explorerCategories" class="w-1/3 md:w-1/4 bg-gray-50 border-r border-gray-200 overflow-y-auto"></div>
 
                 <!-- Coluna Direita: Conteúdo -->
                 <div id="explorerContent" class="w-2/3 md:w-3/4 bg-white overflow-y-auto p-6">
+                    <div class="mb-4">
+                        <input type="text" id="explorerSearchInput" placeholder="🔍 Buscar abertura (Ex: Siciliana, Dragão...)" class="w-full p-3 border border-gray-300 rounded-lg text-gray-800 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-shadow">
+                    </div>
+
                     <div id="explorerPlaceholder" class="flex flex-col items-center justify-center h-full text-gray-400 opacity-50">
                         <span class="text-6xl mb-4">👈</span>
                         <p class="text-lg">Selecione uma categoria à esquerda</p>
                     </div>
-                    <div id="explorerList" class="hidden space-y-4">
-                        <!-- Preenchido via JS (Cards de Abertura) -->
-                    </div>
+                    <div id="explorerList" class="hidden space-y-4"></div>
                 </div>
             </div>
         </div>
