@@ -127,7 +127,8 @@ function init() {
 
     // INICIALIZAÇÃO DO DIAGNÓSTICO (LAYOUT LOGGER)
     // Isso vai monitorar e logar qualquer tremor no tabuleiro/body
-    utils.initLayoutLogger();
+    // ALTERAÇÃO: Removido/Comentado para produção após estabilização
+    // utils.initLayoutLogger();
     
     // Registrar Handlers da UI
     ui.registerUIHandlers({
