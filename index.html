@@ -29,8 +29,8 @@
 
     <div id="gameContainer" class="w-full max-w-7xl hidden flex flex-col lg:flex-row gap-8 items-start justify-center">
         
-        <!-- COLUNA ESQUERDA: Cabeçalho e Tabuleiro (Ajustada para Estabilidade) -->
-        <div class="flex flex-col w-full lg:w-[500px] flex-shrink-0 items-center relative">
+        <!-- COLUNA ESQUERDA: Cabeçalho e Tabuleiro -->
+        <div class="flex flex-col w-full lg:w-auto items-center relative">
             
             <!-- Botão Pop-out Widget -->
             <button id="popOutWidgetBtn" class="absolute -left-16 top-2 hidden lg:flex items-center justify-center p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-lg transition-all z-20 group" title="Abrir como Widget (Pop-out)">
@@ -46,23 +46,25 @@
             <div id="mainHeader" class="w-full max-w-[500px] flex items-center justify-between mb-4 gap-4">
                 <img src="img/logo.png" alt="Logo" class="h-16 w-auto object-contain">
                 
-                <div class="flex-grow flex justify-between items-center bg-gray-900 rounded-lg p-2 shadow-lg h-16 px-4 overflow-hidden">
-                    <div id="evaluationPanel" class="text-2xl font-bold text-center w-24 bg-gray-800 rounded-md py-1 flex-shrink-0">
+                <div class="flex-grow flex justify-between items-center bg-gray-900 rounded-lg p-2 shadow-lg h-16 px-4">
+                    <div id="evaluationPanel" class="text-2xl font-bold text-center w-24 bg-gray-800 rounded-md py-1">
                         <span id="evaluationValue">0.00</span>
                     </div>
+                    <!-- FIX ESTABILIDADE: Adicionado truncate e whitespace-nowrap -->
                     <p class="text-sm sm:text-lg font-semibold text-center flex-grow pl-4 truncate whitespace-nowrap" id="status">Iniciando...</p>
                 </div>
             </div>
 
-            <!-- ÁREA DO TABULEIRO -->
+            <!-- ÁREA DO TABULEIRO (Ajuste de Margens e Alinhamento v1.1) -->
             <div class="w-full max-w-[500px] flex flex-col board-container">
                 
                 <!-- Capturas das Pretas (Topo) -->
+                <!-- ml-8 e pr-8 garantem alinhamento com o tabuleiro e respiro à direita -->
                 <div class="flex items-center mb-1 w-full ml-8 pr-8"> 
                     <div id="capturedForBlack" class="captured-pieces-container w-full shadow-inner justify-start pl-2"></div>
                 </div>
                 
-                <!-- Wrapper do Tabuleiro -->
+                <!-- Wrapper do Tabuleiro com Margens de Proteção -->
                 <div class="relative mb-8 ml-8">
                     <div class="rank-labels"></div>
                     <div id="board" class="w-full aspect-square grid grid-cols-8 grid-rows-8 shadow-2xl rounded-lg overflow-hidden border-4 border-gray-900 bg-gray-700"></div>
@@ -70,14 +72,15 @@
                 </div>
                 
                 <!-- Capturas das Brancas (Base) -->
+                <!-- ml-8 e pr-8 garantem simetria com o topo -->
                 <div class="flex items-center mt-1 w-full ml-8 pr-8">
                     <div id="capturedForWhite" class="captured-pieces-container w-full shadow-inner justify-start pl-2"></div>
                 </div>
             </div>
         </div>
 
-        <!-- COLUNA DIREITA: Histórico e Controles (Ajustada para Ocupar Espaço Restante) -->
-        <div id="sidebarPanel" class="w-full lg:flex-1 max-w-[500px] lg:max-w-md flex flex-col gap-4 mt-0 lg:mt-20"> 
+        <!-- COLUNA DIREITA: Histórico e Controles -->
+        <div id="sidebarPanel" class="w-full max-w-[500px] lg:w-80 flex flex-col gap-4 mt-0 lg:mt-20"> 
             
             <div class="bg-gray-900 p-4 rounded-lg shadow-lg w-full">
                 <div class="flex justify-between items-center mb-3">
@@ -89,6 +92,7 @@
                         <button id="copyPgnButton" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded transition-all">COPIAR PGN</button>
                     </div>
                 </div>
+                <!-- O CSS agora controla a estabilidade do moveHistory -->
                 <div id="moveHistory" class="move-history bg-gray-800 rounded-md p-2 text-sm"></div>
             </div>
             
@@ -108,7 +112,7 @@
 
     </div>
     
-    <!-- MODAIS E COMPONENTES DE UI -->
+    <!-- MODAL DE SELEÇÃO DE COR -->
     <div id="colorSelectionModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
         <div class="bg-white text-gray-900 p-8 rounded-lg shadow-xl text-center max-w-md w-full">
             <div id="continueGameContainer" class="hidden mb-6 pb-6 border-b border-gray-300">
@@ -124,6 +128,7 @@
                 <button id="playBlackButton" class="btn-play-black px-8 py-4 font-bold rounded-lg text-5xl transition-all transform hover:scale-110 shadow-md border border-gray-300">♟</button>
             </div>
             
+            <!-- SELEÇÃO DE DIFICULDADE -->
             <div class="mt-4 text-left">
                 <label for="difficultyLevel" class="block text-sm font-bold text-gray-600 uppercase mb-2">Nível de Dificuldade</label>
                 <select id="difficultyLevel" class="w-full p-3 border border-gray-300 rounded-md text-lg bg-gray-50 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-inner">
@@ -134,8 +139,11 @@
                 </select>
             </div>
             
+            <!-- NOVA ÁREA DE TREINO DE ABERTURA (Substituindo o antigo Select) -->
             <div class="mt-4 text-left border-t border-gray-200 pt-4">
                 <label class="block text-sm font-bold text-gray-600 uppercase mb-2">Treino de Abertura</label>
+                
+                <!-- Display da Abertura Atual -->
                 <div class="flex items-center justify-between bg-gray-100 p-3 rounded-md mb-3 border border-gray-300">
                     <div class="flex flex-col">
                         <span class="text-xs text-gray-500 uppercase font-bold">Selecionado:</span>
@@ -144,6 +152,8 @@
                     </div>
                     <button id="clearOpeningBtn" class="text-gray-400 hover:text-red-500 font-bold px-2" title="Voltar ao Padrão">&times;</button>
                 </div>
+
+                <!-- Botão para Abrir o Explorador -->
                 <button id="openOpeningExplorerBtn" class="w-full py-3 px-4 bg-gray-800 hover:bg-gray-700 text-white font-semibold rounded shadow-md flex items-center justify-center gap-2 transition-all hover:shadow-lg">
                     <span class="text-xl">📚</span> Explorar Biblioteca
                 </button>
@@ -163,6 +173,7 @@
         </div>
     </div>
 
+    <!-- MODAL GAME OVER -->
     <div id="gameOverModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
         <div class="bg-white text-gray-900 p-8 rounded-lg shadow-xl text-center max-w-sm w-full">
             <h2 class="text-3xl font-bold mb-4" id="modalTitle">Fim de Jogo!</h2>
@@ -171,6 +182,7 @@
         </div>
     </div>
 
+    <!-- MODAL PROMOÇÃO -->
     <div id="promotionModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
         <div class="bg-white text-gray-900 p-8 rounded-lg shadow-xl text-center max-w-sm">
             <h3 class="text-xl font-bold mb-6">Escolha a Promoção</h3>
@@ -178,6 +190,7 @@
         </div>
     </div>
 
+    <!-- MODAL DE CHANGELOG -->
     <div id="changelogModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden backdrop-blur-sm">
         <div class="bg-white text-gray-900 p-6 rounded-lg shadow-2xl max-w-md w-full max-h-[80vh] flex flex-col animate-fade-in">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
@@ -188,8 +201,11 @@
         </div>
     </div>
 
+    <!-- MODAL EXPLORADOR DE ABERTURAS (Novo) -->
     <div id="openingExplorerModal" class="fixed inset-0 bg-gray-900 bg-opacity-95 z-[60] hidden flex items-center justify-center backdrop-blur-sm p-4 animate-fade-in">
         <div class="bg-white w-full max-w-5xl h-[85vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
+            
+            <!-- Header -->
             <div class="bg-gray-800 text-white p-4 flex justify-between items-center shadow-md z-10">
                 <div class="flex items-center gap-3">
                     <span class="text-2xl">📚</span>
@@ -200,25 +216,37 @@
                 </div>
                 <button id="closeExplorerBtn" class="text-gray-400 hover:text-white text-3xl font-light leading-none">&times;</button>
             </div>
+
+            <!-- Layout 2 Colunas -->
             <div class="flex flex-1 overflow-hidden">
-                <div id="explorerCategories" class="w-1/3 md:w-1/4 bg-gray-50 border-r border-gray-200 overflow-y-auto"></div>
+                <!-- Coluna Esquerda: Categorias -->
+                <div id="explorerCategories" class="w-1/3 md:w-1/4 bg-gray-50 border-r border-gray-200 overflow-y-auto">
+                    <!-- Preenchido via JS -->
+                </div>
+
+                <!-- Coluna Direita: Conteúdo -->
                 <div id="explorerContent" class="w-2/3 md:w-3/4 bg-white overflow-y-auto p-6">
                     <div id="explorerPlaceholder" class="flex flex-col items-center justify-center h-full text-gray-400 opacity-50">
                         <span class="text-6xl mb-4">👈</span>
                         <p class="text-lg">Selecione uma categoria à esquerda</p>
                     </div>
-                    <div id="explorerList" class="hidden space-y-4"></div>
+                    <div id="explorerList" class="hidden space-y-4">
+                        <!-- Preenchido via JS (Cards de Abertura) -->
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     
+    <!-- CARD DE VERSÃO -->
     <div id="versionCard" class="fixed bottom-4 left-4 bg-gray-900 bg-opacity-90 text-gray-400 text-xs px-3 py-1 rounded-full shadow-lg z-20 cursor-pointer hover:bg-gray-700 hover:text-white transition-colors border border-gray-700">
         <span id="currentVersionDisplay">v1.0.7</span> ℹ️
     </div>
 
+    <!-- CONTAINER DE NOTIFICAÇÕES TOAST -->
     <div id="toastContainer" class="fixed bottom-5 right-5 flex flex-col gap-2 z-50 pointer-events-none"></div>
 
+    <!-- Dependências JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script type="module" src="src/main.js"></script>
 </body>
