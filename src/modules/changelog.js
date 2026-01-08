@@ -1,9 +1,19 @@
 // src/modules/changelog.js
 
 // 1. Defina a versão aqui (Fonte da Verdade)
-export const CURRENT_VERSION = 'v1.0.7';
+export const CURRENT_VERSION = 'v1.0.8';
 
 export const CHANGELOG = [
+    {
+        version: 'v1.0.8',
+        date: '2025-12-20',
+        changes: [
+            'UX/UI: Modernização das coordenadas do tabuleiro, movendo-as para dentro das casas (Estilo Chess.com/Lichess) para economizar espaço e evitar cortes no layout.',
+            'Bug Fix: Correção da orientação das coordenadas (Rank/File) ao jogar com as Pretas. Agora os números e letras giram corretamente para ficarem legíveis.',
+            'Acessibilidade: Adição de sombra sutil e contraste inteligente (cor inversa à casa) nas coordenadas para garantir leitura em qualquer tela.',
+            'Refatoração: Remoção de containers HTML antigos, tornando a renderização do tabuleiro mais leve e autossuficiente.'
+        ]
+    },
     {
         version: 'v1.0.7',
         date: '2025-12-19',
