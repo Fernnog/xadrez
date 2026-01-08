@@ -1,3 +1,4 @@
+--- START OF FILE index.html ---
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -20,17 +21,18 @@
 </head>
 <body class="bg-gray-800 text-white flex flex-col items-center min-h-screen p-4 sm:p-8">
 
-    <!-- Overlay para Modo Cinema (Widget Ativo) -->
+    <!-- Overlay para Modo Cinema -->
     <div id="appOverlay" class="fixed inset-0 bg-gray-900 bg-opacity-95 z-[100] hidden flex flex-col items-center justify-center backdrop-blur-sm transition-all duration-300">
         <div class="text-6xl mb-6 animate-pulse">📱 ↔️ 💻</div>
         <h2 class="text-3xl font-bold text-white mb-2">Jogo em andamento no Widget</h2>
         <p class="text-gray-400 text-lg max-w-md text-center">A interface principal está pausada. Feche a janela do Widget para retomar o controle aqui.</p>
     </div>
 
+    <!-- AJUSTE PRIORIDADE 1: Adicionado flex-shrink-0 e larguras fixas no container principal -->
     <div id="gameContainer" class="w-full max-w-7xl hidden flex flex-col lg:flex-row gap-8 items-start justify-center">
         
-        <!-- COLUNA ESQUERDA: Cabeçalho e Tabuleiro (Âncora do Layout) -->
-        <div class="flex flex-col w-full lg:w-[500px] lg:flex-shrink-0 items-center relative">
+        <!-- COLUNA ESQUERDA: Largura fixa (500px) e impede encolhimento para estabilizar tabuleiro -->
+        <div class="flex flex-col w-full lg:w-[500px] flex-shrink-0 items-center relative">
             
             <!-- Botão Pop-out Widget -->
             <button id="popOutWidgetBtn" class="absolute -left-16 top-2 hidden lg:flex items-center justify-center p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-lg transition-all z-20 group" title="Abrir como Widget (Pop-out)">
@@ -42,12 +44,12 @@
                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
             </button>
 
-            <!-- CABEÇALHO (Estabilizado) -->
-            <div id="mainHeader" class="w-full max-w-[500px] flex items-center justify-between mb-4 gap-4">
+            <!-- CABEÇALHO: Altura mínima fixa (h-16) para evitar saltos verticais -->
+            <div id="mainHeader" class="w-full flex items-center justify-between mb-4 gap-4 h-16">
                 <img src="img/logo.png" alt="Logo" class="h-16 w-auto object-contain">
                 
-                <div class="flex-grow flex justify-between items-center bg-gray-900 rounded-lg p-2 shadow-lg h-16 px-4 overflow-hidden">
-                    <div id="evaluationPanel" class="text-2xl font-bold text-center w-24 bg-gray-800 rounded-md py-1 flex-shrink-0">
+                <div class="flex-grow flex justify-between items-center bg-gray-900 rounded-lg p-2 shadow-lg h-full px-4 overflow-hidden">
+                    <div id="evaluationPanel" class="text-2xl font-bold text-center w-24 bg-gray-800 rounded-md py-1">
                         <span id="evaluationValue">0.00</span>
                     </div>
                     <p class="text-sm sm:text-lg font-semibold text-center flex-grow pl-4 truncate whitespace-nowrap" id="status">Iniciando...</p>
@@ -55,7 +57,7 @@
             </div>
 
             <!-- ÁREA DO TABULEIRO -->
-            <div class="w-full max-w-[500px] flex flex-col board-container">
+            <div class="w-full flex flex-col board-container">
                 
                 <!-- Capturas das Pretas (Topo) -->
                 <div class="flex items-center mb-1 w-full ml-8 pr-8"> 
@@ -76,8 +78,8 @@
             </div>
         </div>
 
-        <!-- COLUNA DIREITA: Histórico e Controles (Flexível) -->
-        <div id="sidebarPanel" class="w-full max-w-[500px] lg:flex-1 lg:max-w-md flex flex-col gap-4 mt-0 lg:mt-20"> 
+        <!-- COLUNA DIREITA: Agora usa flex-1 para ocupar o espaço sem empurrar o tabuleiro -->
+        <div id="sidebarPanel" class="w-full lg:flex-1 max-w-[500px] lg:max-w-md flex flex-col gap-4 mt-0 lg:mt-20"> 
             
             <div class="bg-gray-900 p-4 rounded-lg shadow-lg w-full">
                 <div class="flex justify-between items-center mb-3">
@@ -94,7 +96,6 @@
             
             <div class="flex flex-col gap-2 items-center w-full">
                 <p class="text-xs text-gray-400 uppercase tracking-wider">Engine: Stockfish</p>
-                
                 <div class="flex w-full gap-2">
                     <button id="undoButton" class="w-1/2 py-4 bg-gray-600 hover:bg-gray-700 text-white font-bold rounded-lg shadow-lg transition-transform active:scale-95 uppercase">
                         Desfazer
@@ -108,8 +109,7 @@
 
     </div>
     
-    <!-- MODAIS E COMPONENTES AUXILIARES PERMANECEM IGUAIS -->
-    <!-- (Seleção de cor, Game Over, Promoção, Changelog, Explorador, Version Card, Toast Container) -->
+    <!-- MODAL DE SELEÇÃO DE COR -->
     <div id="colorSelectionModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
         <div class="bg-white text-gray-900 p-8 rounded-lg shadow-xl text-center max-w-md w-full">
             <div id="continueGameContainer" class="hidden mb-6 pb-6 border-b border-gray-300">
@@ -164,6 +164,7 @@
         </div>
     </div>
 
+    <!-- MODAL GAME OVER -->
     <div id="gameOverModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
         <div class="bg-white text-gray-900 p-8 rounded-lg shadow-xl text-center max-w-sm w-full">
             <h2 class="text-3xl font-bold mb-4" id="modalTitle">Fim de Jogo!</h2>
@@ -172,6 +173,7 @@
         </div>
     </div>
 
+    <!-- MODAL PROMOÇÃO -->
     <div id="promotionModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
         <div class="bg-white text-gray-900 p-8 rounded-lg shadow-xl text-center max-w-sm">
             <h3 class="text-xl font-bold mb-6">Escolha a Promoção</h3>
@@ -179,6 +181,7 @@
         </div>
     </div>
 
+    <!-- MODAL DE CHANGELOG -->
     <div id="changelogModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden backdrop-blur-sm">
         <div class="bg-white text-gray-900 p-6 rounded-lg shadow-2xl max-w-md w-full max-h-[80vh] flex flex-col animate-fade-in">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
@@ -189,6 +192,7 @@
         </div>
     </div>
 
+    <!-- MODAL EXPLORADOR DE ABERTURAS -->
     <div id="openingExplorerModal" class="fixed inset-0 bg-gray-900 bg-opacity-95 z-[60] hidden flex items-center justify-center backdrop-blur-sm p-4 animate-fade-in">
         <div class="bg-white w-full max-w-5xl h-[85vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
             <div class="bg-gray-800 text-white p-4 flex justify-between items-center shadow-md z-10">
@@ -214,12 +218,15 @@
         </div>
     </div>
     
+    <!-- CARD DE VERSÃO -->
     <div id="versionCard" class="fixed bottom-4 left-4 bg-gray-900 bg-opacity-90 text-gray-400 text-xs px-3 py-1 rounded-full shadow-lg z-20 cursor-pointer hover:bg-gray-700 hover:text-white transition-colors border border-gray-700">
         <span id="currentVersionDisplay">v1.0.7</span> ℹ️
     </div>
 
+    <!-- CONTAINER DE NOTIFICAÇÕES TOAST -->
     <div id="toastContainer" class="fixed bottom-5 right-5 flex flex-col gap-2 z-50 pointer-events-none"></div>
 
+    <!-- Dependências JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script type="module" src="src/main.js"></script>
 </body>
