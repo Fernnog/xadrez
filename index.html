@@ -15,10 +15,11 @@
     <!-- Fontes do Google -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     
-    <!-- Folha de Estilo Personalizada (Cache Buster v2) -->
-    <link rel="stylesheet" href="css/main.css?v=2">
+    <!-- Folha de Estilo Personalizada (Versionada para forçar atualização) -->
+    <link rel="stylesheet" href="css/main.css?v=3">
 </head>
-<body class="bg-gray-800 text-white flex flex-col items-center min-h-screen p-4 sm:p-8">
+<!-- ALTERAÇÃO: Body travado (h-screen, overflow-hidden) para comportamento de App -->
+<body class="bg-gray-800 text-white flex flex-col items-center h-screen overflow-hidden p-0 m-0">
 
     <!-- Overlay para Modo Cinema (Widget Ativo) -->
     <div id="appOverlay" class="fixed inset-0 bg-gray-900 bg-opacity-95 z-[100] hidden flex flex-col items-center justify-center backdrop-blur-sm transition-all duration-300">
@@ -27,11 +28,12 @@
         <p class="text-gray-400 text-lg max-w-md text-center">A interface principal está pausada. Feche a janela do Widget para retomar o controle aqui.</p>
     </div>
 
-    <div id="gameContainer" class="w-full max-w-7xl hidden flex flex-col lg:flex-row gap-8 items-start justify-center">
+    <!-- ALTERAÇÃO: h-full para ocupar a tela e centralização flexbox rígida -->
+    <div id="gameContainer" class="w-full max-w-7xl hidden flex flex-col lg:flex-row gap-8 h-full items-center justify-center p-4">
         
         <!-- COLUNA ESQUERDA: Cabeçalho e Tabuleiro -->
-        <!-- FIX: Adicionado 'shrink-0' para impedir encolhimento flexbox -->
-        <div class="flex flex-col w-full lg:w-auto items-center relative shrink-0">
+        <!-- ALTERAÇÃO: shrink-0 impede que esta coluna encolha quando a direita rolar ou mudar -->
+        <div class="flex flex-col w-full lg:w-auto items-center relative shrink-0 z-10">
             
             <!-- Botão Pop-out Widget -->
             <button id="popOutWidgetBtn" class="absolute -left-16 top-2 hidden lg:flex items-center justify-center p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-lg transition-all z-20 group" title="Abrir como Widget (Pop-out)">
@@ -44,46 +46,48 @@
             </button>
 
             <!-- CABEÇALHO -->
-            <div id="mainHeader" class="w-full max-w-[500px] flex items-center justify-between mb-4 gap-4">
+            <div id="mainHeader" class="w-full max-w-[500px] flex items-center justify-between mb-2 gap-4">
                 <img src="img/logo.png" alt="Logo" class="h-16 w-auto object-contain">
                 
                 <div class="flex-grow flex justify-between items-center bg-gray-900 rounded-lg p-2 shadow-lg h-16 px-4">
-                    <!-- FIX: Adicionado 'tabular-nums' para largura fixa dos números -->
+                    <!-- ALTERAÇÃO: tabular-nums impede que os números "dancem" mudando a largura -->
                     <div id="evaluationPanel" class="text-2xl font-bold text-center w-24 bg-gray-800 rounded-md py-1 tabular-nums">
                         <span id="evaluationValue">0.00</span>
                     </div>
-                    <!-- FIX: Adicionado 'tabular-nums' -->
+                    <!-- ALTERAÇÃO: tabular-nums aqui também -->
                     <p class="text-sm sm:text-lg font-semibold text-center flex-grow pl-4 truncate whitespace-nowrap tabular-nums" id="status">Iniciando...</p>
                 </div>
             </div>
 
-            <!-- ÁREA DO TABULEIRO (GRID LAYOUT FIXO) -->
-            <!-- FIX: Removido 'flex flex-col' para que o CSS Grid (main.css) assuma -->
+            <!-- ÁREA DO TABULEIRO -->
+            <!-- ALTERAÇÃO: Removido flex/flex-col para deixar o CSS Grid controlar (veja main.css) -->
             <div class="w-full max-w-[500px] board-container">
                 
                 <!-- Capturas das Pretas (Topo) -->
-                <div class="flex items-center mb-1 w-full ml-8 pr-8"> 
+                <!-- ALTERAÇÃO: Classes de espaçamento removidas, controladas pelo Grid no CSS -->
+                <div class="flex items-center w-full"> 
                     <div id="capturedForBlack" class="captured-pieces-container w-full shadow-inner justify-start pl-2"></div>
                 </div>
                 
-                <!-- Wrapper do Tabuleiro com Margens de Proteção -->
-                <div class="relative mb-8 ml-8">
+                <!-- Wrapper do Tabuleiro -->
+                <div class="relative w-full">
                     <div class="rank-labels"></div>
                     <div id="board" class="w-full aspect-square grid grid-cols-8 grid-rows-8 shadow-2xl rounded-lg overflow-hidden border-4 border-gray-900 bg-gray-700"></div>
                     <div class="file-labels"></div>
                 </div>
                 
                 <!-- Capturas das Brancas (Base) -->
-                <div class="flex items-center mt-1 w-full ml-8 pr-8">
+                <div class="flex items-center w-full">
                     <div id="capturedForWhite" class="captured-pieces-container w-full shadow-inner justify-start pl-2"></div>
                 </div>
             </div>
         </div>
 
         <!-- COLUNA DIREITA: Histórico e Controles -->
-        <div id="sidebarPanel" class="w-full max-w-[500px] lg:w-80 flex flex-col gap-4 mt-0 lg:mt-20"> 
+        <!-- ALTERAÇÃO: max-h-[90vh] e overflow-y-auto garantem que APENAS este painel role -->
+        <div id="sidebarPanel" class="w-full max-w-[500px] lg:w-80 flex flex-col gap-4 mt-0 lg:mt-0 max-h-[90vh] overflow-y-auto pr-2 custom-scrollbar"> 
             
-            <div class="bg-gray-900 p-4 rounded-lg shadow-lg w-full">
+            <div class="bg-gray-900 p-4 rounded-lg shadow-lg w-full shrink-0">
                 <div class="flex justify-between items-center mb-3">
                     <h2 class="text-xl font-bold">Histórico</h2>
                     <div class="flex gap-2">
@@ -93,11 +97,11 @@
                         <button id="copyPgnButton" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded transition-all">COPIAR PGN</button>
                     </div>
                 </div>
-                <!-- O CSS agora controla a estabilidade do moveHistory -->
-                <div id="moveHistory" class="move-history bg-gray-800 rounded-md p-2 text-sm"></div>
+                <!-- Altura fixa para o histórico interno -->
+                <div id="moveHistory" class="move-history bg-gray-800 rounded-md p-2 text-sm h-64"></div>
             </div>
             
-            <div class="flex flex-col gap-2 items-center w-full">
+            <div class="flex flex-col gap-2 items-center w-full shrink-0">
                 <p class="text-xs text-gray-400 uppercase tracking-wider">Engine: Stockfish</p>
                 
                 <div class="flex w-full gap-2">
@@ -110,7 +114,6 @@
                 </div>
             </div>
         </div>
-
     </div>
     
     <!-- MODAL DE SELEÇÃO DE COR -->
@@ -140,11 +143,10 @@
                 </select>
             </div>
             
-            <!-- NOVA ÁREA DE TREINO DE ABERTURA -->
+            <!-- ÁREA DE TREINO DE ABERTURA -->
             <div class="mt-4 text-left border-t border-gray-200 pt-4">
                 <label class="block text-sm font-bold text-gray-600 uppercase mb-2">Treino de Abertura</label>
                 
-                <!-- Display da Abertura Atual -->
                 <div class="flex items-center justify-between bg-gray-100 p-3 rounded-md mb-3 border border-gray-300">
                     <div class="flex flex-col">
                         <span class="text-xs text-gray-500 uppercase font-bold">Selecionado:</span>
@@ -154,7 +156,6 @@
                     <button id="clearOpeningBtn" class="text-gray-400 hover:text-red-500 font-bold px-2" title="Voltar ao Padrão">&times;</button>
                 </div>
 
-                <!-- Botão para Abrir o Explorador -->
                 <button id="openOpeningExplorerBtn" class="w-full py-3 px-4 bg-gray-800 hover:bg-gray-700 text-white font-semibold rounded shadow-md flex items-center justify-center gap-2 transition-all hover:shadow-lg">
                     <span class="text-xl">📚</span> Explorar Biblioteca
                 </button>
@@ -206,7 +207,6 @@
     <div id="openingExplorerModal" class="fixed inset-0 bg-gray-900 bg-opacity-95 z-[60] hidden flex items-center justify-center backdrop-blur-sm p-4 animate-fade-in">
         <div class="bg-white w-full max-w-5xl h-[85vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
             
-            <!-- Header -->
             <div class="bg-gray-800 text-white p-4 flex justify-between items-center shadow-md z-10">
                 <div class="flex items-center gap-3">
                     <span class="text-2xl">📚</span>
@@ -218,17 +218,9 @@
                 <button id="closeExplorerBtn" class="text-gray-400 hover:text-white text-3xl font-light leading-none">&times;</button>
             </div>
 
-            <!-- Layout 2 Colunas -->
             <div class="flex flex-1 overflow-hidden">
-                <!-- Coluna Esquerda: Categorias -->
                 <div id="explorerCategories" class="w-1/3 md:w-1/4 bg-gray-50 border-r border-gray-200 overflow-y-auto"></div>
-
-                <!-- Coluna Direita: Conteúdo -->
                 <div id="explorerContent" class="w-2/3 md:w-3/4 bg-white overflow-y-auto p-6">
-                    <div class="mb-4">
-                        <input type="text" id="explorerSearchInput" placeholder="🔍 Buscar abertura (Ex: Siciliana, Dragão...)" class="w-full p-3 border border-gray-300 rounded-lg text-gray-800 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-shadow">
-                    </div>
-
                     <div id="explorerPlaceholder" class="flex flex-col items-center justify-center h-full text-gray-400 opacity-50">
                         <span class="text-6xl mb-4">👈</span>
                         <p class="text-lg">Selecione uma categoria à esquerda</p>
