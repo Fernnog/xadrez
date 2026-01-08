@@ -76,7 +76,7 @@ export function copyPgn(pgn, successCallback, errorCallback) {
     }
 }
 
-// --- NOVA FUNÇÃO: Exportar DOC com Diagrama ---
+// --- Funções de Exportação DOC ---
 
 function generateBoardHtmlTable(boardArray) {
     if (!boardArray) return '';
@@ -138,4 +138,51 @@ export function downloadHistoryAsDoc(pgn, boardArray) {
     
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+}
+
+// --- DIAGNÓSTICO: LAYOUT LOGGER (Anti-Jitter) ---
+
+export function initLayoutLogger() {
+    console.log("[LayoutLogger] Iniciando monitoramento de estabilidade...");
+    
+    // Elementos críticos para observar
+    const targets = [
+        document.getElementById('board'),
+        document.querySelector('.board-container'),
+        document.getElementById('gameContainer'),
+        document.body
+    ];
+
+    const observer = new ResizeObserver(entries => {
+        for (let entry of entries) {
+            // Ignora a inicialização (tamanho 0 para tamanho real)
+            // Filtra mudanças minúsculas (sub-pixel rendering) que podem não ser visíveis
+            if (entry.contentRect.width > 0 && entry.contentRect.height > 0) {
+                const id = entry.target.id || entry.target.className || entry.target.tagName;
+                
+                // Formata para facilitar leitura
+                const w = entry.contentRect.width.toFixed(2);
+                const h = entry.contentRect.height.toFixed(2);
+                
+                // Opcional: Filtrar apenas body ou board se o log estiver muito ruidoso
+                console.warn(
+                    `[JITTER DETECTADO] Elemento: ${id} | Nova Dimensão: ${w} x ${h}`
+                );
+
+                // Dica visual de debug: borda vermelha momentânea
+                // Nota: Pode ser comentado em produção se desejar
+                if (entry.target.style) {
+                    const originalOutline = entry.target.style.outline;
+                    entry.target.style.outline = "2px solid red";
+                    setTimeout(() => {
+                        entry.target.style.outline = originalOutline;
+                    }, 200);
+                }
+            }
+        }
+    });
+
+    targets.forEach(el => {
+        if (el) observer.observe(el);
+    });
 }
