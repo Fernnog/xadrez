@@ -47,33 +47,36 @@
                 <img src="img/logo.png" alt="Logo" class="h-16 w-auto object-contain">
                 
                 <div class="flex-grow flex justify-between items-center bg-gray-900 rounded-lg p-2 shadow-lg h-16 px-4">
-                    <div id="evaluationPanel" class="text-2xl font-bold text-center w-24 bg-gray-800 rounded-md py-1">
+                    <!-- ADIÇÃO: tabular-nums para evitar pulos na largura dos números -->
+                    <div id="evaluationPanel" class="text-2xl font-bold text-center w-24 bg-gray-800 rounded-md py-1 tabular-nums">
                         <span id="evaluationValue">0.00</span>
                     </div>
-                    <!-- FIX ESTABILIDADE: Adicionado truncate e whitespace-nowrap -->
-                    <p class="text-sm sm:text-lg font-semibold text-center flex-grow pl-4 truncate whitespace-nowrap" id="status">Iniciando...</p>
+                    <!-- ADIÇÃO: tabular-nums para texto que contenha números -->
+                    <p class="text-sm sm:text-lg font-semibold text-center flex-grow pl-4 truncate whitespace-nowrap tabular-nums" id="status">Iniciando...</p>
                 </div>
             </div>
 
-            <!-- ÁREA DO TABULEIRO (Ajuste de Margens e Alinhamento v1.1) -->
-            <div class="w-full max-w-[500px] flex flex-col board-container">
+            <!-- ÁREA DO TABULEIRO (Estrutura Grid Rígida) -->
+            <!-- MUDANÇA: Substituído flex-col por grid para estabilidade vertical e removido comportamentos flex -->
+            <div class="w-full max-w-[500px] grid grid-rows-[auto_1fr_auto] gap-1 board-container">
                 
                 <!-- Capturas das Pretas (Topo) -->
-                <!-- ml-8 e pr-8 garantem alinhamento com o tabuleiro e respiro à direita -->
-                <div class="flex items-center mb-1 w-full ml-8 pr-8"> 
+                <!-- LIMPEZA: Removido ml-8 pr-8 mb-1. A grade e o container controlam o layout agora. -->
+                <div class="flex items-center w-full overflow-hidden"> 
                     <div id="capturedForBlack" class="captured-pieces-container w-full shadow-inner justify-start pl-2"></div>
                 </div>
                 
-                <!-- Wrapper do Tabuleiro com Margens de Proteção -->
-                <div class="relative mb-8 ml-8">
+                <!-- Wrapper do Tabuleiro -->
+                <!-- LIMPEZA: Removido mb-8 ml-8. Margens externas eliminadas em favor do gap da grid. -->
+                <div class="relative w-full">
                     <div class="rank-labels"></div>
                     <div id="board" class="w-full aspect-square grid grid-cols-8 grid-rows-8 shadow-2xl rounded-lg overflow-hidden border-4 border-gray-900 bg-gray-700"></div>
                     <div class="file-labels"></div>
                 </div>
                 
                 <!-- Capturas das Brancas (Base) -->
-                <!-- ml-8 e pr-8 garantem simetria com o topo -->
-                <div class="flex items-center mt-1 w-full ml-8 pr-8">
+                <!-- LIMPEZA: Removido mt-1 ml-8 pr-8. -->
+                <div class="flex items-center w-full overflow-hidden">
                     <div id="capturedForWhite" class="captured-pieces-container w-full shadow-inner justify-start pl-2"></div>
                 </div>
             </div>
