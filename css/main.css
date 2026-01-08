@@ -35,6 +35,9 @@ html, body {
 }
 
 /* Scrollbar Personalizada para o Painel Lateral (único lugar que rola) */
+.custom-scrollbar {
+    scrollbar-gutter: stable; /* Reserva espaço para o scroll evitar pulos no layout */
+}
 .custom-scrollbar::-webkit-scrollbar {
     width: 8px;
 }
@@ -47,6 +50,11 @@ html, body {
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #6b7280; 
+}
+
+/* Garante números estáveis (não tremem quando mudam largura) */
+.tabular-nums {
+    font-variant-numeric: tabular-nums;
 }
 
 /* ==========================================================================
