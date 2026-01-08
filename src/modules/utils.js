@@ -1,533 +1,141 @@
---- START OF FILE ui.js ---
-// src/modules/ui.js
+// src/modules/utils.js
 
-import { PIECES, PIECE_VALUES, PROMOTION_PIECES, OPENING_BOOK, APP_VERSION } from './config.js';
-import { CHANGELOG } from './changelog.js';
+import { PIECES } from './config.js';
 
-// Centraliza a seleção de todos os elementos do DOM
-const elements = {
-    board: document.getElementById('board'),
-    status: document.getElementById('status'),
-    evaluationValue: document.getElementById('evaluationValue'),
-    moveHistory: document.getElementById('moveHistory'),
-    capturedForWhite: document.getElementById('capturedForWhite'),
-    capturedForBlack: document.getElementById('capturedForBlack'),
-    gameContainer: document.getElementById('gameContainer'),
-    colorSelectionModal: document.getElementById('colorSelectionModal'),
-    gameOverModal: document.getElementById('gameOverModal'),
-    promotionModal: document.getElementById('promotionModal'),
-    promotionOptions: document.getElementById('promotionOptions'),
-    modalTitle: document.getElementById('modalTitle'),
-    modalMessage: document.getElementById('modalMessage'),
-    copyPgnButton: document.getElementById('copyPgnButton'),
-    downloadDocButton: document.getElementById('downloadDocButton'),
-    mainBoardContainer: document.querySelector('.board-container'),
-    rankLabels: document.querySelector('.rank-labels'),
-    fileLabels: document.querySelector('.file-labels'),
-    undoButton: document.getElementById('undoButton'),
-    versionCard: document.getElementById('versionCard'),
-    currentVersionDisplay: document.getElementById('currentVersionDisplay'),
-    changelogModal: document.getElementById('changelogModal'),
-    changelogContent: document.getElementById('changelogContent'),
-    closeChangelogButton: document.getElementById('closeChangelogButton'),
-    toastContainer: document.getElementById('toastContainer'),
-    popOutWidgetBtn: document.getElementById('popOutWidgetBtn'),
-    restoreWindowBtn: document.getElementById('restoreWindowBtn'),
-    appOverlay: document.getElementById('appOverlay'),
-    
-    // --- ELEMENTOS DO EXPLORADOR (v1.0.7) ---
-    openOpeningExplorerBtn: document.getElementById('openOpeningExplorerBtn'),
-    openingExplorerModal: document.getElementById('openingExplorerModal'),
-    closeExplorerBtn: document.getElementById('closeExplorerBtn'),
-    explorerCategories: document.getElementById('explorerCategories'),
-    explorerList: document.getElementById('explorerList'),
-    explorerPlaceholder: document.getElementById('explorerPlaceholder'),
-    selectedOpeningName: document.getElementById('selectedOpeningName'),
-    selectedVariantName: document.getElementById('selectedVariantName'),
-    clearOpeningBtn: document.getElementById('clearOpeningBtn'),
-};
+const PGN_COPY_BUTTON_ID = 'copyPgnButton'; 
+const GAME_STATE_KEY = 'savedChessGameState';
 
-let uiHandlers = {}; 
-let widgetWindowRef = null; 
-let activeCategory = null;
+// --- Funções de Persistência (Salvar/Carregar Jogo) ---
 
-function safeAddEventListener(id, event, handler) {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener(event, handler);
-}
-
-// ==========================================================
-// LÓGICA DO EXPLORADOR DE ABERTURAS (v1.0.7)
-// ==========================================================
-
-function initOpeningExplorer() {
-    if (!elements.explorerCategories) return;
-    elements.explorerCategories.innerHTML = '';
-    
-    OPENING_BOOK.forEach((category, index) => {
-        const btn = document.createElement('button');
-        const baseClass = "w-full text-left p-4 border-b border-gray-200 transition-colors flex flex-col gap-1 focus:outline-none";
-        const inactiveClass = "text-gray-600 hover:bg-white hover:text-gray-800";
-        const activeClass = "bg-white text-gray-900 border-l-4 border-l-blue-600 shadow-sm";
-        
-        btn.className = `${baseClass} ${index === 0 ? activeClass : inactiveClass}`;
-        btn.innerHTML = `
-            <span class="font-bold text-sm sm:text-base pointer-events-none">${category.label}</span>
-            <span class="text-xs text-gray-400 truncate pointer-events-none">${category.description}</span>
-        `;
-        
-        btn.onclick = () => {
-            Array.from(elements.explorerCategories.children).forEach(c => {
-                c.className = `${baseClass} ${inactiveClass}`;
-            });
-            btn.className = `${baseClass} ${activeClass}`;
-            activeCategory = category;
-            renderCategoryContent(category);
+export function saveGameState(game, playerColor, skillLevel) {
+    if (!game) return;
+    try {
+        const state = {
+            pgn: game.getPgn(), 
+            playerColor: playerColor,
+            skillLevel: skillLevel,
+            timestamp: new Date().getTime()
         };
-        elements.explorerCategories.appendChild(btn);
-    });
-
-    if (OPENING_BOOK.length > 0) {
-        activeCategory = OPENING_BOOK[0];
-        renderCategoryContent(OPENING_BOOK[0]);
+        localStorage.setItem(GAME_STATE_KEY, JSON.stringify(state));
+    } catch (e) {
+        console.error("Failed to save game state:", e);
     }
 }
 
-function renderCategoryContent(category) {
-    elements.explorerPlaceholder.classList.add('hidden');
-    elements.explorerList.classList.remove('hidden');
-    elements.explorerList.innerHTML = '';
-
-    const title = document.createElement('h2');
-    title.className = "text-2xl font-bold text-gray-800 mb-6 pb-2 border-b border-gray-100";
-    title.textContent = category.label;
-    elements.explorerList.appendChild(title);
-
-    category.openings.forEach(opening => {
-        const card = document.createElement('div');
-        card.className = "bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden mb-4";
-        
-        const header = document.createElement('div');
-        header.className = "bg-gray-50 p-4 border-b border-gray-100 flex justify-between items-center";
-        header.innerHTML = `
-            <div>
-                <div class="flex items-center gap-2">
-                    <h3 class="font-bold text-lg text-gray-800">${opening.name}</h3>
-                    ${opening.eco ? `<span class="text-xs font-mono bg-gray-200 text-gray-600 px-2 py-0.5 rounded border border-gray-300" title="Código ECO">${opening.eco}</span>` : ''}
-                </div>
-            </div>
-            <span class="text-gray-400 text-xs font-semibold uppercase tracking-wide">${opening.variants.length} variantes</span>
-        `;
-        
-        const variantsContainer = document.createElement('div');
-        variantsContainer.className = "p-4 flex flex-wrap gap-2";
-        
-        opening.variants.forEach(variant => {
-            const chip = document.createElement('button');
-            chip.className = "group relative px-3 py-1.5 bg-blue-50 text-blue-700 text-sm font-semibold rounded-full border border-blue-100 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all cursor-pointer";
-            chip.textContent = variant.name;
-            chip.onclick = () => selectOpening(opening, variant);
-            variantsContainer.appendChild(chip);
-        });
-
-        card.appendChild(header);
-        card.appendChild(variantsContainer);
-        elements.explorerList.appendChild(card);
-    });
+export function loadGameState() {
+    try {
+        const savedState = localStorage.getItem(GAME_STATE_KEY);
+        return savedState ? JSON.parse(savedState) : null;
+    } catch (e) {
+        console.error("Failed to load game state:", e);
+        return null;
+    }
 }
 
-function selectOpening(opening, variant) {
-    if (elements.selectedOpeningName) elements.selectedOpeningName.textContent = opening.name;
-    if (elements.selectedVariantName) elements.selectedVariantName.textContent = variant.name;
-    elements.openingExplorerModal.classList.add('hidden');
-    showToast(`Abertura selecionada: ${opening.name}`, 'success');
-
-    const event = new CustomEvent('opening-selected', { 
-        detail: { 
-            pgn: variant.pgn, 
-            name: `${opening.name} - ${variant.name}`
-        } 
-    });
-    window.dispatchEvent(event);
+export function clearGameState() {
+    localStorage.removeItem(GAME_STATE_KEY);
 }
 
-// ==========================================================
-// FUNÇÕES AUXILIARES DE UI (ESTABILIZAÇÃO PRIORIDADE 2)
-// ==========================================================
 
-function renderChangelog() {
-    if (!elements.currentVersionDisplay || !elements.changelogContent) return;
-    elements.currentVersionDisplay.textContent = APP_VERSION || 'v1.0.7';
-    elements.changelogContent.innerHTML = '';
-    
-    CHANGELOG.forEach((log, index) => {
-        const isLatest = index === 0;
-        const entry = document.createElement('div');
-        entry.className = `mb-6 ${!isLatest ? 'opacity-75 hover:opacity-100 transition-opacity' : ''}`;
-        entry.innerHTML = `
-            <div class="flex justify-between items-baseline mb-2">
-                <div class="flex items-center gap-2">
-                    <span class="font-bold text-lg ${isLatest ? 'text-blue-600' : 'text-gray-600'}">${log.version}</span>
-                    ${isLatest ? '<span class="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">Atual</span>' : ''}
-                </div>
-                <span class="text-xs text-gray-500">${log.date}</span>
-            </div>
-            <ul class="list-disc list-inside text-sm text-gray-700 space-y-1 ml-1">
-                ${log.changes.map(c => `<li>${c}</li>`).join('')}
-            </ul>
-        `;
-        elements.changelogContent.appendChild(entry);
-    });
+// --- Funções de Interação com a Área de Transferência ---
+
+function fallbackCopy(text, successCallback, errorCallback) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-9999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+            if (successCallback) successCallback("PGN copiado!");
+        } else {
+            if (errorCallback) errorCallback("Falha ao copiar PGN.");
+        }
+    } catch (err) {
+        if (errorCallback) errorCallback(err);
+    }
+    document.body.removeChild(textArea);
 }
 
-export function showToast(message, type = 'info') {
-    if (!elements.toastContainer) return;
-    const toast = document.createElement('div');
-    const bgClass = type === 'error' ? 'bg-red-600' : (type === 'success' ? 'bg-green-600' : 'bg-blue-600');
-    toast.className = `toast pointer-events-auto px-4 py-3 rounded shadow-lg text-white text-sm font-bold flex items-center gap-2 ${bgClass}`;
-    toast.innerHTML = `<span>${message}</span>`;
-    elements.toastContainer.appendChild(toast);
-    requestAnimationFrame(() => toast.classList.add('toast-visible'));
-    setTimeout(() => {
-        toast.classList.remove('toast-visible');
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
+export function copyPgn(pgn, successCallback, errorCallback) {
+    if (!pgn) {
+        if (errorCallback) errorCallback('Nenhum lance para copiar!');
+        return;
+    }
 
-function highlightCoordinates(squareName) {
-    if (!squareName) return;
-    const file = squareName[0];
-    const rank = squareName[1];
-    const fileLabel = document.getElementById(`label-file-${file}`);
-    const rankLabel = document.getElementById(`label-rank-${rank}`);
-    if (fileLabel) fileLabel.classList.add('label-highlight');
-    if (rankLabel) rankLabel.classList.add('label-highlight');
-}
-
-function clearCoordinateHighlights() {
-    document.querySelectorAll('.label-highlight').forEach(el => el.classList.remove('label-highlight'));
-}
-
-function openWidgetWindow() {
-    const width = 450;
-    const height = 550;
-    const features = `width=${width},height=${height},resizable=yes,scrollbars=no,status=no`;
-    widgetWindowRef = window.open(`${window.location.pathname}?mode=widget`, 'ChessWidgetWindow', features);
-
-    if (widgetWindowRef) {
-        if (elements.appOverlay) elements.appOverlay.classList.remove('hidden');
-        const checkTimer = setInterval(() => {
-            if (widgetWindowRef.closed) {
-                clearInterval(checkTimer);
-                if (elements.appOverlay) elements.appOverlay.classList.add('hidden');
-                window.dispatchEvent(new CustomEvent('widget-closed'));
-            }
-        }, 500);
+    // Tenta usar API moderna
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(pgn)
+            .then(() => successCallback && successCallback("PGN copiado para a área de transferência!"))
+            .catch(() => fallbackCopy(pgn, successCallback, errorCallback));
     } else {
-        showToast("Por favor, permita pop-ups para usar o modo Widget.", "error");
+        fallbackCopy(pgn, successCallback, errorCallback);
     }
 }
 
-export function registerUIHandlers(handlers) {
-    uiHandlers = handlers;
-    safeAddEventListener('playWhiteButton', 'click', handlers.onPlayWhite);
-    safeAddEventListener('playBlackButton', 'click', handlers.onPlayBlack);
-    safeAddEventListener('resetButton', 'click', handlers.onResetGame);
-    safeAddEventListener('modalResetButton', 'click', handlers.onResetGame);
-    safeAddEventListener('continueGameButton', 'click', handlers.onContinueGame);
-    safeAddEventListener('importPgnButton', 'click', handlers.onImportPgn);
-    safeAddEventListener('undoButton', 'click', handlers.onUndo); 
+// --- NOVA FUNÇÃO: Exportar DOC com Diagrama ---
 
-    if (elements.copyPgnButton) elements.copyPgnButton.addEventListener('click', handlers.onCopyPgn);
-    safeAddEventListener('downloadDocButton', 'click', handlers.onDownloadDoc);
-    safeAddEventListener('versionCard', 'click', () => elements.changelogModal.classList.remove('hidden'));
-    safeAddEventListener('closeChangelogButton', 'click', () => elements.changelogModal.classList.add('hidden'));
+function generateBoardHtmlTable(boardArray) {
+    if (!boardArray) return '';
     
-    if (elements.popOutWidgetBtn) elements.popOutWidgetBtn.addEventListener('click', openWidgetWindow);
+    let html = '<table border="0" cellspacing="0" cellpadding="0" style="border: 2px solid #333; margin: 20px auto;">';
     
-    if (elements.restoreWindowBtn) {
-        elements.restoreWindowBtn.addEventListener('click', () => {
-            if (window.opener) window.opener.focus();
-            window.close();
-        });
-    }
-
-    if (elements.openOpeningExplorerBtn) {
-        elements.openOpeningExplorerBtn.addEventListener('click', () => {
-            elements.openingExplorerModal.classList.remove('hidden');
-            initOpeningExplorer();
-        });
-    }
-    if (elements.closeExplorerBtn) {
-        elements.closeExplorerBtn.addEventListener('click', () => elements.openingExplorerModal.classList.add('hidden'));
-    }
-    if (elements.clearOpeningBtn) {
-        elements.clearOpeningBtn.addEventListener('click', () => {
-             elements.selectedOpeningName.textContent = 'Padrão (Início)';
-             elements.selectedVariantName.textContent = '--';
-             const event = new CustomEvent('opening-selected', { detail: { pgn: '', name: 'Standard' } });
-             window.dispatchEvent(event);
-             showToast("Abertura redefinida para Padrão.", "info");
-        });
-    }
-
-    renderChangelog(); 
-}
-
-export function getSkillLevel() {
-    const el = document.getElementById('difficultyLevel');
-    return el ? parseInt(el.value, 10) : 12;
-}
-
-export function getPgnInput() {
-    const el = document.getElementById('pgnInput');
-    return el ? el.value : '';
-}
-
-export function setBoardCursor(cursor) {
-    if (elements.board) elements.board.style.cursor = cursor;
-}
-
-export function showContinueGameOption(isVisible) {
-    const container = document.getElementById('continueGameContainer');
-    if (container) isVisible ? container.classList.remove('hidden') : container.classList.add('hidden');
-}
-
-export function setupAndDisplayGame(playerColor) {
-    hideColorSelectionModal();
-    hideGameOverModal();
-    showGameContainer();
-    setupBoardOrientation(playerColor);
-    createBoard(uiHandlers.onSquareClick);
-}
-
-export function renderBoard(boardState) {
+    const lightColor = '#f0d9b5';
+    const darkColor = '#b58863';
+    
     for (let r = 0; r < 8; r++) {
+        html += '<tr>';
         for (let c = 0; c < 8; c++) {
-            const squareName = 'abcdefgh'[c] + (8 - r);
-            const squareElement = elements.board.querySelector(`[data-square="${squareName}"]`);
-            const piece = boardState[r][c];
+            const isDark = (r + c) % 2 === 1;
+            const bgColor = isDark ? darkColor : lightColor;
+            const piece = boardArray[r][c];
+            const symbol = piece ? PIECES[piece.color][piece.type] : '';
             
-            if (squareElement) {
-                squareElement.innerHTML = '';
-                if (piece) {
-                    const pieceElement = document.createElement('div');
-                    pieceElement.className = 'piece';
-                    pieceElement.style.backgroundImage = `url('${PIECES[piece.color][piece.type]}')`;
-                    if (elements.board.classList.contains('board-flipped')) {
-                        pieceElement.style.transform = 'rotate(180deg)';
-                    }
-                    squareElement.appendChild(pieceElement);
-                }
-            }
+            // Estilo inline essencial para Word
+            html += `<td style="width: 40px; height: 40px; background-color: ${bgColor}; text-align: center; font-size: 24px; color: #000; border: none;">${symbol}</td>`;
         }
+        html += '</tr>';
     }
+    html += '</table>';
+    return html;
 }
 
-export function createBoard(onSquareClickCallback) {
-    if (!elements.board) return;
-    elements.board.innerHTML = '';
-    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+export function downloadHistoryAsDoc(pgn, boardArray) {
+    const boardDiagram = boardArray ? generateBoardHtmlTable(boardArray) : '';
 
-    for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
-            const square = document.createElement('div');
-            const squareName = 'abcdefgh'[c] + (8 - r);
-            const colorClass = (r + c) % 2 === 0 ? 'light' : 'dark';
-            square.className = `square ${colorClass}`;
-            square.dataset.square = squareName;
-            
-            if (onSquareClickCallback) {
-                square.addEventListener('click', () => onSquareClickCallback(squareName));
-            }
-            if (!isTouchDevice) {
-                square.addEventListener('mouseenter', () => highlightCoordinates(squareName));
-                square.addEventListener('mouseleave', clearCoordinateHighlights);
-            }
-            elements.board.appendChild(square);
-        }
-    }
-}
+    const content = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head><meta charset='utf-8'><title>Partida de Xadrez</title></head>
+        <body style="font-family: Arial, sans-serif;">
+            <h1 style="text-align:center">Registro de Partida de Xadrez</h1>
+            <p style="text-align:center"><strong>Data:</strong> ${new Date().toLocaleDateString()}</p>
+            <hr>
+            <h3 style="text-align:center">Posição Final</h3>
+            ${boardDiagram}
+            <hr>
+            <h3>Notação (PGN)</h3>
+            <div style="background:#f4f4f4; padding:10px; border:1px solid #ddd; font-family: monospace; font-size: 14px;">
+                ${pgn}
+            </div>
+            <br>
+            <p style="font-size: 10px; color: #888; text-align: center;">Gerado por Xadrez vs Stockfish</p>
+        </body>
+        </html>
+    `;
 
-export function setupBoardOrientation(playerColor) {
-    const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
-    const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+    const blob = new Blob([content], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
     
-    if(elements.rankLabels) elements.rankLabels.innerHTML = '';
-    if(elements.fileLabels) elements.fileLabels.innerHTML = '';
-
-    const rList = playerColor === 'b' ? [...ranks].reverse() : ranks;
-    const fList = playerColor === 'b' ? [...files].reverse() : files;
-
-    if(elements.rankLabels) {
-        rList.forEach(r => {
-            elements.rankLabels.innerHTML += `<span id="label-rank-${r}">${r}</span>`;
-        });
-    }
-    if(elements.fileLabels) {
-        fList.forEach(f => {
-            elements.fileLabels.innerHTML += `<span id="label-file-${f}">${f}</span>`;
-        });
-    }
-
-    if (playerColor === 'b') elements.board.classList.add('board-flipped');
-    else elements.board.classList.remove('board-flipped');
-}
-
-// OTIMIZAÇÃO PRIORIDADE 2: Evita atualização do DOM se o texto for idêntico
-export function updateStatus(gameState, showGameOverCallback) {
-    let statusText = '';
-    const turn = gameState.turn === 'w' ? 'Brancas' : 'Pretas';
-    const safeGameOverCall = showGameOverCallback || showGameOverModal;
-
-    if (gameState.isGameOver) {
-        if (gameState.isCheckmate) {
-            const winner = gameState.turn === 'w' ? 'Pretas' : 'Brancas';
-            statusText = `Xeque-mate! ${winner} vencem.`;
-            safeGameOverCall(`Xeque-mate!`, `${winner} vencem.`);
-        } else if (gameState.isStalemate) {
-            statusText = 'Empate por Afogamento.';
-            safeGameOverCall('Empate!', 'O jogo terminou em afogamento.');
-        } else if (gameState.isDraw) {
-            statusText = 'Empate.';
-            safeGameOverCall('Empate!', 'Material insuficiente, repetição ou regra dos 50 lances.');
-        }
-    } else if (gameState.inCheck) {
-        statusText = `XEQUE! É a vez das ${turn}.`;
-    } else {
-        statusText = `É a vez das ${turn}.`;
-    }
-
-    // Só atualiza o DOM se houver mudança real de texto
-    if (elements.status.textContent !== statusText) {
-        elements.status.textContent = statusText;
-    }
-}
-
-export function highlightMoves(fromSquare, moves) {
-    clearHighlights();
-    const fromElement = elements.board.querySelector(`[data-square="${fromSquare}"]`);
-    if (fromElement) fromElement.classList.add('selected-square');
-    moves.forEach(move => {
-        const toElement = elements.board.querySelector(`[data-square="${move.to}"]`);
-        if (toElement) {
-            const marker = document.createElement('div');
-            marker.className = 'valid-move-marker';
-            toElement.appendChild(marker);
-        }
-    });
-}
-
-export function clearHighlights() {
-    document.querySelectorAll('.selected-square').forEach(el => el.classList.remove('selected-square'));
-    document.querySelectorAll('.valid-move-marker').forEach(el => el.remove());
-}
-
-export function updateMoveHistory(history) {
-    elements.moveHistory.innerHTML = '';
-    const movePairs = [];
-    const getSan = (move) => {
-        if (!move) return '';
-        return typeof move === 'string' ? move : (move.san || '');
-    };
-
-    for (let i = 0; i < history.length; i += 2) {
-        movePairs.push({ white: getSan(history[i]), black: getSan(history[i + 1]) });
-    }
-
-    movePairs.reverse().forEach((pair, index) => {
-        const moveNumber = movePairs.length - index;
-        const moveItem = document.createElement('div');
-        moveItem.className = 'move-list-item';
-        moveItem.innerHTML = `
-            <span class="move-number">${moveNumber}.</span>
-            <span>${pair.white}</span>
-            <span>${pair.black}</span>
-        `;
-        elements.moveHistory.appendChild(moveItem);
-    });
-    elements.moveHistory.scrollTop = 0;
-}
-
-export function updateCapturedPieces(history) {
-    const captured = { w: [], b: [] };
-    for (const move of history) {
-        if (move && move.captured) {
-            const capturedColor = move.color === 'w' ? 'b' : 'w';
-            captured[capturedColor].push(move.captured);
-        }
-    }
-
-    const render = (container, pieces, color) => {
-        if(!container) return 0; 
-        container.innerHTML = '';
-        let material = 0;
-        const pieceOrder = { q: 1, r: 2, b: 3, n: 4, p: 5 };
-        
-        pieces.sort((a, b) => pieceOrder[a] - pieceOrder[b]).forEach(p => {
-            const pieceEl = document.createElement('div');
-            pieceEl.className = 'piece';
-            pieceEl.style.backgroundImage = `url('${PIECES[color][p]}')`;
-            container.appendChild(pieceEl);
-            material += PIECE_VALUES[p];
-        });
-        return material;
-    };
-
-    const whiteMaterial = render(elements.capturedForBlack, captured.w, 'w');
-    const blackMaterial = render(elements.capturedForWhite, captured.b, 'b');
-    const diff = whiteMaterial - blackMaterial;
-
-    const createBadge = (score) => {
-        const diffEl = document.createElement('span');
-        diffEl.className = 'material-diff';
-        diffEl.textContent = `+${Math.abs(score)}`;
-        return diffEl;
-    };
-
-    if (elements.capturedForBlack && diff > 0) elements.capturedForBlack.appendChild(createBadge(diff));
-    else if (elements.capturedForWhite && diff < 0) elements.capturedForWhite.appendChild(createBadge(diff));
-}
-
-export function showPromotionModal(color) {
-    if (!elements.promotionOptions || !elements.promotionModal) return;
-    elements.promotionOptions.innerHTML = '';
-
-    PROMOTION_PIECES.forEach(type => {
-        const button = document.createElement('button');
-        button.className = `piece w-16 h-16 mx-1 hover:scale-110 transition-transform bg-gray-200 rounded-lg`;
-        button.style.backgroundImage = `url('${PIECES[color][type]}')`;
-        button.onclick = () => { if (uiHandlers.onPromotionSelect) uiHandlers.onPromotionSelect(type); };
-        elements.promotionOptions.appendChild(button);
-    });
-
-    elements.promotionModal.classList.remove('hidden');
-}
-
-export function hidePromotionModal() { elements.promotionModal.classList.add('hidden'); }
-export function showGameContainer() { elements.gameContainer.classList.remove('hidden'); }
-export function showColorSelectionModal() { elements.colorSelectionModal.classList.remove('hidden'); }
-export function hideColorSelectionModal() { elements.colorSelectionModal.classList.add('hidden'); }
-
-export function showGameOverModal(title, message) {
-    elements.modalTitle.textContent = title;
-    elements.modalMessage.textContent = message;
-    elements.gameOverModal.classList.remove('hidden');
-}
-export function hideGameOverModal() { elements.gameOverModal.classList.add('hidden'); }
-
-// OTIMIZAÇÃO PRIORIDADE 3: Evita flicker na barra de avaliação
-export function updateEvaluationDisplay(type, score) {
-    let displayText = '';
-    if (type === 'mate') {
-        displayText = `M${Math.abs(score)}`;
-        displayText = score > 0 ? `+${displayText}` : `-${displayText}`;
-    } else {
-        const pawnValue = (score / 100).toFixed(2);
-        displayText = pawnValue >= 0 ? `+${pawnValue}` : pawnValue;
-    }
-
-    if (elements.evaluationValue.textContent !== displayText) {
-        elements.evaluationValue.textContent = displayText;
-    }
+    link.href = url;
+    link.download = `Partida_Xadrez_${new Date().getTime()}.doc`;
+    
+    document.body.appendChild(link);
+    link.click();
+    
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 }
