@@ -21,21 +21,47 @@
 }
 
 /* ==========================================================================
-   1. CONFIGURAÇÕES GERAIS E TABULEIRO
+   1. CONFIGURAÇÕES GERAIS E ESTABILIDADE (ANTI-JITTER)
    ========================================================================== */
+
+/* FIX ESTABILIDADE (Prioridade 1): Reserva espaço para o scrollbar */
+html {
+    scrollbar-gutter: stable;
+}
 
 body { 
     font-family: 'Inter', sans-serif; 
 }
 
-/* Container Estrutural */
+/* Utilitário para números tabulares (Largura fixa por dígito) */
+.tabular-nums {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+}
+
+/* Container Estrutural - REFORMATADO PARA GRID (Prioridade 1) */
 .board-container { 
     position: relative;     
-    /* Padding e layout controlados via HTML/Tailwind agora para melhor alinhamento */
-    padding-top: 0.5rem;
+    display: grid !important; /* Força Grid para travar o layout */
+    grid-template-rows: 2.5rem auto 2.5rem; /* Altura fixa para capturas (topo/base) e auto para tabuleiro */
+    gap: 0.5rem; /* Espaçamento fixo */
+    
     width: 100%;
     max-width: 100%;
-    display: inline-block;  
+    
+    /* Espaçamento interno para acomodar os labels (números/letras) sem cortar */
+    padding-left: 2rem; 
+    padding-bottom: 2rem;
+    padding-top: 0.5rem;
+    
+    box-sizing: border-box;
+    margin: 0 auto;
+}
+
+/* Reset de margens para o wrapper do tabuleiro dentro do Grid */
+.board-container > .relative {
+    margin: 0 !important;
+    width: 100%;
 }
 
 /* O Tabuleiro de Xadrez */
@@ -84,9 +110,9 @@ body {
 /* Números (1-8) à esquerda */
 .rank-labels { 
     position: absolute;
-    left: -1.5rem; 
+    left: -2rem; /* Ajustado para alinhar com o padding do grid */
     top: 0;
-    width: 1.5rem; 
+    width: 2rem; 
     height: 100%; 
     display: grid;
     grid-template-rows: repeat(8, 1fr);
@@ -100,7 +126,7 @@ body {
 /* Letras (a-h) embaixo */
 .file-labels { 
     position: absolute;
-    bottom: -1.5rem; 
+    bottom: -1.75rem; /* Ajustado para alinhar com o padding do grid */
     left: 0;
     width: 100%;
     height: 1.5rem; 
@@ -134,7 +160,7 @@ body {
 }
 
 /* ==========================================================================
-   3. PEÇAS (MODIFICADO PARA SVG E BACKGROUND IMAGE)
+   3. PEÇAS (SVG E BACKGROUND IMAGE)
    ========================================================================== */
 
 .piece { 
@@ -178,7 +204,7 @@ body {
 .board-flipped .piece { transform: rotate(180deg); }
 
 /* ==========================================================================
-   4. UI AUXILIAR & UI KIT v1.1 (PEÇAS CAPTURADAS)
+   4. UI AUXILIAR & UI KIT (PEÇAS CAPTURADAS ESTABILIZADAS)
    ========================================================================== */
 
 /* FIX ESTABILIDADE: Containment para o histórico */
@@ -204,7 +230,7 @@ body {
 .captured-pieces-container { 
     display: flex; 
     align-items: center; 
-    gap: 0; /* Gap zero para permitir sobreposição sutil ou compactação */
+    gap: 0; 
     padding: 0.25rem 0.5rem; 
     
     background-color: var(--bg-panel); 
@@ -214,11 +240,14 @@ body {
     
     flex-wrap: wrap; 
     
-    /* FIX ESTABILIDADE: Tamanho fixo e overflow hidden */
+    /* FIX ESTABILIDADE: Tamanho fixo obrigatório no Grid */
     box-sizing: border-box;
+    height: 100%; /* Preenche a linha do grid (2.5rem) */
     min-height: 2.5rem;
     max-height: 2.5rem;
     overflow: hidden;
+    margin: 0 !important; /* Remove margens que causam deslocamento */
+    width: 100% !important;
     
     transition: all 0.3s ease;
 }
@@ -313,15 +342,20 @@ body.widget-mode .board-container {
     width: 95vmin !important; 
     height: auto !important; 
     max-width: none;
+    
+    /* No Widget, removemos o padding extra porque o espaço é precioso */
     padding-left: 0 !important; 
     padding-bottom: 0 !important;
+    padding-top: 0;
+    
+    /* Reajuste de Grid para Widget pode ser simplificado */
     margin-left: -0.5rem !important;
-    padding-top: 0; 
 }
 
 /* Prateleira Compacta para Widget */
 body.widget-mode .captured-pieces-container {
     min-height: 2rem; 
+    max-height: 2rem; /* Mantém a altura fixa também no widget */
     padding: 0.1rem 0.25rem;
     background-color: var(--bg-panel-widget);
 }
