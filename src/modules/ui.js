@@ -21,7 +21,6 @@ const elements = {
     copyPgnButton: document.getElementById('copyPgnButton'),
     downloadDocButton: document.getElementById('downloadDocButton'),
     mainBoardContainer: document.querySelector('.board-container'),
-    // Removidos rankLabels e fileLabels pois não existem mais no HTML
     undoButton: document.getElementById('undoButton'),
     versionCard: document.getElementById('versionCard'),
     currentVersionDisplay: document.getElementById('currentVersionDisplay'),
@@ -33,7 +32,7 @@ const elements = {
     restoreWindowBtn: document.getElementById('restoreWindowBtn'),
     appOverlay: document.getElementById('appOverlay'),
     
-    // --- NOVOS ELEMENTOS DO EXPLORADOR (v1.0.7) ---
+    // --- ELEMENTOS DO EXPLORADOR ---
     openOpeningExplorerBtn: document.getElementById('openOpeningExplorerBtn'),
     openingExplorerModal: document.getElementById('openingExplorerModal'),
     closeExplorerBtn: document.getElementById('closeExplorerBtn'),
@@ -56,7 +55,7 @@ function safeAddEventListener(id, event, handler) {
 }
 
 // ==========================================================
-// LÓGICA DO EXPLORADOR DE ABERTURAS (v1.0.7)
+// LÓGICA DO EXPLORADOR DE ABERTURAS
 // ==========================================================
 
 function initOpeningExplorer() {
@@ -236,12 +235,9 @@ export function showToast(message, type = 'info') {
 
 function highlightCoordinates(squareName) {
     if (!squareName) return;
-    // Opcional: Aqui poderiamos adicionar lógica para iluminar as coordenadas internas.
-    // Atualmente desativado para manter a limpeza visual.
 }
 
 function clearCoordinateHighlights() {
-    // Limpeza de destaques opcionais
 }
 
 function openWidgetWindow() {
@@ -363,8 +359,7 @@ export function renderBoard(boardState) {
             const piece = boardState[r][c];
             
             if (squareElement) {
-                // Limpa apenas as peças antigas (mantém as coordenadas que estão como spans)
-                // Para evitar remover as coordenadas, removemos apenas elementos com a classe .piece
+                // Remove apenas peças antigas, preservando coordenadas
                 const existingPiece = squareElement.querySelector('.piece');
                 if (existingPiece) existingPiece.remove();
 
@@ -407,7 +402,7 @@ export function createBoard(onSquareClickCallback) {
         }
     }
     
-    // Injeta coordenadas internas
+    // Injeta coordenadas
     const isFlipped = elements.board.classList.contains('board-flipped');
     updateCoordinates(isFlipped ? 'b' : 'w');
 }
@@ -418,27 +413,29 @@ export function setupBoardOrientation(playerColor) {
     } else {
         elements.board.classList.remove('board-flipped');
     }
-    // Redesenha coordenadas para ficarem na posição correta após o flip
+    // Redesenha coordenadas com lógica de cor atualizada
     updateCoordinates(playerColor);
 }
 
-// NOVA FUNÇÃO PARA GERENCIAR COORDENADAS INTERNAS
+// LÓGICA DE COORDENADAS INTERNAS
 function updateCoordinates(playerColor) {
-    // Remove coordenadas antigas para evitar duplicidade
+    // Remove coordenadas antigas
     document.querySelectorAll('.coord-label').forEach(el => el.remove());
 
     const squares = document.querySelectorAll('.square');
     
     squares.forEach(square => {
-        const squareName = square.dataset.square; // ex: "e4"
-        const file = squareName[0]; // "e"
-        const rank = squareName[1]; // "4"
+        const squareName = square.dataset.square; 
+        const file = squareName[0]; 
+        const rank = squareName[1]; 
 
-        // Lógica para coordenadas internas nas bordas
+        // Lógica de bordas visuais
+        // Se Brancas: Esquerda é 'a', Base é '1'
+        // Se Pretas (Flipped): Esquerda visual é 'h', Base visual é '8'
         const isLeftEdge = (playerColor === 'w' && file === 'a') || (playerColor === 'b' && file === 'h');
         const isBottomEdge = (playerColor === 'w' && rank === '1') || (playerColor === 'b' && rank === '8');
 
-        // Adicionar Número (Rank) na lateral esquerda
+        // Adicionar Número (Rank)
         if (isLeftEdge) {
             const rankLabel = document.createElement('span');
             rankLabel.className = 'coord-label coord-rank';
@@ -446,7 +443,7 @@ function updateCoordinates(playerColor) {
             square.appendChild(rankLabel);
         }
 
-        // Adicionar Letra (File) na lateral inferior
+        // Adicionar Letra (File)
         if (isBottomEdge) {
             const fileLabel = document.createElement('span');
             fileLabel.className = 'coord-label coord-file';
