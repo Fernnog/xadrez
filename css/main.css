@@ -21,52 +21,47 @@
 }
 
 /* ==========================================================================
-   1. ESTABILIZAÇÃO GLOBAL E LAYOUT (ANTI-JITTER CORE)
+   CORREÇÃO DE ESTABILIDADE (ANTI-JITTER GLOBAL)
    ========================================================================== */
-
-/* Reserva espaço para scrollbar, evitando salto lateral no Desktop */
 html {
+    /* Força a barra de rolagem a estar sempre visível para evitar saltos laterais */
+    overflow-y: scroll;
     scrollbar-gutter: stable;
 }
+
+/* ==========================================================================
+   1. CONFIGURAÇÕES GERAIS E TABULEIRO
+   ========================================================================== */
 
 body { 
     font-family: 'Inter', sans-serif; 
 }
 
-/* Container Estrutural - GRID RÍGIDO
-   Define 3 linhas fixas: Capturas (Topo), Tabuleiro (Meio), Capturas (Base) */
+/* Container Estrutural (Refatorado para Grid Rígido) */
 .board-container { 
     position: relative;     
+    /* Layout Rígido com 3 linhas: Captura (Top), Tabuleiro, Captura (Base) */
     display: grid !important;
-    grid-template-rows: 2.5rem auto 2.5rem; /* Alturas travadas */
+    grid-template-rows: 2.5rem auto 2.5rem;
     gap: 0.5rem;
-    width: 100%;
-    max-width: 100%;
     
-    /* Zera margens que causam deslocamento */
+    width: 100% !important;
+    max-width: 500px !important; /* Trava largura máxima */
+    
+    /* Remove padding/margin que causavam instabilidade */
     padding: 0 !important;
     margin: 0 auto !important;
 }
 
-/* ==========================================================================
-   2. TABULEIRO E CASAS (BLINDAGEM)
-   ========================================================================== */
-
-/* Wrapper para labels e tabuleiro */
-.board-container > div.relative {
-    width: 100%;
-    height: 100%;
-    margin: 0 !important;
-    /* Isola o contexto de empilhamento */
-    isolation: isolate; 
-}
-
-/* O Tabuleiro de Xadrez - CONTENÇÃO ESTRITA */
+/* O Tabuleiro de Xadrez (Isolamento Total) */
 #board { 
+    /* Força o navegador a tratar este elemento como independente */
+    contain: size layout paint style; 
+    
     width: 100%; 
+    height: auto;
     aspect-ratio: 1 / 1;    
     
-    /* Layout Interno */
     display: grid; 
     grid-template-columns: repeat(8, 1fr); 
     grid-template-rows: repeat(8, 1fr); 
@@ -74,31 +69,28 @@ body {
     /* Estética */
     border: 4px solid var(--board-border); 
     border-radius: 0.5rem;
-    
-    /* BLINDAGEM: Contain strict diz ao browser que o tamanho deste elemento 
-       NUNCA muda com base nos filhos. Isso elimina o jitter do container pai. */
-    contain: size layout paint style;
     overflow: hidden;
-    box-sizing: border-box;
-
-    transition: transform 0.5s ease-in-out; 
     z-index: 10; 
+    
+    /* Performance */
+    box-sizing: border-box;
+    transition: none !important; /* Remove transições de layout */
 }
 
 /* Casas (Squares) */
 .square { 
-    position: relative; /* Necessário para ancorar peças absolutas */
-    width: 100%;
-    height: 100%;
+    position: relative; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
     
-    /* Força tamanho ignorando conteúdo */
+    /* Isolamento por casa */
+    flex: 1 1 0px; 
     min-width: 0;
     min-height: 0;
-    
-    /* Isolamento de renderização por casa */
+    overflow: hidden;
     contain: strict;
 }
-
 .light { background-color: var(--board-light); }
 .dark { background-color: var(--board-dark); }
 .selected-square { background-color: var(--highlight-last-move) !important; }
@@ -116,14 +108,15 @@ body {
 }
 
 /* ==========================================================================
-   3. ETIQUETAS (LABELS)
+   2. ETIQUETAS (LABELS)
    ========================================================================== */
 
+/* Ajustado posicionamento para fora do fluxo do Grid */
 .rank-labels { 
     position: absolute;
-    left: -1.5rem; 
+    left: -2rem; /* Movido para fora */
     top: 0;
-    width: 1.5rem; 
+    width: 2rem; 
     height: 100%; 
     display: grid;
     grid-template-rows: repeat(8, 1fr);
@@ -136,7 +129,7 @@ body {
 
 .file-labels { 
     position: absolute;
-    bottom: -1.5rem; 
+    bottom: -1.75rem; /* Movido para fora */
     left: 0;
     width: 100%;
     height: 1.5rem; 
@@ -158,6 +151,7 @@ body {
     font-size: 0.875rem; 
     transition: color 0.2s ease, transform 0.2s ease;
     cursor: default;
+    
     font-variant-numeric: tabular-nums; 
 }
 
@@ -168,35 +162,36 @@ body {
 }
 
 /* ==========================================================================
-   4. PEÇAS (MODIFICADO PARA ABSOLUTE E SVG)
+   3. PEÇAS (MODIFICADO PARA SVG E BACKGROUND IMAGE)
    ========================================================================== */
 
-/* Peças DENTRO do Tabuleiro (.square .piece) */
-.square .piece {
-    /* POSICIONAMENTO ABSOLUTO: Remove a peça do fluxo do documento.
-       Isso impede que a peça force o tamanho da casa. */
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-
+.piece { 
     /* Reset de Texto */
     font-size: 0; 
     color: transparent; 
+    text-shadow: none !important;
     
-    /* Imagem */
+    /* Configuração de Imagem de Fundo */
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    
     background-position: center;
     background-repeat: no-repeat;
     background-size: contain; 
     
+    /* FIX: Absolute para desacoplar tamanho da peça do tamanho da casa */
+    position: absolute;
+    top: 0;
+    left: 0;
+    
+    transform: none; 
     cursor: pointer; 
     user-select: none; 
     z-index: 10; 
-    
-    /* Performance: Avisa o browser que haverá animação */
-    will-change: transform; 
     transition: transform 0.1s ease-in-out, opacity 0.1s; 
+    
     filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));
 }
 
@@ -208,23 +203,27 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 12.5%; 
+    width: 12.5%; /* 1/8 do tabuleiro */
     height: 12.5%;
 }
 
 .piece-hidden { opacity: 0; }
 .board-flipped { transform: rotate(180deg); }
-.board-flipped .square .piece { transform: rotate(180deg); }
+.board-flipped .piece { transform: rotate(180deg); }
 
 /* ==========================================================================
-   5. PRATELEIRAS DE CAPTURA & HISTÓRICO
+   4. UI AUXILIAR & UI KIT v1.1 (PEÇAS CAPTURADAS)
    ========================================================================== */
 
+/* FIX ESTABILIDADE: Overflow scroll forçado para reservar espaço */
 .move-history { 
     overflow-y: scroll !important; 
+    scrollbar-gutter: stable;
     scrollbar-width: thin; 
     scrollbar-color: #4a5568 #2d3748; 
+    
     height: 20rem; 
+    
     contain: strict; 
     will-change: transform;
 }
@@ -235,15 +234,7 @@ body {
 .move-list-item:nth-child(odd) { background-color: #4a5568; }
 .move-number { color: #a0aec0; font-weight: 600; text-align: right; }
 
-/* Wrapper das Prateleiras - Fixado no Grid */
-.flex.items-center.w-full {
-    height: 100%;
-    overflow: hidden;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-/* Container Interno de Capturas */
+/* --- PRATELEIRA DE CAPTURAS --- */
 .captured-pieces-container { 
     display: flex; 
     align-items: center; 
@@ -257,39 +248,44 @@ body {
     
     flex-wrap: wrap; 
     
-    /* FIX ESTABILIDADE: Tamanho travado */
+    /* FIX ESTABILIDADE: Tamanho fixo e overflow hidden */
     box-sizing: border-box;
-    width: 100%;
-    height: 100% !important; 
-    overflow: hidden; /* Corta excessos */
+    min-height: 2.5rem;
+    max-height: 2.5rem;
+    height: 2.5rem; /* Altura fixa */
+    width: 100% !important;
+    overflow: hidden;
+    flex-shrink: 0;
     
-    transition: all 0.3s ease;
+    margin: 0 !important; /* Sem margens */
+    
+    transition: none;
 }
 
-/* Peças na Prateleira (Não podem ser Absolute, precisam fluir) */
-.captured-pieces-container .piece { 
-    /* Reinicia propriedades que podem conflitar com a classe genérica .piece */
-    position: relative; 
-    display: block;
-    
-    width: clamp(1rem, 3.5vmin, 1.8rem);
-    height: clamp(1rem, 3.5vmin, 1.8rem);
-    
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: contain; 
-    
-    margin-right: -2px; 
-    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    cursor: default;
-}
-
+/* Animação de Entrada */
 @keyframes popIn {
     0% { transform: scale(0) translateY(-10px); opacity: 0; }
     60% { transform: scale(1.3); }
     100% { transform: scale(1) translateY(0); opacity: 1; }
 }
 
+/* PEÇAS REDUZIDAS (50% menor) na Prateleira */
+.captured-pieces-container .piece { 
+    width: clamp(1rem, 3.5vmin, 1.8rem);
+    height: clamp(1rem, 3.5vmin, 1.8rem);
+    
+    /* Remove absolute apenas aqui para permitir flexbox flow */
+    position: relative; 
+    top: auto;
+    left: auto;
+    
+    transform: none !important;
+    margin-right: -2px; 
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    cursor: default;
+}
+
+/* Placar de Material (Tooltip cursor) */
 .captured-pieces-container .material-diff { 
     margin-left: auto;
     background-color: rgba(0,0,0,0.6);
@@ -302,28 +298,19 @@ body {
     cursor: help; 
 }
 
-/* Botões e Auxiliares */
+/* Botões do Menu */
 .btn-play-white { background-color: var(--board-dark); color: white; }
 .btn-play-white:hover { background-color: #c79d7f; }
 .btn-play-black { background-color: var(--board-light); color: #1a202c; }
 .btn-play-black:hover { background-color: #e6c8a4; }
 
+/* Auxiliares Gerais */
 #versionCard:hover { background-color: rgba(55, 65, 81, 0.9); cursor: help; }
 .toast { transform: translateX(100%); transition: transform 0.3s ease-out, opacity 0.3s ease-out; opacity: 0; }
 .toast-visible { transform: translateX(0); opacity: 1; }
 
-/* Destaques */
-.label-highlight {
-    color: #fbbf24 !important; 
-    font-weight: bold; 
-    transform: scale(1.4);
-    text-shadow: 0 0 12px rgba(251, 191, 36, 0.8); 
-    z-index: 20;
-    will-change: transform;
-}
-
 /* ==========================================================================
-   6. MODO WIDGET
+   5. MODO WIDGET (POP-OUT)
    ========================================================================== */
 
 body.widget-mode #mainHeader,
@@ -361,12 +348,16 @@ body.widget-mode .board-container {
     width: 95vmin !important; 
     height: auto !important; 
     max-width: none;
-    padding: 0 !important;
-    margin: 0 !important;
+    padding-left: 0 !important; 
+    padding-bottom: 0 !important;
+    margin-left: -0.5rem !important;
+    padding-top: 0; 
 }
 
+/* Prateleira Compacta para Widget */
 body.widget-mode .captured-pieces-container {
     min-height: 2rem; 
+    height: 2rem;
     padding: 0.1rem 0.25rem;
     background-color: var(--bg-panel-widget);
 }
@@ -400,4 +391,19 @@ body.widget-mode #restoreWindowBtn {
     background-color: rgba(31, 41, 55, 0.8);
     backdrop-filter: blur(4px);
     border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* ==========================================================================
+   6. DESTAQUES DINÂMICOS
+   ========================================================================== */
+
+.label-highlight {
+    color: #fbbf24 !important; 
+    font-weight: bold; 
+    
+    transform: scale(1.4);
+    text-shadow: 0 0 12px rgba(251, 191, 36, 0.8); 
+    z-index: 20;
+    
+    will-change: transform;
 }
