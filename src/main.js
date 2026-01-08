@@ -19,7 +19,7 @@ let appState = {
     pendingPromotionMove: null,
 };
 
-// --- NOVO ESTADO: Armazena a Abertura Selecionada via Modal (Prioridade 3) ---
+// --- NOVO ESTADO: Armazena a Abertura Selecionada via Modal ---
 let selectedOpeningPgn = ''; 
 
 // ==========================================================
@@ -124,6 +124,10 @@ function handleUndo() {
 
 function init() {
     console.log("[Main] Inicializando aplicação...");
+
+    // INICIALIZAÇÃO DO DIAGNÓSTICO (LAYOUT LOGGER)
+    // Isso vai monitorar e logar qualquer tremor no tabuleiro/body
+    utils.initLayoutLogger();
     
     // Registrar Handlers da UI
     ui.registerUIHandlers({
@@ -158,7 +162,7 @@ function init() {
     
     engine.initEngine(handleEngineMessage);
 
-    // --- LISTENER DO EXPLORADOR DE ABERTURAS (Prioridade 3) ---
+    // --- LISTENER DO EXPLORADOR DE ABERTURAS ---
     window.addEventListener('opening-selected', (e) => {
         console.log(`[Main] Abertura definida via Explorer: ${e.detail.name}`);
         selectedOpeningPgn = e.detail.pgn;
@@ -299,7 +303,7 @@ function startGame(chosenColor) {
 
     ui.setupAndDisplayGame(appState.playerColor);
 
-    // --- NOVA LÓGICA DE INÍCIO: Verifica se há PGN do Explorador (Prioridade 3) ---
+    // --- NOVA LÓGICA DE INÍCIO: Verifica se há PGN do Explorador ---
     if (selectedOpeningPgn && selectedOpeningPgn.trim() !== '') {
         console.log(`[Main] Animando Abertura Selecionada`);
         playOpeningSequence(selectedOpeningPgn);
