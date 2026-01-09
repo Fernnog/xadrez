@@ -358,3 +358,40 @@ body.widget-mode #restoreWindowBtn {
 body.widget-mode .coord-label {
     font-size: 0.7rem; 
 }
+
+/* Adicione isso ao final do arquivo main.css */
+
+/* ==========================================================================
+   7. RESPONSIVIDADE AVANÇADA (MOBILE PORTRAIT)
+   ========================================================================== */
+
+@media (max-width: 1024px) and (orientation: portrait) {
+    /* No celular em pé, o tabuleiro não deve dominar a tela toda.
+       Reduzimos para 55dvh (Dynamic Viewport Height) para sobrar espaço
+       para o histórico e botões abaixo. */
+    .board-container {
+        width: 100% !important;
+        /* O cálculo abaixo tenta maximizar a largura, mas limita a altura 
+           para não estourar a tela verticalmente junto com os controles */
+        max-width: 55dvh !important; 
+        aspect-ratio: auto !important; /* Reseta o aspect-ratio forçado */
+    }
+
+    /* Garante que o grid do tabuleiro se adapte a essa nova restrição de altura */
+    #board {
+        aspect-ratio: 1 / 1 !important;
+        height: auto !important;
+    }
+    
+    /* Ajuste fino para o container principal não ter margens excessivas no mobile */
+    #gameContainer {
+        gap: 1rem !important;
+        padding-top: 0.5rem !important;
+        justify-content: flex-start !important; /* Começa do topo */
+    }
+    
+    /* Reduz um pouco a altura das barras de captura no mobile para economizar pixels */
+    .board-container {
+        grid-template-rows: 32px 1fr 32px !important;
+    }
+}
