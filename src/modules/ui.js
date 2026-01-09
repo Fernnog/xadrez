@@ -32,6 +32,10 @@ const elements = {
     restoreWindowBtn: document.getElementById('restoreWindowBtn'),
     appOverlay: document.getElementById('appOverlay'),
     
+    // --- Novos botões da Modal de Game Over ---
+    modalCloseButton: document.getElementById('modalCloseButton'),
+    modalCopyPgnButton: document.getElementById('modalCopyPgnButton'),
+    
     // --- ELEMENTOS DO EXPLORADOR ---
     openOpeningExplorerBtn: document.getElementById('openOpeningExplorerBtn'),
     openingExplorerModal: document.getElementById('openingExplorerModal'),
@@ -273,6 +277,18 @@ export function registerUIHandlers(handlers) {
     safeAddEventListener('playBlackButton', 'click', () => onStartWrapper(handlers.onPlayBlack));
     safeAddEventListener('resetButton', 'click', handlers.onResetGame);
     safeAddEventListener('modalResetButton', 'click', handlers.onResetGame);
+    
+    // --- NOVOS HANDLERS (Prioridades 1 e 3) ---
+    safeAddEventListener('modalCloseButton', 'click', () => {
+        hideGameOverModal();
+        showToast("Modo de análise. Use 'Novo Jogo' para reiniciar.", "info");
+    });
+    
+    if (elements.modalCopyPgnButton) {
+        elements.modalCopyPgnButton.addEventListener('click', handlers.onCopyPgn);
+    }
+    // ------------------------------------------
+
     safeAddEventListener('continueGameButton', 'click', handlers.onContinueGame);
     safeAddEventListener('importPgnButton', 'click', handlers.onImportPgn);
     safeAddEventListener('undoButton', 'click', handlers.onUndo); 
@@ -524,7 +540,16 @@ export function updateMoveHistory(history) {
         `;
         elements.moveHistory.appendChild(moveItem);
     });
-    elements.moveHistory.scrollTop = 0;
+    
+    // --- Prioridade 2: Auto-scroll no histórico ---
+    // Reseta o scroll para o fundo (no contexto do flex-direction ou comportamento padrão)
+    // Se o estilo 'movePairs.reverse()' coloca o último no topo, scrollTop=0 está correto.
+    // MAS, xadrez padrão geralmente coloca o último lance no final da lista se não for revertido.
+    // O código original fazia 'movePairs.reverse()', colocando o lance mais recente no TOPO visualmente.
+    // Se o lance mais recente está no topo, scrollTop = 0 é o correto.
+    // Se você prefere comportamento padrão (lance 1 no topo, lance 50 em baixo), deveríamos remover o reverse().
+    // Assumindo que o "Auto-Scroll" pedido é para VER O LANCE RECENTE:
+    elements.moveHistory.scrollTop = 0; 
 }
 
 export function updateCapturedPieces(history) {
